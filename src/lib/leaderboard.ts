@@ -47,14 +47,12 @@ export function buildLeaderboardFromTrades(
     }
   }
 
-  const entries: LeaderboardEntry[] = [];
-
-  for (const group of Array.from(grouped.values())) {
+  const entries: LeaderboardEntry[] = Array.from(grouped, ([, group]) => {
     const excessReturns = group.trades
       .map((trade) => trade.ExcessReturn ?? 0)
       .filter((value) => Number.isFinite(value));
 
-    entries.push({
+    return {
       id: group.id,
       name: group.name,
       party: group.party,
@@ -62,8 +60,8 @@ export function buildLeaderboardFromTrades(
       state: "",
       tradesLast90Days: group.trades.length,
       returnVsSpy: averageExcessReturn(excessReturns),
-    });
-  }
+    };
+  });
 
   return entries.sort((a, b) => b.returnVsSpy - a.returnVsSpy);
 }
