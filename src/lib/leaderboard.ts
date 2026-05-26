@@ -49,7 +49,7 @@ export function buildLeaderboardFromTrades(
 
   const entries: LeaderboardEntry[] = [];
 
-  for (const group of grouped.values()) {
+  for (const group of Array.from(grouped.values())) {
     const excessReturns = group.trades
       .map((trade) => trade.ExcessReturn ?? 0)
       .filter((value) => Number.isFinite(value));
