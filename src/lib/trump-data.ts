@@ -1,67 +1,73 @@
 import { EdgarFiling, PoliticianProfileData, ProfileTrade, SearchPoliticianEntry } from "@/types";
-import { getCompanyFilingsForTicker } from "@/lib/sec-edgar";
+import {
+  getCompanyFilingsForTicker,
+  searchCompanyFilingsByName,
+} from "@/lib/sec-edgar";
+import { rankFilings } from "@/lib/filing-utils";
+import { getStoredFilingsForPolitician } from "@/lib/supabase/sec-filings";
 import { getMarketQuotes } from "@/lib/yahoo-finance";
 
 export const TRUMP_PROFILE_ID = "donald-trump";
 
-const TRUMP_WATCHLIST = ["DJT", "TSLA", "COIN", "AMZN", "AAPL"];
+/** Public share count cited in DJT SEC registration/proxy materials (~59% ownership). */
+const TRUMP_DJT_SHARES = 114_750_000;
 
-function getTrumpDisclosedTrades(): ProfileTrade[] {
+function getTrumpDisclosures(): ProfileTrade[] {
   return [
     {
-      id: "trump-djt-merger",
+      id: "trump-djt-holding-2024",
       ticker: "DJT",
       company: "Trump Media & Technology Group",
-      type: "Purchase",
-      amount: "Over $50,000,000 (OGE reported value)",
+      type: "Reported Holding",
+      amount: "$50,000,001 – $100,000,000 (OGE asset range)",
+      tradeDate: "2023-12-31",
+      filingDate: "2024-08-13",
+      sector: "Media / Social",
+      disclosureType: "reported-holding",
+      sourceNote: "OGE Form 278e annual report, certified Aug 13, 2024",
+    },
+    {
+      id: "trump-djt-merger-2024",
+      ticker: "DJT",
+      company: "Trump Media & Technology Group",
+      type: "Corporate Event",
+      amount: "SPAC merger consideration (DWAC → DJT)",
       tradeDate: "2024-03-25",
-      filingDate: "2024-08-13",
+      filingDate: "2024-03-25",
       sector: "Media / Social",
+      disclosureType: "corporate-event",
+      sourceNote: "Trump Media & Digital World Acquisition Corp. merger close",
     },
     {
-      id: "trump-djt-oge-2025",
+      id: "trump-djt-lockup-2024",
       ticker: "DJT",
       company: "Trump Media & Technology Group",
-      type: "Purchase",
-      amount: "$5M - $25M (periodic report range)",
-      tradeDate: "2025-01-15",
-      filingDate: "2025-08-01",
+      type: "Reported Transaction",
+      amount: "$100,000,001 – $1,000,000,000 (OGE sale range)",
+      tradeDate: "2024-10-29",
+      filingDate: "2024-10-29",
       sector: "Media / Social",
+      disclosureType: "transaction",
+      sourceNote:
+        "Periodic transaction report filed Oct 29, 2024 for trust sale of DJT shares",
     },
     {
-      id: "trump-tsla-oge",
-      ticker: "TSLA",
-      company: "Tesla, Inc.",
-      type: "Purchase",
-      amount: "$15,001 - $50,000",
-      tradeDate: "2024-12-01",
+      id: "trump-crypto-income-2024",
+      ticker: "BTC",
+      company: "Bitcoin (via licensing / crypto ventures)",
+      type: "Reported Income",
+      amount: "$50,000,001 – $100,000,000 (OGE income range)",
+      tradeDate: "2023-12-31",
       filingDate: "2024-08-13",
-      sector: "Automotive",
-    },
-    {
-      id: "trump-coin-oge",
-      ticker: "COIN",
-      company: "Coinbase Global, Inc.",
-      type: "Purchase",
-      amount: "$1,001 - $15,000",
-      tradeDate: "2024-11-10",
-      filingDate: "2024-08-13",
-      sector: "Financial Services",
-    },
-    {
-      id: "trump-amzn-oge",
-      ticker: "AMZN",
-      company: "Amazon.com, Inc.",
-      type: "Purchase",
-      amount: "$1,001 - $15,000",
-      tradeDate: "2024-10-05",
-      filingDate: "2024-08-13",
-      sector: "Consumer",
+      sector: "Digital Assets",
+      disclosureType: "reported-holding",
+      sourceNote:
+        "OGE Form 278e — crypto-related licensing income (not an exchange trade)",
     },
   ];
 }
 
-function enrichTradesWithQuotes(
+function enrichDisclosuresWithQuotes(
   trades: ProfileTrade[],
   quotes: Awaited<ReturnType<typeof getMarketQuotes>>
 ): ProfileTrade[] {
@@ -76,15 +82,25 @@ function enrichTradesWithQuotes(
 }
 
 export async function getTrumpFilings(): Promise<EdgarFiling[]> {
-  const filings = await Promise.all(
-    ["DJT", "TSLA"].map((ticker) =>
-      getCompanyFilingsForTicker(ticker, 4).catch(() => [])
-    )
-  );
+  const { isSupabaseConfigured } = await import("@/lib/supabase/server");
+
+  if (isSupabaseConfigured()) {
+    const stored = await getStoredFilingsForPolitician(TRUMP_PROFILE_ID);
+
+    if (stored.length > 0) {
+      return stored;
+    }
+  }
+
+  const [djtFilings, djtSearchFilings] = await Promise.all([
+    getCompanyFilingsForTicker("DJT", 15).catch(() => []),
+    searchCompanyFilingsByName("Trump Media & Technology Group", 8).catch(
+      () => []
+    ),
+  ]);
 
   const seen = new Set<string>();
-
-  return filings.flat().filter((filing) => {
+  const combined = [...djtFilings, ...djtSearchFilings].filter((filing) => {
     if (seen.has(filing.id)) {
       return false;
     }
@@ -92,34 +108,28 @@ export async function getTrumpFilings(): Promise<EdgarFiling[]> {
     seen.add(filing.id);
     return true;
   });
+
+  return rankFilings(combined);
 }
 
 export async function getTrumpProfile(): Promise<PoliticianProfileData> {
-  const trades = getTrumpDisclosedTrades();
-  const tickers = [
-    ...new Set([...trades.map((trade) => trade.ticker), ...TRUMP_WATCHLIST]),
-  ];
+  const disclosures = getTrumpDisclosures();
+  const tickers = ["DJT", "BTC"];
+
   const [quotes, filings] = await Promise.all([
     getMarketQuotes(tickers),
     getTrumpFilings(),
   ]);
 
-  const enrichedTrades = enrichTradesWithQuotes(trades, quotes);
+  const enrichedDisclosures = enrichDisclosuresWithQuotes(disclosures, quotes);
   const djtQuote = quotes.DJT;
-  const recentFilings = filings.filter((filing) => {
-    const filedAt = new Date(filing.filedAt);
-    const cutoff = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000);
-    return filedAt >= cutoff;
-  });
 
-  const excessReturns = enrichedTrades
-    .map((trade) => trade.excessReturn ?? 0)
-    .filter((value) => Number.isFinite(value));
+  const recentFilings = filings.filter((filing) => filing.daysAgo <= 90);
+  const djtReturns = djtQuote?.changePercent != null ? [djtQuote.changePercent] : [];
 
-  const avgReturn =
-    excessReturns.length > 0
-      ? excessReturns.reduce((sum, value) => sum + value, 0) / excessReturns.length
-      : djtQuote?.changePercent ?? 0;
+  const sortedDisclosures = [...enrichedDisclosures].sort(
+    (a, b) => new Date(b.filingDate).getTime() - new Date(a.filingDate).getTime()
+  );
 
   return {
     id: TRUMP_PROFILE_ID,
@@ -128,20 +138,16 @@ export async function getTrumpProfile(): Promise<PoliticianProfileData> {
     chamber: "Executive",
     state: "FL",
     officeTitle: "President of the United States",
-    committee: "Executive Branch · OGE Financial Disclosures",
+    committee: "Executive Branch · OGE Form 278e disclosures",
     source: "disclosure",
-    tradesLast90Days: recentFilings.length + 1,
-    totalTrades: enrichedTrades.length,
-    returnVsSpy: avgReturn,
-    winRate:
-      excessReturns.length > 0
-        ? (excessReturns.filter((value) => value > 0).length / excessReturns.length) *
-          100
+    tradesLast90Days: recentFilings.length,
+    totalTrades: sortedDisclosures.length,
+    returnVsSpy: djtReturns[0] ?? 0,
+    portfolioValue:
+      djtQuote?.price != null
+        ? Math.round(djtQuote.price * TRUMP_DJT_SHARES)
         : undefined,
-    portfolioValue: djtQuote?.price
-      ? Math.round(djtQuote.price * 114_750_000)
-      : undefined,
-    trades: enrichedTrades,
+    trades: sortedDisclosures,
   };
 }
 
@@ -153,28 +159,35 @@ export async function getTrumpSpotlightData() {
   ]);
 
   const djt = quotes.DJT;
+  const ranked = rankFilings(filings);
+  const latest = ranked.filter((filing) => filing.isFeatured).slice(0, 3);
 
   return {
     profile,
     djtPrice: djt?.price ?? null,
     djtChange: djt?.changePercent ?? null,
     djtName: djt?.shortName ?? "Trump Media & Technology Group",
-    filingCount: filings.length,
+    filingCount: ranked.length,
     disclosedPositions: profile.trades.length,
+    latestFilings: latest,
+    estimatedStakeValue:
+      djt?.price != null ? Math.round(djt.price * TRUMP_DJT_SHARES) : null,
   };
 }
 
-export function getTrumpSearchEntry(): SearchPoliticianEntry {
+export async function getTrumpSearchEntry(): Promise<SearchPoliticianEntry> {
+  const profile = await getTrumpProfile();
+
   return {
     id: TRUMP_PROFILE_ID,
     name: "Donald J. Trump",
     party: "Republican",
     chamber: "Executive",
     state: "FL",
-    committee: "President · OGE Financial Disclosures",
-    tradesLast90Days: 5,
-    totalTrades: 5,
-    returnVsSpy: 0,
+    committee: "President · OGE Form 278e",
+    tradesLast90Days: profile.tradesLast90Days,
+    totalTrades: profile.totalTrades,
+    returnVsSpy: profile.returnVsSpy,
     source: "disclosure",
   };
 }

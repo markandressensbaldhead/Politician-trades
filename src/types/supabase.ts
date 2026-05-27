@@ -1,3 +1,5 @@
+import { TradeSecSnapshot } from "@/types";
+
 export interface CongressTradeRow {
   id: string;
   trade_key: string;
@@ -10,6 +12,8 @@ export interface CongressTradeRow {
   filing_date: string | null;
   sector: string | null;
   excess_return: number | null;
+  sec_data: TradeSecSnapshot | null;
+  sec_synced_at: string | null;
   created_at: string;
 }
 

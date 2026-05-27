@@ -5,6 +5,7 @@ import {
   TRUMP_PROFILE_ID,
   getTrumpProfile,
 } from "@/lib/trump-data";
+import { enrichProfileWithLockedSecData } from "@/lib/supabase/sec-filings";
 import {
   averageExcessReturn,
   computeWinRate,
@@ -112,7 +113,8 @@ export async function getPoliticianProfile(
   id: string
 ): Promise<PoliticianProfileData | null> {
   if (isTrumpProfileId(id)) {
-    return getTrumpProfile();
+    const profile = await getTrumpProfile();
+    return enrichProfileWithLockedSecData(profile);
   }
 
   const apiKey = process.env.QUIVERQUANT_API_KEY;
@@ -123,7 +125,7 @@ export async function getPoliticianProfile(
       const liveProfile = buildProfileFromTrades(id, trades);
 
       if (liveProfile) {
-        return liveProfile;
+        return enrichProfileWithLockedSecData(liveProfile);
       }
     } catch (error) {
       console.error(
@@ -136,7 +138,7 @@ export async function getPoliticianProfile(
   const mockPolitician = getPoliticianById(id);
 
   if (mockPolitician) {
-    return buildProfileFromMock(mockPolitician);
+    return enrichProfileWithLockedSecData(buildProfileFromMock(mockPolitician));
   }
 
   return null;

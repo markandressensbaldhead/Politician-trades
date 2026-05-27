@@ -257,13 +257,16 @@ export async function getSearchIndex(): Promise<{
 
   if (source === "live") {
     return {
-      politicians: [getTrumpSearchEntry(), ...buildSearchIndexFromTrades(trades)],
+      politicians: [
+        await getTrumpSearchEntry(),
+        ...buildSearchIndexFromTrades(trades),
+      ],
       source: "live",
     };
   }
 
   return {
-    politicians: [getTrumpSearchEntry(), ...buildSearchIndexFromMock()],
+    politicians: [await getTrumpSearchEntry(), ...buildSearchIndexFromMock()],
     source: "mock",
   };
 }

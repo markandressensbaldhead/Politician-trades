@@ -70,6 +70,7 @@ export async function checkDatabaseTables(): Promise<{
     "congress_trades",
     "politician_insights",
     "politician_filing_insights",
+    "sec_filings",
     "subscriptions",
   ];
   const missingTables: string[] = [];

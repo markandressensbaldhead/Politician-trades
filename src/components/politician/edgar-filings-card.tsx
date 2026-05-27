@@ -12,12 +12,79 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { EdgarFiling, FilingInsight } from "@/types";
-import { formatDate } from "@/lib/utils";
+import { EdgarFiling, FilingInsight, GroupedFilings } from "@/types";
+import { cn, formatDate } from "@/lib/utils";
+
+interface FilingsApiResponse {
+  filings: EdgarFiling[];
+  latest: EdgarFiling[];
+  grouped: GroupedFilings[];
+  locked?: boolean;
+  storedCount?: number;
+}
 
 interface EdgarFilingsCardProps {
   politicianId: string;
   politicianName: string;
+}
+
+function FilingRow({
+  filing,
+  featured = false,
+}: {
+  filing: EdgarFiling;
+  featured?: boolean;
+}) {
+  return (
+    <div
+      className={cn(
+        "flex flex-col gap-3 rounded-md border p-4 sm:flex-row sm:items-center sm:justify-between",
+        featured
+          ? "border-terminal-amber/50 bg-terminal-amber/10 shadow-[0_0_24px_rgba(245,158,11,0.08)]"
+          : "border-border/60 bg-background/30"
+      )}
+    >
+      <div className="space-y-2">
+        <div className="flex flex-wrap items-center gap-2">
+          {featured && (
+            <Badge className="bg-terminal-amber/20 font-mono text-[10px] text-terminal-amber hover:bg-terminal-amber/20">
+              Latest
+            </Badge>
+          )}
+          <Badge variant="outline" className="font-mono text-[10px]">
+            {filing.form}
+          </Badge>
+          <Badge variant="secondary" className="font-mono text-[10px]">
+            {filing.categoryLabel}
+          </Badge>
+          <span className="font-mono text-xs text-muted-foreground">
+            {formatDate(filing.filedAt)} · {filing.recencyLabel}
+          </span>
+          {filing.ticker && (
+            <Badge variant="secondary" className="font-mono text-[10px]">
+              {filing.ticker}
+            </Badge>
+          )}
+        </div>
+        <p className={cn("font-medium", featured && "text-base")}>
+          {filing.entityName}
+        </p>
+        <p className="text-xs text-muted-foreground">{filing.title}</p>
+      </div>
+
+      <Button
+        variant={featured ? "default" : "outline"}
+        size="sm"
+        asChild
+        className={featured ? "shrink-0" : "shrink-0"}
+      >
+        <a href={filing.documentUrl} target="_blank" rel="noopener noreferrer">
+          View Filing
+          <ExternalLink className="h-3.5 w-3.5" />
+        </a>
+      </Button>
+    </div>
+  );
 }
 
 export function EdgarFilingsCard({
@@ -25,6 +92,9 @@ export function EdgarFilingsCard({
   politicianName,
 }: EdgarFilingsCardProps) {
   const [filings, setFilings] = useState<EdgarFiling[]>([]);
+  const [latest, setLatest] = useState<EdgarFiling[]>([]);
+  const [grouped, setGrouped] = useState<GroupedFilings[]>([]);
+  const [locked, setLocked] = useState(false);
   const [insight, setInsight] = useState<FilingInsight | null>(null);
   const [loadingFilings, setLoadingFilings] = useState(true);
   const [loadingInsight, setLoadingInsight] = useState(true);
@@ -41,7 +111,9 @@ export function EdgarFilingsCard({
         const response = await fetch(
           `/api/filings/${encodeURIComponent(politicianId)}`
         );
-        const data = await response.json();
+        const data = (await response.json()) as FilingsApiResponse & {
+          error?: string;
+        };
 
         if (!response.ok) {
           throw new Error(data.error ?? "Failed to load SEC filings");
@@ -49,6 +121,9 @@ export function EdgarFilingsCard({
 
         if (!cancelled) {
           setFilings(data.filings ?? []);
+          setLatest(data.latest ?? []);
+          setGrouped(data.grouped ?? []);
+          setLocked(Boolean(data.locked));
         }
       } catch (fetchError) {
         if (!cancelled) {
@@ -127,6 +202,11 @@ export function EdgarFilingsCard({
     [insight?.analysis]
   );
 
+  const featuredIds = useMemo(
+    () => new Set(latest.map((filing) => filing.id)),
+    [latest]
+  );
+
   return (
     <Card className="terminal-panel overflow-hidden border-border/60 bg-card/40">
       <CardHeader className="terminal-header border-b border-border/60">
@@ -135,12 +215,14 @@ export function EdgarFilingsCard({
           SEC EDGAR Filings
         </CardTitle>
         <CardDescription>
-          Official SEC filings linked to {politicianName}&apos;s traded
-          companies, analyzed by Claude
+          {locked
+            ? "Locked SEC EDGAR records from database — synced and linked to disclosed trades."
+            : "Ranked by recency — newest material events and insider filings appear first"}{" "}
+          for {politicianName}
         </CardDescription>
       </CardHeader>
 
-      <CardContent className="space-y-6 p-6">
+      <CardContent className="space-y-8 p-6">
         {loadingFilings ? (
           <div className="flex items-center gap-3 py-8 text-muted-foreground">
             <Loader2 className="h-4 w-4 animate-spin text-terminal-amber" />
@@ -153,47 +235,50 @@ export function EdgarFilingsCard({
             No matching SEC filings found for this profile yet.
           </p>
         ) : (
-          <div className="space-y-3">
-            {filings.slice(0, 8).map((filing) => (
-              <div
-                key={filing.id}
-                className="flex flex-col gap-2 rounded-md border border-border/60 bg-background/30 p-4 sm:flex-row sm:items-center sm:justify-between"
-              >
-                <div className="space-y-1">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <Badge variant="outline" className="font-mono text-[10px]">
-                      {filing.form}
-                    </Badge>
-                    <span className="font-mono text-xs text-muted-foreground">
-                      Filed {formatDate(filing.filedAt)}
-                    </span>
-                    {filing.ticker && (
-                      <Badge variant="secondary" className="font-mono text-[10px]">
-                        {filing.ticker}
-                      </Badge>
-                    )}
-                  </div>
-                  <p className="text-sm font-medium">{filing.entityName}</p>
-                  <p className="text-xs text-muted-foreground">
-                    {filing.source === "politician-search"
-                      ? "Matched politician name in EDGAR"
-                      : "Company filing for traded ticker"}
-                  </p>
+          <>
+            {latest.length > 0 && (
+              <section className="space-y-3">
+                <div className="flex items-center justify-between gap-3">
+                  <h3 className="font-mono text-xs uppercase tracking-[0.2em] text-terminal-amber">
+                    Latest Filings
+                  </h3>
+                  <span className="font-mono text-[10px] text-muted-foreground">
+                    Most recent · highest visibility
+                  </span>
                 </div>
+                {latest.map((filing) => (
+                  <FilingRow key={filing.id} filing={filing} featured />
+                ))}
+              </section>
+            )}
 
-                <Button variant="outline" size="sm" asChild>
-                  <a
-                    href={filing.documentUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    View Filing
-                    <ExternalLink className="h-3.5 w-3.5" />
-                  </a>
-                </Button>
-              </div>
+            {grouped
+              .map((group) => ({
+                ...group,
+                filings: group.filings.filter(
+                  (filing) => !featuredIds.has(filing.id)
+                ),
+              }))
+              .filter((group) => group.filings.length > 0)
+              .map((group) => (
+              <section key={group.category} className="space-y-3">
+                <div className="flex items-center justify-between gap-3 border-b border-border/40 pb-2">
+                  <h3 className="font-mono text-xs uppercase tracking-[0.18em] text-foreground/90">
+                    {group.label}
+                  </h3>
+                  <span className="font-mono text-[10px] text-muted-foreground">
+                    {group.filings.length} filing
+                    {group.filings.length !== 1 ? "s" : ""}
+                  </span>
+                </div>
+                <div className="space-y-3">
+                  {group.filings.map((filing) => (
+                      <FilingRow key={filing.id} filing={filing} />
+                    ))}
+                </div>
+              </section>
             ))}
-          </div>
+          </>
         )}
 
         <div className="rounded-md border border-border/60 bg-background/20 p-4">

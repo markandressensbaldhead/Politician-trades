@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { ExternalLink } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import {
@@ -87,7 +88,8 @@ export function TradeHistoryTable({
           Trade History
         </CardTitle>
         <CardDescription>
-          Reported transactions with live Yahoo Finance prices
+          Reported transactions with live Yahoo Finance prices. Linked SEC filings
+          are locked from EDGAR sync when available.
         </CardDescription>
       </CardHeader>
       <CardContent className="p-0">
@@ -123,13 +125,16 @@ export function TradeHistoryTable({
                   vs. SPY
                 </TableHead>
               )}
+              <TableHead className="font-mono text-[10px] uppercase tracking-wider text-terminal-amber">
+                SEC Filings
+              </TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {trades.length === 0 ? (
               <TableRow>
                 <TableCell
-                  colSpan={showExcessReturn ? 9 : 8}
+                  colSpan={showExcessReturn ? 10 : 9}
                   className="py-12 text-center text-muted-foreground"
                 >
                   No trades on record.
@@ -163,14 +168,32 @@ export function TradeHistoryTable({
                             {trade.sector}
                           </p>
                         )}
+                        {trade.sourceNote && (
+                          <p className="mt-1 text-xs text-muted-foreground/80">
+                            {trade.sourceNote}
+                          </p>
+                        )}
                       </div>
                     </TableCell>
                     <TableCell>
-                      <Badge
-                        variant={trade.type === "Purchase" ? "gain" : "loss"}
-                      >
-                        {trade.type}
-                      </Badge>
+                      <div className="flex flex-col gap-1">
+                        <Badge
+                          variant={
+                            trade.type === "Purchase"
+                              ? "gain"
+                              : trade.type === "Sale"
+                                ? "loss"
+                                : "secondary"
+                          }
+                        >
+                          {trade.type}
+                        </Badge>
+                        {trade.disclosureType && (
+                          <span className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
+                            {trade.disclosureType.replace(/-/g, " ")}
+                          </span>
+                        )}
+                      </div>
                     </TableCell>
                     <TableCell className="text-right font-mono tabular-nums">
                       {trade.amount}
@@ -217,6 +240,37 @@ export function TradeHistoryTable({
                         )}
                       </TableCell>
                     )}
+                    <TableCell>
+                      {trade.secFilings && trade.secFilings.length > 0 ? (
+                        <div className="flex max-w-xs flex-col gap-1.5">
+                          {trade.secFilings.slice(0, 2).map((filing) => (
+                            <a
+                              key={filing.id}
+                              href={filing.documentUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="group inline-flex items-start gap-1 text-xs text-foreground/90 hover:text-terminal-amber"
+                            >
+                              <ExternalLink className="mt-0.5 h-3 w-3 shrink-0 opacity-60 group-hover:opacity-100" />
+                              <span>
+                                <span className="font-mono">{filing.form}</span>
+                                <span className="text-muted-foreground">
+                                  {" "}
+                                  · {formatDate(filing.filedAt)}
+                                </span>
+                              </span>
+                            </a>
+                          ))}
+                          {trade.secFilings.length > 2 && (
+                            <span className="font-mono text-[10px] text-muted-foreground">
+                              +{trade.secFilings.length - 2} more locked
+                            </span>
+                          )}
+                        </div>
+                      ) : (
+                        <span className="text-muted-foreground">—</span>
+                      )}
+                    </TableCell>
                   </TableRow>
                 );
               })

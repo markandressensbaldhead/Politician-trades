@@ -99,6 +99,8 @@ export function profileTradesToCongressRows(
     return {
       id: row.trade_key,
       created_at: createdAt,
+      sec_data: null,
+      sec_synced_at: null,
       ...row,
     };
   });
@@ -238,6 +240,15 @@ export function formatTradesForAnalysis(
     .join("\n");
 
   const tradeLines = trades.map((trade, index) => {
+    const secData = trade.sec_data as { filings?: Array<{ form: string; filedAt: string }> } | null;
+    const secNote =
+      secData?.filings && secData.filings.length > 0
+        ? ` | SEC: ${secData.filings
+            .slice(0, 2)
+            .map((filing) => `${filing.form} (${filing.filedAt})`)
+            .join("; ")}`
+        : "";
+
     const parts = [
       `${index + 1}. ${trade.trade_date}`,
       trade.ticker,
@@ -248,6 +259,7 @@ export function formatTradesForAnalysis(
       trade.excess_return != null
         ? `Excess return vs S&P 500: ${trade.excess_return.toFixed(2)}%`
         : null,
+      secNote || null,
     ].filter(Boolean);
 
     return parts.join(" | ");

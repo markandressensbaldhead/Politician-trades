@@ -6,6 +6,8 @@ import {
   quiverTradeToRow,
 } from "@/lib/supabase/trades";
 import { sendTradeAlertsToSubscribers } from "@/lib/resend";
+import { isSupabaseConfigured } from "@/lib/supabase/server";
+import { syncSecFilingsForPolitician } from "@/lib/sync-sec-filings";
 import {
   fetchCongressTrades,
   normalizeTradeType,
@@ -56,6 +58,37 @@ export async function syncTradesAndSendAlerts(): Promise<SyncTradesResult> {
   }
 
   const inserted = await insertNewTrades(newRows);
+
+  if (inserted > 0 && isSupabaseConfigured()) {
+    const affectedPoliticians = new Map<
+      string,
+      { name: string; tickers: Set<string> }
+    >();
+
+    for (const row of newRows) {
+      const current = affectedPoliticians.get(row.politician_id) ?? {
+        name: row.politician_name ?? row.politician_id,
+        tickers: new Set<string>(),
+      };
+      current.tickers.add(row.ticker.toUpperCase());
+      affectedPoliticians.set(row.politician_id, current);
+    }
+
+    for (const [politicianId, value] of affectedPoliticians) {
+      try {
+        await syncSecFilingsForPolitician({
+          politicianId,
+          politicianName: value.name,
+          tickers: [...value.tickers],
+        });
+      } catch (error) {
+        console.error(
+          `SEC sync failed for ${value.name}:`,
+          error instanceof Error ? error.message : error
+        );
+      }
+    }
+  }
 
   let emailsSent = 0;
 

@@ -1,5 +1,6 @@
 import { EdgarFiling, FilingInsight, ProfileTrade } from "@/types";
 import { generateFilingAnalysis } from "@/lib/claude";
+import { prepareFilingsResponse } from "@/lib/filing-utils";
 import { getPoliticianProfile } from "@/lib/politician";
 import {
   enrichFilingsWithExcerpts,
@@ -15,6 +16,8 @@ import {
   saveFilingInsight,
 } from "@/lib/supabase/filing-insights";
 import { isSupabaseConfigured } from "@/lib/supabase/server";
+import { getStoredFilingsForPolitician } from "@/lib/supabase/sec-filings";
+import { syncSecFilingsForPolitician } from "@/lib/sync-sec-filings";
 
 export function formatFilingsForAnalysis(input: {
   politicianName: string;
@@ -22,7 +25,15 @@ export function formatFilingsForAnalysis(input: {
   filings: EdgarFiling[];
 }): string {
   const tradeLines = input.trades.slice(0, 25).map((trade, index) => {
-    return `${index + 1}. ${trade.tradeDate} | ${trade.ticker} | ${trade.type} | ${trade.amount} | Filed ${trade.filingDate}`;
+    const secNote =
+      trade.secFilings && trade.secFilings.length > 0
+        ? ` | SEC: ${trade.secFilings
+            .slice(0, 2)
+            .map((filing) => `${filing.form} (${filing.filedAt})`)
+            .join("; ")}`
+        : "";
+
+    return `${index + 1}. ${trade.tradeDate} | ${trade.ticker} | ${trade.type} | ${trade.amount} | Filed ${trade.filingDate}${secNote}`;
   });
 
   const filingLines = input.filings.map((filing, index) => {
@@ -31,7 +42,8 @@ export function formatFilingsForAnalysis(input: {
       : "";
 
     return [
-      `${index + 1}. ${filing.form} filed ${filing.filedAt}`,
+      `${index + 1}. ${filing.form} filed ${filing.filedAt} (${filing.recencyLabel})`,
+      `Category: ${filing.categoryLabel}`,
       `Entity: ${filing.entityName}`,
       filing.ticker ? `Ticker: ${filing.ticker}` : null,
       `Source: ${filing.source}`,
@@ -57,6 +69,8 @@ export async function getFilingsBundle(politicianId: string): Promise<{
   politicianName: string;
   trades: ProfileTrade[];
   filings: EdgarFiling[];
+  latest: EdgarFiling[];
+  grouped: ReturnType<typeof prepareFilingsResponse>["grouped"];
 }> {
   const profile = await getPoliticianProfile(politicianId);
 
@@ -64,19 +78,52 @@ export async function getFilingsBundle(politicianId: string): Promise<{
     throw new Error("Politician not found");
   }
 
-  const filings = isTrumpProfileId(politicianId)
+  if (isSupabaseConfigured()) {
+    let stored = await getStoredFilingsForPolitician(politicianId);
+
+    if (stored.length === 0) {
+      await syncSecFilingsForPolitician({
+        politicianId,
+        politicianName: profile.name,
+        tickers: [...new Set(profile.trades.map((trade) => trade.ticker))],
+      });
+      stored = await getStoredFilingsForPolitician(politicianId);
+    }
+
+    if (stored.length > 0) {
+      const prepared = prepareFilingsResponse(stored);
+
+      return {
+        politicianName: profile.name,
+        trades: profile.trades,
+        ...prepared,
+      };
+    }
+  }
+
+  const ranked = isTrumpProfileId(politicianId)
     ? await getTrumpFilings()
     : await getFilingsForPolitician({
         politicianName: profile.name,
         tickers: profile.trades.map((trade) => trade.ticker),
       });
 
-  const enriched = await enrichFilingsWithExcerpts(filings, 4);
+  const enrichedTop = await enrichFilingsWithExcerpts(ranked, 5);
+  const excerptById = new Map(
+    enrichedTop.map((filing) => [filing.id, filing.excerpt])
+  );
+
+  const filingsWithExcerpts = ranked.map((filing) => ({
+    ...filing,
+    excerpt: excerptById.get(filing.id) ?? filing.excerpt,
+  }));
+
+  const prepared = prepareFilingsResponse(filingsWithExcerpts);
 
   return {
     politicianName: profile.name,
     trades: profile.trades,
-    filings: enriched,
+    ...prepared,
   };
 }
 

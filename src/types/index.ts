@@ -76,6 +76,16 @@ export interface ProfileTrade {
   filingDate: string;
   excessReturn?: number;
   sector?: string;
+  disclosureType?: "transaction" | "reported-holding" | "corporate-event";
+  sourceNote?: string;
+  secFilings?: EdgarFiling[];
+  secSyncedAt?: string;
+}
+
+export interface TradeSecSnapshot {
+  syncedAt: string;
+  filings: EdgarFiling[];
+  primaryFilingId?: string;
 }
 
 export interface PoliticianProfileData {
@@ -106,6 +116,13 @@ export interface MarketQuote {
   shortName: string | null;
 }
 
+export type FilingCategory =
+  | "material-event"
+  | "insider"
+  | "periodic"
+  | "ownership"
+  | "other";
+
 export interface EdgarFiling {
   id: string;
   form: string;
@@ -116,6 +133,18 @@ export interface EdgarFiling {
   source: "politician-search" | "company-filing";
   documentUrl: string;
   excerpt?: string;
+  category: FilingCategory;
+  categoryLabel: string;
+  daysAgo: number;
+  recencyLabel: string;
+  priority: number;
+  isFeatured?: boolean;
+}
+
+export interface GroupedFilings {
+  category: FilingCategory;
+  label: string;
+  filings: EdgarFiling[];
 }
 
 export interface FilingInsight {

@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 
 import { getFilingsBundle } from "@/lib/filing-research";
+import { getStoredFilingsForPolitician } from "@/lib/supabase/sec-filings";
+import { isSupabaseConfigured } from "@/lib/supabase/server";
 
 interface RouteParams {
   params: { politician: string };
@@ -18,12 +20,19 @@ export async function GET(_request: Request, { params }: RouteParams) {
 
   try {
     const bundle = await getFilingsBundle(politicianId);
+    const storedCount = isSupabaseConfigured()
+      ? (await getStoredFilingsForPolitician(politicianId)).length
+      : 0;
 
     return NextResponse.json({
       politicianId,
       politicianName: bundle.politicianName,
       filings: bundle.filings,
+      latest: bundle.latest,
+      grouped: bundle.grouped,
       count: bundle.filings.length,
+      locked: storedCount > 0,
+      storedCount,
     });
   } catch (error) {
     const message =
