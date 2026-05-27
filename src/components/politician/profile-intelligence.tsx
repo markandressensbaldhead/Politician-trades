@@ -10,11 +10,14 @@ import {
   SectorActivity,
   OverlapFlag,
 } from "@/lib/trade-analytics";
+import { RepeatableEdgeStats } from "@/lib/repeatable-edge";
+import { EdgeTierBadge } from "@/components/shared/edge-tier-badge";
 import { formatDate } from "@/lib/utils";
 
 interface ProfileIntelligenceProps {
   politicianName: string;
   lagStats: PoliticianLagStats;
+  edge?: RepeatableEdgeStats;
   sectors: SectorActivity[];
   overlapFlags: OverlapFlag[];
 }
@@ -22,6 +25,7 @@ interface ProfileIntelligenceProps {
 export function ProfileIntelligence({
   politicianName,
   lagStats,
+  edge,
   sectors,
   overlapFlags,
 }: ProfileIntelligenceProps) {
@@ -29,6 +33,42 @@ export function ProfileIntelligence({
 
   return (
     <div className="space-y-4">
+      {edge && (
+        <Card
+          className={
+            edge.isCosplay
+              ? "border-amber-500/20 bg-amber-500/[0.03]"
+              : "border-gain/20 bg-gain/[0.03]"
+          }
+        >
+          <CardHeader className="pb-3">
+            <div className="flex flex-wrap items-center gap-2">
+              <CardTitle className="text-sm font-semibold tracking-tight text-foreground">
+                Repeatable edge vs cosplay
+              </CardTitle>
+              <EdgeTierBadge tier={edge.edgeTier} score={edge.edgeScore} compact />
+            </div>
+            <CardDescription className="text-sm leading-relaxed">
+              Separates copy-study signal from one-off legalized insider optics.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="grid gap-3 sm:grid-cols-3">
+            <StatBlock label="Edge score" value={`${edge.edgeScore}/100`} />
+            <StatBlock
+              label="Hit rate vs S&P"
+              value={`${Math.round(edge.winRate)}%`}
+            />
+            <StatBlock
+              label="Scored trades"
+              value={String(edge.scoredTrades)}
+            />
+          </CardContent>
+          <div className="border-t border-border/60 px-6 pb-4 pt-3 text-xs leading-relaxed text-muted-foreground">
+            {edge.actionHint}
+          </div>
+        </Card>
+      )}
+
       <Card className="border-border/60 bg-card/40">
         <CardHeader className="pb-3">
           <CardTitle className="text-sm font-semibold tracking-tight text-foreground">

@@ -6,6 +6,7 @@ import {
 } from "@/lib/alpha-brief-analytics";
 import { generateAlphaBrief, parseAlphaBriefJson } from "@/lib/claude";
 import { getPoliticianProfile } from "@/lib/politician";
+import { computeRepeatableEdge } from "@/lib/repeatable-edge";
 import {
   getStoredAlphaBrief,
   isAlphaBriefFresh,
@@ -169,10 +170,35 @@ export async function getOrGenerateAlphaBrief(
     );
   }
 
+  const edge = computeRepeatableEdge(
+    trades.map((trade, index) => ({
+      id: trade.trade_key ?? `${trade.politician_id}-${index}`,
+      politicianId: trade.politician_id,
+      politicianName: trade.politician_name ?? profile.name,
+      party: profile.party,
+      chamber: profile.chamber,
+      ticker: trade.ticker,
+      company: trade.ticker,
+      type: trade.trade_type === "Purchase" ? "Purchase" : "Sale",
+      amount: trade.amount_range ?? "Amount undisclosed",
+      tradeDate: trade.trade_date,
+      filingDate: trade.filing_date,
+      disclosureLagDays: null,
+      sector: trade.sector ?? "",
+      excessReturn: trade.excess_return,
+    }))
+  );
+
   const contextBlock = buildAlphaContextBlock(
     trades,
     profile.committee,
-    ALPHA_BRIEF_WINDOW_DAYS
+    ALPHA_BRIEF_WINDOW_DAYS,
+    {
+      edgeScore: edge.edgeScore,
+      edgeTier: edge.edgeTier,
+      winRate: edge.winRate,
+      actionHint: edge.actionHint,
+    }
   );
 
   const tradeHistoryText = formatTradesForAnalysis(

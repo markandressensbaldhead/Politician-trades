@@ -50,6 +50,27 @@ function buildActionCopy(
     cluster?.netFlow === "selling" || trade.clusterNetFlow === "selling";
   const lastName = trade.politicianName.split(" ").pop() ?? trade.politicianName;
 
+  if (isPurchase && trade.politicianEdgeTier === "proven") {
+    return {
+      action: "research-buy",
+      actionLabel: `Copy-study $${trade.ticker}`,
+      actionHeadline: `${lastName} has repeatable edge on $${trade.ticker}`,
+      actionSummary:
+        trade.politicianEdgeActionHint ??
+        `This politician's hit rate is backed by enough sample size to treat today's buy as actionable alpha, not cosplay.`,
+    };
+  }
+
+  if (isPurchase && trade.politicianEdgeTier === "cosplay") {
+    return {
+      action: "watch",
+      actionLabel: `Watch $${trade.ticker}`,
+      actionHeadline: `${lastName}'s $${trade.ticker} buy looks like cosplay`,
+      actionSummary:
+        "One-off optics — wait for crowd confirmation or a proven trader before sizing up.",
+    };
+  }
+
   if (isPurchase && trade.clusterPoliticianCount >= 3 && clusterBuying) {
     return {
       action: "research-buy",
@@ -105,8 +126,41 @@ function buildActionCopy(
 
 function buildCandidatePool(scored: ScoredTrade[]): ScoredTrade[] {
   const purchases = scored.filter((trade) => trade.type === "Purchase");
-  const ranked = (purchases.length > 0 ? purchases : scored)
-    .sort((a, b) => b.significanceScore - a.significanceScore)
+  const edgeBacked = purchases.filter(
+    (trade) =>
+      trade.politicianEdgeTier === "proven" ||
+      trade.politicianEdgeTier === "promising"
+  );
+  const withoutCosplay = purchases.filter(
+    (trade) => trade.politicianEdgeTier !== "cosplay"
+  );
+  const poolSource =
+    edgeBacked.length >= 2
+      ? edgeBacked
+      : withoutCosplay.length >= 2
+        ? withoutCosplay
+        : purchases.length > 0
+          ? purchases
+          : scored;
+
+  const ranked = poolSource
+    .sort((a, b) => {
+      const scoreA =
+        a.significanceScore +
+        (a.politicianEdgeTier === "proven"
+          ? 12
+          : a.politicianEdgeTier === "promising"
+            ? 6
+            : 0);
+      const scoreB =
+        b.significanceScore +
+        (b.politicianEdgeTier === "proven"
+          ? 12
+          : b.politicianEdgeTier === "promising"
+            ? 6
+            : 0);
+      return scoreB - scoreA;
+    })
     .slice(0, 6);
 
   return ranked.length > 0 ? ranked : scored.slice(0, 1);

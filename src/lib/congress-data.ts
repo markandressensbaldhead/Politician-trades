@@ -1,5 +1,7 @@
 import { LeaderboardEntry, Party, SearchPoliticianEntry, Chamber } from "@/types";
 import { politicians } from "@/lib/data";
+import { getPoliticianMetadata } from "@/lib/politician-metadata";
+import { computeRepeatableEdge } from "@/lib/repeatable-edge";
 import { getTrumpSearchEntry } from "@/lib/trump-data";
 import {
   averageExcessReturn,
@@ -77,18 +79,31 @@ export function buildLeaderboardFromUnified(
         .map((trade) => trade.excessReturn ?? 0)
         .filter((value) => Number.isFinite(value));
 
+      const edge = computeRepeatableEdge(group.allTrades);
+      const meta = getPoliticianMetadata(group.id);
+
       return {
         id: group.id,
         name: group.name,
         party: group.party,
         chamber: group.chamber,
-        state: "",
+        state: meta?.state ?? "",
+        district: politicians.find((p) => p.id === group.id)?.district,
         tradesLast90Days: group.recentTrades.length,
         totalTrades: group.allTrades.length,
         returnVsSpy: averageExcessReturn(excessReturns),
+        edgeScore: edge.edgeScore,
+        edgeTier: edge.edgeTier,
+        edgeWinRate: edge.winRate,
+        edgeLabel: edge.edgeLabel,
+        edgeActionHint: edge.actionHint,
       };
     })
     .sort((a, b) => {
+      if (b.edgeScore !== a.edgeScore) {
+        return (b.edgeScore ?? 0) - (a.edgeScore ?? 0);
+      }
+
       if (b.returnVsSpy !== a.returnVsSpy) {
         return b.returnVsSpy - a.returnVsSpy;
       }
@@ -131,22 +146,6 @@ export function buildSearchIndexFromUnified(
     .sort((a, b) => a.name.localeCompare(b.name));
 }
 
-function buildLeaderboardFromMock(): LeaderboardEntry[] {
-  return politicians
-    .map((politician) => ({
-      id: politician.id,
-      name: politician.name,
-      party: politician.party,
-      chamber: politician.chamber,
-      state: politician.state,
-      district: politician.district,
-      tradesLast90Days: politician.tradesLast90Days,
-      totalTrades: politician.totalTrades,
-      returnVsSpy: politician.returnVsSpy,
-    }))
-    .sort((a, b) => b.returnVsSpy - a.returnVsSpy);
-}
-
 function buildSearchIndexFromMock(): SearchPoliticianEntry[] {
   return politicians.map((politician) => ({
     id: politician.id,
@@ -174,10 +173,6 @@ export async function getLeaderboardData(): Promise<{
   source: "live" | "mock";
 }> {
   const { trades, source } = await loadUnifiedTrades();
-
-  if (source === "mock") {
-    return { entries: buildLeaderboardFromMock(), source: "mock" };
-  }
 
   return {
     entries: buildLeaderboardFromUnified(trades),

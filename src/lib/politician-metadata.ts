@@ -1,5 +1,6 @@
 import { politicians } from "@/lib/data";
 import { PoliticianScoreContext } from "@/lib/trade-significance";
+import { EdgeTier } from "@/lib/repeatable-edge";
 import { Party, UnifiedCongressTrade } from "@/types";
 
 export interface PoliticianMetadata {
@@ -35,7 +36,15 @@ export function getPoliticianMetadata(
 
 export function buildPoliticianMetadataIndex(
   trades: UnifiedCongressTrade[],
-  leaderboardReturns?: Array<{ id: string; returnVsSpy: number }>
+  leaderboardReturns?: Array<{
+    id: string;
+    returnVsSpy: number;
+    edgeScore?: number;
+    edgeTier?: EdgeTier;
+    edgeWinRate?: number;
+    edgeLabel?: string;
+    edgeActionHint?: string;
+  }>
 ): Map<string, PoliticianScoreContext & { name?: string; state?: string }> {
   const index = new Map<
     string,
@@ -56,6 +65,11 @@ export function buildPoliticianMetadataIndex(
     index.set(entry.id, {
       ...existing,
       returnVsSpy: entry.returnVsSpy,
+      edgeScore: entry.edgeScore,
+      edgeTier: entry.edgeTier,
+      edgeWinRate: entry.edgeWinRate,
+      edgeLabel: entry.edgeLabel,
+      edgeActionHint: entry.edgeActionHint,
     });
   }
 

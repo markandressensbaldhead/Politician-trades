@@ -25,6 +25,7 @@ import {
   getPoliticianLagStats,
   getSectorActivity,
 } from "@/lib/trade-analytics";
+import { computeRepeatableEdge } from "@/lib/repeatable-edge";
 import { cn, formatCurrency, formatPercent } from "@/lib/utils";
 
 interface PoliticianProfileProps {
@@ -70,6 +71,7 @@ export function PoliticianProfile({
   );
 
   const lagStats = getPoliticianLagStats(unifiedTrades);
+  const edgeStats = computeRepeatableEdge(unifiedTrades);
   const sectors = getSectorActivity(unifiedTrades);
   const overlapFlags = getCommitteeOverlapFlags({
     trades: unifiedTrades,
@@ -254,6 +256,7 @@ export function PoliticianProfile({
               <ProfileIntelligence
                 politicianName={politician.name}
                 lagStats={lagStats}
+                edge={edgeStats}
                 sectors={sectors}
                 overlapFlags={overlapFlags}
               />

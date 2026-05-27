@@ -1,5 +1,6 @@
 import { LeaderboardPanel } from "@/components/leaderboard/leaderboard-panel";
 import { DiscoveryRail } from "@/components/dashboard/discovery-rail";
+import { EdgeLeadersPanel } from "@/components/dashboard/edge-leaders-panel";
 import { HighConvictionFeed } from "@/components/dashboard/high-conviction-feed";
 import { LiveTradeFeed } from "@/components/dashboard/live-trade-feed";
 import { MarketPulse } from "@/components/dashboard/market-pulse";
@@ -56,6 +57,11 @@ export default async function HomePage() {
     entries.map((entry) => ({
       id: entry.id,
       returnVsSpy: entry.returnVsSpy,
+      edgeScore: entry.edgeScore,
+      edgeTier: entry.edgeTier,
+      edgeWinRate: entry.edgeWinRate,
+      edgeLabel: entry.edgeLabel,
+      edgeActionHint: entry.edgeActionHint,
     }))
   );
   const highConviction = getHighConvictionTrades(allTrades, 6, clusterIndex, {
@@ -108,6 +114,8 @@ export default async function HomePage() {
         topPerformer={topPerformer ?? null}
         topCluster={clusters[0] ?? null}
       />
+
+      <EdgeLeadersPanel entries={sortedEntries} />
 
       <XNewsPanel topical={xTopical} />
 

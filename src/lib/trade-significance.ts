@@ -1,6 +1,12 @@
 import { UnifiedCongressTrade } from "@/types";
 import { COPY } from "@/lib/brand";
 import {
+  getCosplayPenalty,
+  getEdgeFactorWeight,
+  getEdgeSortBoost,
+  EdgeTier,
+} from "@/lib/repeatable-edge";
+import {
   committeeOverlapsSector,
   getDisclosureLagDays,
 } from "@/lib/trade-analytics";
@@ -15,6 +21,7 @@ export type SignificanceFactorId =
   | "cluster"
   | "conviction"
   | "trackrecord"
+  | "repeatableedge"
   | "committee";
 
 export interface SignificanceFactor {
@@ -27,6 +34,11 @@ export interface SignificanceFactor {
 export interface PoliticianScoreContext {
   returnVsSpy?: number;
   committee?: string;
+  edgeScore?: number;
+  edgeTier?: EdgeTier;
+  edgeWinRate?: number;
+  edgeLabel?: string;
+  edgeActionHint?: string;
 }
 
 export interface ScoredTrade extends UnifiedCongressTrade {
@@ -42,6 +54,10 @@ export interface ScoredTrade extends UnifiedCongressTrade {
   disclosureLag: number | null;
   amountTier: "mega" | "large" | "medium" | "small" | "unknown";
   politicianReturnVsSpy: number | null;
+  politicianEdgeScore: number | null;
+  politicianEdgeTier: EdgeTier | null;
+  politicianEdgeLabel: string | null;
+  politicianEdgeActionHint: string | null;
   hasCommitteeOverlap: boolean;
 }
 
@@ -52,6 +68,10 @@ export interface ScoreTradeContext {
   clusterMemberNames?: string[];
   politicianReturnVsSpy?: number;
   politicianCommittee?: string;
+  politicianEdgeScore?: number;
+  politicianEdgeTier?: EdgeTier;
+  politicianEdgeLabel?: string;
+  politicianEdgeActionHint?: string;
 }
 
 export interface HighConvictionSummary {
@@ -73,6 +93,7 @@ const FACTOR_MAX: Record<SignificanceFactorId, number> = {
   cluster: 15,
   conviction: 4,
   trackrecord: 12,
+  repeatableedge: 15,
   committee: 10,
 };
 
@@ -256,6 +277,8 @@ function buildInvestorTake(input: {
   clusterMemberNames: string[];
   excessReturn: number | null;
   politicianReturnVsSpy: number | null;
+  politicianEdgeTier: EdgeTier | null;
+  politicianEdgeActionHint: string | null;
   hasCommitteeOverlap: boolean;
   politicianCommittee?: string;
   amountTier: ScoredTrade["amountTier"];
@@ -275,6 +298,18 @@ function buildInvestorTake(input: {
 
   if (input.hasCommitteeOverlap && input.politicianCommittee) {
     return `${lastName} serves on ${input.politicianCommittee} and added ${input.sector || "sector"} exposure via ${input.ticker}. Flag for potential committee–sector overlap.`;
+  }
+
+  if (
+    input.politicianEdgeTier === "proven" &&
+    input.type === "Purchase" &&
+    input.politicianEdgeActionHint
+  ) {
+    return input.politicianEdgeActionHint;
+  }
+
+  if (input.politicianEdgeTier === "cosplay" && input.type === "Purchase") {
+    return `${lastName}'s track record looks like legalized insider cosplay — one headline trade, not repeatable edge. Only act if the crowd or size confirms.`;
   }
 
   if (
@@ -307,9 +342,12 @@ function buildSignalTag(input: {
   excessReturn: number | null;
   hasCommitteeOverlap: boolean;
   politicianReturnVsSpy: number | null;
+  politicianEdgeTier: EdgeTier | null;
   recencyWeight: number;
   type: UnifiedCongressTrade["type"];
 }): string {
+  if (input.politicianEdgeTier === "proven") return "Repeatable edge";
+  if (input.politicianEdgeTier === "cosplay") return "Cosplay risk";
   if (input.clusterPoliticianCount >= 3 && input.clusterNetFlow === "buying") {
     return "Hill cluster";
   }
@@ -352,6 +390,10 @@ function mergeContext(
     ...cluster,
     politicianReturnVsSpy: politician?.returnVsSpy,
     politicianCommittee: politician?.committee,
+    politicianEdgeScore: politician?.edgeScore,
+    politicianEdgeTier: politician?.edgeTier,
+    politicianEdgeLabel: politician?.edgeLabel,
+    politicianEdgeActionHint: politician?.edgeActionHint,
   };
 }
 
@@ -368,6 +410,10 @@ export function scoreTrade(
   const clusterMemberNames = context?.clusterMemberNames ?? [];
   const politicianReturnVsSpy = context?.politicianReturnVsSpy ?? null;
   const politicianCommittee = context?.politicianCommittee;
+  const politicianEdgeScore = context?.politicianEdgeScore ?? null;
+  const politicianEdgeTier = context?.politicianEdgeTier ?? null;
+  const politicianEdgeLabel = context?.politicianEdgeLabel ?? null;
+  const politicianEdgeActionHint = context?.politicianEdgeActionHint ?? null;
   const disclosureLag =
     trade.disclosureLagDays ??
     getDisclosureLagDays(trade.tradeDate, trade.filingDate);
@@ -451,6 +497,22 @@ export function scoreTrade(
   );
   if (trackRecordFactor) factors.push(trackRecordFactor);
 
+  const edgeWeight = getEdgeFactorWeight(politicianEdgeScore ?? undefined);
+  if (edgeWeight >= 11) {
+    reasons.push("Repeatable trader edge");
+  } else if (politicianEdgeTier === "cosplay") {
+    reasons.push("Cosplay risk — thin or outlier-driven history");
+  }
+  score += edgeWeight;
+  const edgeFactor = buildFactor(
+    "repeatableedge",
+    politicianEdgeTier === "cosplay" ? "Cosplay filter" : "Repeatable edge",
+    edgeWeight
+  );
+  if (edgeFactor) factors.push(edgeFactor);
+
+  score -= getCosplayPenalty(politicianEdgeTier ?? undefined);
+
   const committeeWeight = getCommitteeOverlapWeight(
     politicianCommittee,
     trade.sector
@@ -499,6 +561,8 @@ export function scoreTrade(
     clusterMemberNames,
     excessReturn: trade.excessReturn,
     politicianReturnVsSpy,
+    politicianEdgeTier,
+    politicianEdgeActionHint,
     hasCommitteeOverlap,
     politicianCommittee,
     amountTier,
@@ -511,6 +575,7 @@ export function scoreTrade(
     excessReturn: trade.excessReturn,
     hasCommitteeOverlap,
     politicianReturnVsSpy,
+    politicianEdgeTier,
     recencyWeight,
     type: trade.type,
   });
@@ -529,6 +594,10 @@ export function scoreTrade(
     disclosureLag,
     amountTier,
     politicianReturnVsSpy,
+    politicianEdgeScore,
+    politicianEdgeTier,
+    politicianEdgeLabel,
+    politicianEdgeActionHint,
     hasCommitteeOverlap,
   };
 }
@@ -639,7 +708,25 @@ export function getHighConvictionTrades(
     ),
     clusterIndex,
     options.politicianIndex
-  ).filter((trade) => trade.significanceScore >= minScore);
+  )
+    .filter((trade) => trade.significanceScore >= minScore)
+    .sort((a, b) => {
+      const scoreA =
+        a.significanceScore +
+        getEdgeSortBoost(a.politicianEdgeTier ?? undefined);
+      const scoreB =
+        b.significanceScore +
+        getEdgeSortBoost(b.politicianEdgeTier ?? undefined);
+
+      if (scoreB !== scoreA) {
+        return scoreB - scoreA;
+      }
+
+      return (
+        new Date(b.filingDate ?? b.tradeDate).getTime() -
+        new Date(a.filingDate ?? a.tradeDate).getTime()
+      );
+    });
 
   return diversify ? diversifyTrades(ranked, limit) : ranked.slice(0, limit);
 }

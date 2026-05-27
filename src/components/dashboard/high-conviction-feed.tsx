@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 
 import { TradeSignificanceBadge } from "@/components/shared/trade-significance-badge";
+import { EdgeTierBadge } from "@/components/shared/edge-tier-badge";
 import { PartyBadge } from "@/components/leaderboard/party-badge";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -38,6 +39,8 @@ const tagStyles: Record<string, string> = {
   "Committee overlap": "border-primary/30 bg-primary/10 text-primary",
   "Beating market": "border-gain/30 bg-gain/10 text-gain",
   "Top trader": "border-primary/30 bg-primary/10 text-primary",
+  "Repeatable edge": "border-gain/30 bg-gain/10 text-gain",
+  "Cosplay risk": "border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-300",
   "Fresh filing": "border-border bg-secondary text-foreground",
 };
 
@@ -77,7 +80,8 @@ export function HighConvictionFeed({ trades }: HighConvictionFeedProps) {
             </CardTitle>
             <CardDescription className="max-w-2xl leading-relaxed">
               Skip the noise. One strong pick per ticker — size, crowd overlap,
-              and market follow-through, ranked for capital deployers.
+              market follow-through, and repeatable trader edge ranked for capital
+              deployers.
             </CardDescription>
           </div>
           <SummaryStats summary={summary} />
@@ -107,7 +111,8 @@ export function HighConvictionFeed({ trades }: HighConvictionFeedProps) {
         <div className="flex flex-col gap-3 border-t border-border pt-4 sm:flex-row sm:items-center sm:justify-between">
           <p className="text-xs text-muted-foreground">
             Scores combine trade size, recency, cluster overlap, committee fit,
-            trader history, and vs-S&amp;P performance when available.
+            repeatable edge vs cosplay risk, and vs-S&amp;P performance when
+            available.
           </p>
           <Button variant="outline" size="sm" asChild>
             <Link href="/feed">
@@ -314,6 +319,13 @@ function FeaturedTrade({ trade, rank }: { trade: ScoredTrade; rank: number }) {
               {trade.chamber}
             </Badge>
             <span className="text-xs text-muted-foreground">{trade.amount}</span>
+            {trade.politicianEdgeTier && (
+              <EdgeTierBadge
+                tier={trade.politicianEdgeTier}
+                score={trade.politicianEdgeScore ?? undefined}
+                compact
+              />
+            )}
             {trade.politicianReturnVsSpy != null && (
               <span className="text-xs text-muted-foreground">
                 · Trader avg{" "}

@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import Link from "next/link";
 import { ArrowUpRight, TrendingDown, TrendingUp } from "lucide-react";
 
+import { EdgeTierBadge } from "@/components/shared/edge-tier-badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { ChamberFilterBar } from "@/components/leaderboard/chamber-filter";
@@ -40,8 +41,11 @@ function getRankStyle(rank: number) {
   return "text-muted-foreground";
 }
 
+type LeaderboardSort = "edge" | "return";
+
 export function LeaderboardPanel({ entries, source }: LeaderboardPanelProps) {
   const [chamberFilter, setChamberFilter] = useState<ChamberFilter>("all");
+  const [sortBy, setSortBy] = useState<LeaderboardSort>("edge");
 
   const counts = useMemo(
     () => ({
@@ -53,10 +57,28 @@ export function LeaderboardPanel({ entries, source }: LeaderboardPanelProps) {
   );
 
   const filteredEntries = useMemo(() => {
-    if (chamberFilter === "all") return entries;
-    const chamber = chamberFilter === "senate" ? "Senate" : "House";
-    return entries.filter((entry) => entry.chamber === chamber);
-  }, [entries, chamberFilter]);
+    const chamberFiltered =
+      chamberFilter === "all"
+        ? entries
+        : entries.filter(
+            (entry) =>
+              entry.chamber === (chamberFilter === "senate" ? "Senate" : "House")
+          );
+
+    return [...chamberFiltered].sort((a, b) => {
+      if (sortBy === "edge") {
+        if ((b.edgeScore ?? 0) !== (a.edgeScore ?? 0)) {
+          return (b.edgeScore ?? 0) - (a.edgeScore ?? 0);
+        }
+      }
+
+      if (b.returnVsSpy !== a.returnVsSpy) {
+        return b.returnVsSpy - a.returnVsSpy;
+      }
+
+      return b.tradesLast90Days - a.tradesLast90Days;
+    });
+  }, [entries, chamberFilter, sortBy]);
 
   return (
     <div className="surface-card overflow-hidden">
@@ -64,8 +86,8 @@ export function LeaderboardPanel({ entries, source }: LeaderboardPanelProps) {
         <div className="space-y-1">
           <h2 className="section-title">Who beats the S&amp;P</h2>
           <p className="section-description">
-            Copy-study list — ranked by estimated return vs the S&amp;P over the
-            last 90 days. Click a name, see every trade.
+            Copy-study list — default sort is repeatable edge (hit rate +
+            consistency), not one lucky headline trade.
           </p>
         </div>
 
@@ -73,6 +95,26 @@ export function LeaderboardPanel({ entries, source }: LeaderboardPanelProps) {
           <span className="status-pill">
             {source === "live" ? "Live data" : "Sample data"}
           </span>
+          <div className="flex rounded-lg border border-border p-0.5">
+            <Button
+              type="button"
+              size="sm"
+              variant={sortBy === "edge" ? "default" : "ghost"}
+              className="h-8 text-xs"
+              onClick={() => setSortBy("edge")}
+            >
+              Repeatable edge
+            </Button>
+            <Button
+              type="button"
+              size="sm"
+              variant={sortBy === "return" ? "default" : "ghost"}
+              className="h-8 text-xs"
+              onClick={() => setSortBy("return")}
+            >
+              vs S&amp;P
+            </Button>
+          </div>
           <ChamberFilterBar
             value={chamberFilter}
             onChange={setChamberFilter}
@@ -98,6 +140,9 @@ export function LeaderboardPanel({ entries, source }: LeaderboardPanelProps) {
                 Trades (90D)
               </TableHead>
               <TableHead className="text-right text-xs font-medium text-muted-foreground">
+                Edge
+              </TableHead>
+              <TableHead className="text-right text-xs font-medium text-muted-foreground">
                 vs. S&amp;P 500
               </TableHead>
               <TableHead className="w-32 text-right text-xs font-medium text-muted-foreground">
@@ -109,7 +154,7 @@ export function LeaderboardPanel({ entries, source }: LeaderboardPanelProps) {
             {filteredEntries.length === 0 ? (
               <TableRow>
                 <TableCell
-                  colSpan={6}
+                  colSpan={7}
                   className="py-16 text-center text-sm text-muted-foreground"
                 >
                   No politicians match this filter.
@@ -167,6 +212,17 @@ export function LeaderboardPanel({ entries, source }: LeaderboardPanelProps) {
                       <span className="text-base font-semibold tabular-nums">
                         {entry.tradesLast90Days}
                       </span>
+                    </TableCell>
+
+                    <TableCell className="text-right">
+                      <div className="flex flex-col items-end gap-1">
+                        <span className="text-base font-semibold tabular-nums text-primary">
+                          {entry.edgeScore ?? "—"}
+                        </span>
+                        {entry.edgeTier && (
+                          <EdgeTierBadge tier={entry.edgeTier} compact />
+                        )}
+                      </div>
                     </TableCell>
 
                     <TableCell className="text-right">

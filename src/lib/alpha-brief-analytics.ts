@@ -20,7 +20,13 @@ export function filterTradesInWindow(
 export function buildAlphaContextBlock(
   trades: CongressTradeRow[],
   committee: string | undefined,
-  days = ALPHA_BRIEF_WINDOW_DAYS
+  days = ALPHA_BRIEF_WINDOW_DAYS,
+  edgeContext?: {
+    edgeScore?: number;
+    edgeTier?: string;
+    winRate?: number;
+    actionHint?: string;
+  }
 ): string {
   const recent = filterTradesInWindow(trades, days);
   const purchases = recent.filter((trade) => trade.trade_type === "Purchase");
@@ -76,9 +82,26 @@ export function buildAlphaContextBlock(
     `Trades in window: ${recent.length}`,
     `Purchases: ${purchases.length} | Sales: ${sales.length}`,
     committee ? `Committee jurisdiction: ${committee}` : "Committee: not provided",
-    "",
-    "Tickers with activity in window:",
   ];
+
+  if (edgeContext?.edgeTier) {
+    lines.push(
+      "",
+      "Repeatable edge profile:",
+      `- Tier: ${edgeContext.edgeTier}`,
+      edgeContext.edgeScore != null
+        ? `- Edge score: ${edgeContext.edgeScore}/100`
+        : "- Edge score: unavailable",
+      edgeContext.winRate != null
+        ? `- Hit rate vs S&P: ${Math.round(edgeContext.winRate)}%`
+        : "- Hit rate vs S&P: unavailable",
+      edgeContext.actionHint
+        ? `- Action framing: ${edgeContext.actionHint}`
+        : "- Action framing: use cluster/size if edge is thin"
+    );
+  }
+
+  lines.push("", "Tickers with activity in window:");
 
   if (byTicker.size === 0) {
     lines.push("- None — no disclosed trades in the last 30 days.");

@@ -2,6 +2,8 @@ export type Party = "Democrat" | "Republican" | "Independent";
 export type Chamber = "Senate" | "House" | "Executive";
 export type TransactionType = "Purchase" | "Sale";
 
+import type { EdgeTier } from "@/lib/repeatable-edge";
+
 export interface UnifiedCongressTrade {
   id: string;
   politicianId: string;
@@ -77,6 +79,11 @@ export interface LeaderboardEntry {
   tradesLast90Days: number;
   totalTrades?: number;
   returnVsSpy: number;
+  edgeScore?: number;
+  edgeTier?: EdgeTier;
+  edgeWinRate?: number;
+  edgeLabel?: string;
+  edgeActionHint?: string;
 }
 
 export interface SearchPoliticianEntry {
