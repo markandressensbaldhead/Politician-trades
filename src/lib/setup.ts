@@ -165,6 +165,12 @@ export async function runSupabaseSchema(): Promise<{ executed: number }> {
         }
       }
     }
+
+    try {
+      await client.query("NOTIFY pgrst, 'reload schema';");
+    } catch {
+      // PostgREST reload is best-effort; tables may take a few seconds otherwise.
+    }
   } finally {
     await client.end();
   }
