@@ -249,15 +249,28 @@ export function formatTradesForAnalysis(
             .join("; ")}`
         : "";
 
+    const lagDays =
+      trade.filing_date && trade.trade_date
+        ? Math.max(
+            0,
+            Math.floor(
+              (new Date(trade.filing_date).getTime() -
+                new Date(trade.trade_date).getTime()) /
+                (24 * 60 * 60 * 1000)
+            )
+          )
+        : null;
+
     const parts = [
-      `${index + 1}. ${trade.trade_date}`,
+      `${index + 1}. Trade ${trade.trade_date}`,
+      trade.filing_date ? `Filed ${trade.filing_date}` : null,
+      lagDays != null ? `Disclosure lag ${lagDays}d` : null,
       trade.ticker,
       trade.trade_type,
       trade.amount_range ?? "Amount undisclosed",
-      trade.filing_date ? `Filed ${trade.filing_date}` : null,
       trade.sector ? `Sector: ${trade.sector}` : null,
       trade.excess_return != null
-        ? `Excess return vs S&P 500: ${trade.excess_return.toFixed(2)}%`
+        ? `Excess return vs SPY: ${trade.excess_return.toFixed(2)}%`
         : null,
       secNote || null,
     ].filter(Boolean);

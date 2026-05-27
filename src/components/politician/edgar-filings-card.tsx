@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { ExternalLink, FileText, Loader2, Sparkles } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
@@ -14,6 +14,10 @@ import {
 } from "@/components/ui/card";
 import { EdgarFiling, FilingInsight, GroupedFilings, InvestmentSummary } from "@/types";
 import { InvestmentActivityList } from "@/components/politician/investment-activity-list";
+import {
+  RefreshAnalysisButton,
+  ResearchDeskOutput,
+} from "@/components/politician/research-desk-output";
 import { cn, formatDate } from "@/lib/utils";
 
 interface FilingsApiResponse {
@@ -172,14 +176,17 @@ export function EdgarFilingsCard({
       return;
     }
 
-    let cancelled = false;
+    loadFilingInsight(false);
+  }, [politicianId, filings.length, loadingFilings]);
 
-    async function loadInsight() {
+  const loadFilingInsight = useCallback(
+    async (refresh = false) => {
       setLoadingInsight(true);
 
       try {
+        const query = refresh ? "?refresh=1" : "";
         const response = await fetch(
-          `/api/filing-insights/${encodeURIComponent(politicianId)}`
+          `/api/filing-insights/${encodeURIComponent(politicianId)}${query}`
         );
         const data = await response.json();
 
@@ -187,34 +194,14 @@ export function EdgarFilingsCard({
           throw new Error(data.error ?? "Failed to analyze filings");
         }
 
-        if (!cancelled) {
-          setInsight(data);
-        }
+        setInsight(data);
       } catch {
-        if (!cancelled) {
-          setInsight(null);
-        }
+        setInsight(null);
       } finally {
-        if (!cancelled) {
-          setLoadingInsight(false);
-        }
+        setLoadingInsight(false);
       }
-    }
-
-    loadInsight();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [politicianId, filings.length, loadingFilings]);
-
-  const insightParagraphs = useMemo(
-    () =>
-      insight?.analysis
-        .split(/\n\s*\n/)
-        .map((paragraph) => paragraph.trim())
-        .filter(Boolean) ?? [],
-    [insight?.analysis]
+    },
+    [politicianId]
   );
 
   const featuredIds = useMemo(
@@ -314,35 +301,37 @@ export function EdgarFilingsCard({
         )}
 
         <div className="rounded-md border border-border/60 bg-background/20 p-4">
-          <div className="mb-3 flex items-center gap-2">
-            <Sparkles className="h-4 w-4 text-terminal-amber" />
-            <p className="font-mono text-xs uppercase tracking-[0.18em] text-terminal-amber">
-              Claude Filing Analysis
-            </p>
+          <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
+            <div className="flex items-center gap-2">
+              <Sparkles className="h-4 w-4 text-terminal-amber" />
+              <p className="font-mono text-xs uppercase tracking-[0.18em] text-terminal-amber">
+                EDGAR Linkage Memo
+              </p>
+            </div>
+            <RefreshAnalysisButton
+              loading={loadingInsight}
+              onRefresh={() => loadFilingInsight(true)}
+            />
           </div>
 
           {loadingInsight ? (
             <div className="flex items-center gap-3 py-6 text-muted-foreground">
               <Loader2 className="h-4 w-4 animate-spin text-terminal-amber" />
               <span className="font-mono text-sm">
-                Extracting data from filings...
+                Running event-driven review...
               </span>
             </div>
           ) : insight ? (
-            <div className="space-y-3">
+            <div className="space-y-4">
               <p className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
                 {insight.cached ? "Cached" : "Fresh"} · {insight.filingsReviewed}{" "}
                 filings reviewed · Updated {formatDate(insight.generatedAt)}
               </p>
-              {insightParagraphs.map((paragraph, index) => (
-                <p key={index} className="text-sm leading-7 text-foreground/90">
-                  {paragraph}
-                </p>
-              ))}
+              <ResearchDeskOutput analysis={insight.analysis} />
             </div>
           ) : (
             <p className="text-sm text-muted-foreground">
-              Filing analysis will appear once SEC documents are available.
+              EDGAR memo will appear once SEC documents are available.
             </p>
           )}
         </div>

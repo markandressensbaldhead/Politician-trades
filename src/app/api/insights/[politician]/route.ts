@@ -6,8 +6,9 @@ interface RouteParams {
   params: { politician: string };
 }
 
-export async function GET(_request: Request, { params }: RouteParams) {
+export async function GET(request: Request, { params }: RouteParams) {
   const politicianId = decodeURIComponent(params.politician);
+  const refresh = new URL(request.url).searchParams.get("refresh") === "1";
 
   if (!politicianId) {
     return NextResponse.json(
@@ -17,7 +18,9 @@ export async function GET(_request: Request, { params }: RouteParams) {
   }
 
   try {
-    const insight = await getOrGenerateInsight(politicianId);
+    const insight = await getOrGenerateInsight(politicianId, {
+      forceRefresh: refresh,
+    });
 
     return NextResponse.json({
       politicianId: insight.politicianId,

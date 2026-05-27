@@ -66,7 +66,8 @@ async function ensureTradesForAnalysis(politicianId: string) {
 }
 
 export async function getOrGenerateInsight(
-  politicianId: string
+  politicianId: string,
+  options?: { forceRefresh?: boolean }
 ): Promise<PoliticianInsight> {
   if (!isSupabaseConfigured()) {
     throw new Error(
@@ -74,10 +75,12 @@ export async function getOrGenerateInsight(
     );
   }
 
-  const stored = await getStoredInsight(politicianId);
+  if (!options?.forceRefresh) {
+    const stored = await getStoredInsight(politicianId);
 
-  if (stored && isInsightFresh(stored.generatedAt)) {
-    return { ...stored, cached: true };
+    if (stored && isInsightFresh(stored.generatedAt)) {
+      return { ...stored, cached: true };
+    }
   }
 
   const result = await ensureTradesForAnalysis(politicianId);

@@ -155,13 +155,14 @@ export async function getFilingsBundle(politicianId: string): Promise<{
 }
 
 export async function getOrGenerateFilingInsight(
-  politicianId: string
+  politicianId: string,
+  options?: { forceRefresh?: boolean }
 ): Promise<FilingInsight> {
   if (!process.env.ANTHROPIC_API_KEY) {
     throw new Error("ANTHROPIC_API_KEY is not configured");
   }
 
-  if (isSupabaseConfigured()) {
+  if (isSupabaseConfigured() && !options?.forceRefresh) {
     const stored = await getStoredFilingInsight(politicianId);
 
     if (stored && isFilingInsightFresh(stored.generatedAt)) {
