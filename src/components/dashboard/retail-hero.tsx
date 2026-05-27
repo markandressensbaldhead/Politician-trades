@@ -1,9 +1,11 @@
 import Link from "next/link";
 import { ArrowRight, Sparkles, TrendingUp, Zap } from "lucide-react";
 
-import { Button } from "@/components/ui/button";
 import { NextDisclosureSync } from "@/components/shared/next-disclosure-sync";
+import { DataSourceBadge } from "@/components/shared/data-source-badge";
+import { Button } from "@/components/ui/button";
 import { BRAND, COPY } from "@/lib/brand";
+import type { CongressDataProvider } from "@/lib/congress-trade-source";
 import { cn, formatPercent } from "@/lib/utils";
 
 interface RetailHeroProps {
@@ -15,6 +17,7 @@ interface RetailHeroProps {
   tradeCount90d: number;
   memberCount: number;
   isLive: boolean;
+  dataProvider?: CongressDataProvider;
 }
 
 export function RetailHero({
@@ -26,6 +29,7 @@ export function RetailHero({
   tradeCount90d,
   memberCount,
   isLive,
+  dataProvider = "none",
 }: RetailHeroProps) {
   const lastName = topPerformerName.split(" ").pop() ?? topPerformerName;
 
@@ -39,6 +43,9 @@ export function RetailHero({
               {isLive ? "Live disclosures" : "Demo mode"}
             </span>
             {isLive && <NextDisclosureSync variant="pill" />}
+            {dataProvider !== "none" && (
+              <DataSourceBadge provider={dataProvider} />
+            )}
             <span className="status-pill">Free · No login</span>
             <span className="status-pill">STOCK Act data</span>
           </div>

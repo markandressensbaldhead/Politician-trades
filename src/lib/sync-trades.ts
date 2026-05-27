@@ -3,41 +3,48 @@ import { getSubscribersForPolitician, getSubscribersForTicker } from "@/lib/supa
 import {
   getExistingTradeKeys,
   insertNewTrades,
-  quiverTradeToRow,
+  TradeInsertRow,
 } from "@/lib/supabase/trades";
 import { sendTradeAlertsToSubscribers } from "@/lib/resend";
 import { isSupabaseConfigured } from "@/lib/supabase/server";
 import { syncSecFilingsForPolitician } from "@/lib/sync-sec-filings";
 import {
-  fetchCongressTrades,
-  normalizeTradeType,
-} from "@/lib/quiverquant";
+  fetchLiveCongressTradeRows,
+  getPreferredCongressProvider,
+} from "@/lib/congress-trade-source";
+import { isUnusualWhalesConfigured } from "@/lib/unusual-whales";
 
 export interface SyncTradesResult {
   scanned: number;
   inserted: number;
   emailsSent: number;
+  provider: ReturnType<typeof getPreferredCongressProvider>;
+}
+
+function alertTradeType(tradeType: string): "buy" | "sell" {
+  return tradeType === "Purchase" ? "buy" : "sell";
 }
 
 export async function syncTradesAndSendAlerts(): Promise<SyncTradesResult> {
-  const apiKey = process.env.QUIVERQUANT_API_KEY;
-
-  if (!apiKey) {
-    throw new Error("QUIVERQUANT_API_KEY is not configured");
+  if (
+    !isUnusualWhalesConfigured() &&
+    !process.env.QUIVERQUANT_API_KEY?.trim()
+  ) {
+    throw new Error(
+      "Configure UNUSUAL_WHALES_API_KEY or QUIVERQUANT_API_KEY for trade sync"
+    );
   }
 
-  const [rawTrades, existingKeys] = await Promise.all([
-    fetchCongressTrades(apiKey),
+  const [{ rows: rawRows, provider }, existingKeys] = await Promise.all([
+    fetchLiveCongressTradeRows({ maxPages: 24, lookbackMonths: 18 }),
     getExistingTradeKeys(),
   ]);
 
   const isBootstrap = existingKeys.size === 0;
-  const newRows = [];
+  const newRows: TradeInsertRow[] = [];
   const alerts: NewTradeAlert[] = [];
 
-  for (const trade of rawTrades) {
-    const row = quiverTradeToRow(trade);
-
+  for (const row of rawRows) {
     if (existingKeys.has(row.trade_key)) {
       continue;
     }
@@ -48,9 +55,9 @@ export async function syncTradesAndSendAlerts(): Promise<SyncTradesResult> {
     if (!isBootstrap) {
       alerts.push({
         politicianId: row.politician_id,
-        politicianName: row.politician_name ?? trade.Representative,
+        politicianName: row.politician_name ?? row.politician_id,
         ticker: row.ticker,
-        tradeType: normalizeTradeType(trade.Transaction),
+        tradeType: alertTradeType(row.trade_type),
         amountRange: row.amount_range ?? "Amount undisclosed",
         tradeDate: row.trade_date,
       });
@@ -113,8 +120,9 @@ export async function syncTradesAndSendAlerts(): Promise<SyncTradesResult> {
   }
 
   return {
-    scanned: rawTrades.length,
+    scanned: rawRows.length,
     inserted,
     emailsSent,
+    provider,
   };
 }

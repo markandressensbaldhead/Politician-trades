@@ -1,11 +1,13 @@
 import Link from "next/link";
 
 import { LiveTradeFeed } from "@/components/dashboard/live-trade-feed";
+import { DataSourceBadge } from "@/components/shared/data-source-badge";
 import { ExportCsvLink } from "@/components/shared/export-csv-button";
 import { FollowTickerButton } from "@/components/shared/follow-ticker-button";
 import { DisclosureLagBadge } from "@/components/shared/disclosure-lag-badge";
 import { TradeSignificanceBadge } from "@/components/shared/trade-significance-badge";
 import { PartyBadge } from "@/components/leaderboard/party-badge";
+import { TickerHoldersPanel } from "@/components/ticker/ticker-holders-panel";
 import { TickerIntelligencePanel } from "@/components/ticker/ticker-intelligence-panel";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -28,7 +30,12 @@ import { BRAND } from "@/lib/brand";
 import { buildClusterIndex, getTradeClusters } from "@/lib/trade-clusters";
 import { scoreTrades } from "@/lib/trade-significance";
 import { buildTickerIntelligence } from "@/lib/ticker-intelligence";
+import { getLiveDataSetupMessage } from "@/lib/data-provider";
 import { loadUnifiedTrades, toLegacyRecentTrade } from "@/lib/unified-trades";
+import {
+  fetchPoliticianHoldersByTicker,
+  isUnusualWhalesConfigured,
+} from "@/lib/unusual-whales";
 import { cn, formatDate, formatPercent } from "@/lib/utils";
 
 interface TickerPageProps {
@@ -37,13 +44,18 @@ interface TickerPageProps {
 
 export async function TickerPageContent({ symbol }: TickerPageProps) {
   const ticker = symbol.toUpperCase();
-  const { trades: allTrades, source } = await loadUnifiedTrades();
+  const { trades: allTrades, source, provider } = await loadUnifiedTrades();
   const trades = allTrades
     .filter((trade) => trade.ticker === ticker)
     .sort(
       (a, b) =>
         new Date(b.tradeDate).getTime() - new Date(a.tradeDate).getTime()
     );
+
+  const holders =
+    isUnusualWhalesConfigured() && trades.length > 0
+      ? await fetchPoliticianHoldersByTicker(ticker, true).catch(() => [])
+      : [];
 
   const intelligence = buildTickerIntelligence(ticker, trades, allTrades);
   const clusters = getTradeClusters(allTrades, {
@@ -73,9 +85,12 @@ export async function TickerPageContent({ symbol }: TickerPageProps) {
           Intelligence brief, vs-S&P performance, crowd clusters, and every
           disclosed buy and sell — the deep dive {BRAND.name} is built for.
         </p>
+        <div className="flex flex-wrap items-center gap-2">
+          <DataSourceBadge provider={provider} />
+        </div>
         {source === "mock" && (
           <p className="rounded-lg border border-primary/20 bg-primary/[0.04] px-3 py-2 text-sm text-muted-foreground">
-            Demo data — add QUIVERQUANT_API_KEY for live congressional trades.
+            {getLiveDataSetupMessage()}
           </p>
         )}
         <div className="flex flex-wrap items-center gap-3">
@@ -96,6 +111,9 @@ export async function TickerPageContent({ symbol }: TickerPageProps) {
       ) : (
         <>
           {intelligence && <TickerIntelligencePanel intelligence={intelligence} />}
+          {holders.length > 0 && (
+            <TickerHoldersPanel ticker={ticker} holders={holders} />
+          )}
 
           <Card className="border-border/60 bg-card/40">
             <CardHeader>

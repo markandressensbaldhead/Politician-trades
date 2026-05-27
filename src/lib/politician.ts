@@ -12,16 +12,11 @@ import {
   averageExcessReturn,
   computeWinRate,
   isWithinLast90Days,
-  mapChamber,
-  mapParty,
   slugify,
 } from "@/lib/quiver-mappers";
-import {
-  fetchCongressTrades,
-  normalizeTradeType,
-  QuiverCongressTrade,
-} from "@/lib/quiverquant";
 import { loadUnifiedTrades, TradeDataSource } from "@/lib/unified-trades";
+import { fetchLiveCongressTrades } from "@/lib/congress-trade-source";
+import { getPreferredCongressProvider } from "@/lib/congress-trade-source";
 
 function unifiedToProfileTrade(trade: UnifiedCongressTrade): ProfileTrade {
   return {
@@ -131,69 +126,6 @@ function buildProfileFromUnified(
   };
 }
 
-function quiverTradeToProfileTrade(
-  trade: QuiverCongressTrade,
-  index: number
-): ProfileTrade {
-  const tradeType = normalizeTradeType(trade.Transaction);
-
-  return {
-    id: `${trade.BioGuideID}-${trade.TransactionDate}-${trade.Ticker}-${index}`,
-    ticker: trade.Ticker,
-    company: trade.Description?.trim() || trade.Ticker,
-    type: tradeType === "buy" ? "Purchase" : "Sale",
-    amount: trade.Range,
-    tradeDate: trade.TransactionDate,
-    filingDate: trade.ReportDate,
-    excessReturn: trade.ExcessReturn,
-    priceChange: trade.PriceChange ?? null,
-    spyChange: trade.SPYChange ?? null,
-    sector: trade.TickerType,
-  };
-}
-
-function buildProfileFromTrades(
-  id: string,
-  trades: QuiverCongressTrade[]
-): PoliticianProfileData | null {
-  const politicianTrades = trades.filter(
-    (trade) =>
-      trade.BioGuideID === id || slugify(trade.Representative) === id
-  );
-
-  if (politicianTrades.length === 0) {
-    return null;
-  }
-
-  const first = politicianTrades[0];
-  const recentTrades = politicianTrades.filter((trade) =>
-    isWithinLast90Days(trade.TransactionDate)
-  );
-  const recentReturns = recentTrades
-    .map((trade) => trade.ExcessReturn ?? 0)
-    .filter((value) => Number.isFinite(value));
-
-  const sortedTrades = [...politicianTrades].sort(
-    (a, b) =>
-      new Date(b.TransactionDate).getTime() -
-      new Date(a.TransactionDate).getTime()
-  );
-
-  return {
-    id: first.BioGuideID || id,
-    bioGuideId: first.BioGuideID,
-    name: first.Representative,
-    party: mapParty(first.Party),
-    chamber: mapChamber(first.House),
-    source: "live",
-    tradesLast90Days: recentTrades.length,
-    totalTrades: politicianTrades.length,
-    returnVsSpy: averageExcessReturn(recentReturns),
-    winRate: computeWinRate(recentReturns),
-    trades: sortedTrades.map(quiverTradeToProfileTrade),
-  };
-}
-
 export async function getPoliticianProfile(
   id: string
 ): Promise<PoliticianProfileData | null> {
@@ -215,12 +147,18 @@ export async function getPoliticianProfile(
     return enrichProfileWithLockedSecData(unifiedProfile);
   }
 
-  const apiKey = process.env.QUIVERQUANT_API_KEY;
-
-  if (apiKey) {
+  if (getPreferredCongressProvider() !== "none") {
     try {
-      const liveTrades = await fetchCongressTrades(apiKey);
-      const liveProfile = buildProfileFromTrades(id, liveTrades);
+      const { trades: liveTrades } = await fetchLiveCongressTrades({
+        maxPages: 12,
+        lookbackMonths: 18,
+      });
+      const liveProfile = buildProfileFromUnified(
+        id,
+        liveTrades,
+        mockPolitician ?? undefined,
+        "live"
+      );
 
       if (liveProfile) {
         return enrichProfileWithLockedSecData(liveProfile);
@@ -243,18 +181,16 @@ export async function getPoliticianProfile(
 export async function getPoliticianProfileIds(): Promise<string[]> {
   const mockIds = politicians.map((politician) => politician.id);
 
-  const apiKey = process.env.QUIVERQUANT_API_KEY;
-  if (!apiKey) {
+  if (getPreferredCongressProvider() === "none") {
     return [...mockIds, TRUMP_PROFILE_ID];
   }
 
   try {
-    const trades = await fetchCongressTrades(apiKey);
-    const liveIds = [
-      ...new Set(
-        trades.map((trade) => trade.BioGuideID || slugify(trade.Representative))
-      ),
-    ];
+    const { trades } = await fetchLiveCongressTrades({
+      maxPages: 12,
+      lookbackMonths: 18,
+    });
+    const liveIds = [...new Set(trades.map((trade) => trade.politicianId))];
     return [...new Set([...mockIds, TRUMP_PROFILE_ID, ...liveIds])];
   } catch {
     return [...mockIds, TRUMP_PROFILE_ID];

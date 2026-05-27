@@ -30,7 +30,8 @@ Also confirm these exist (you may have added them already):
 | Key | Value |
 |-----|--------|
 | `NEXT_PUBLIC_APP_URL` | `https://tradethehill.org` |
-| `QUIVERQUANT_API_KEY` | your QuiverQuant key |
+| `UNUSUAL_WHALES_API_KEY` | your Unusual Whales key (primary congress data) |
+| `QUIVERQUANT_API_KEY` | QuiverQuant fallback (optional) |
 | `CRON_SECRET` | any random string |
 
 ---

@@ -21,12 +21,14 @@ import {
   getTradesForPolitician,
   insertNewTrades,
   profileTradeToRow,
-  quiverTradeToRow,
   syncPoliticianTradesIfMissing,
 } from "@/lib/supabase/trades";
+import {
+  fetchLiveCongressTradeRows,
+  fetchLiveCongressTrades,
+  getPreferredCongressProvider,
+} from "@/lib/congress-trade-source";
 import { isSupabaseConfigured } from "@/lib/supabase/server";
-import { slugify } from "@/lib/quiver-mappers";
-import { fetchCongressTrades } from "@/lib/quiverquant";
 import {
   getTrumpFilings,
   getTrumpProfile,
@@ -58,22 +60,27 @@ async function getPoliticiansForSecSync(): Promise<PoliticianSecTarget[]> {
     }
   }
 
-  const apiKey = process.env.QUIVERQUANT_API_KEY;
-  if (apiKey) {
+  const hasLiveProvider =
+    process.env.UNUSUAL_WHALES_API_KEY?.trim() ||
+    process.env.QUIVERQUANT_API_KEY?.trim();
+
+  if (hasLiveProvider) {
     try {
-      const trades = await fetchCongressTrades(apiKey);
+      const { trades } = await fetchLiveCongressTrades({
+        maxPages: 12,
+        lookbackMonths: 18,
+      });
       const byPolitician = new Map<string, PoliticianSecTarget>();
 
       for (const trade of trades) {
-        const politicianId = trade.BioGuideID || slugify(trade.Representative);
-        const existing = byPolitician.get(politicianId) ?? {
-          politicianId,
-          politicianName: trade.Representative,
+        const existing = byPolitician.get(trade.politicianId) ?? {
+          politicianId: trade.politicianId,
+          politicianName: trade.politicianName,
           tickers: [],
         };
 
-        existing.tickers.push(trade.Ticker.toUpperCase());
-        byPolitician.set(politicianId, existing);
+        existing.tickers.push(trade.ticker.toUpperCase());
+        byPolitician.set(trade.politicianId, existing);
       }
 
       for (const entry of byPolitician.values()) {
@@ -88,7 +95,7 @@ async function getPoliticiansForSecSync(): Promise<PoliticianSecTarget[]> {
       }
     } catch (error) {
       console.error(
-        "Quiver politician index for SEC sync failed:",
+        "Congress trade index for SEC sync failed:",
         error instanceof Error ? error.message : error
       );
     }
@@ -132,20 +139,16 @@ async function getTradesForSecLink(target: PoliticianSecTarget) {
     );
   }
 
-  const apiKey = process.env.QUIVERQUANT_API_KEY;
-  if (!apiKey) {
+  if (getPreferredCongressProvider() === "none") {
     return [];
   }
 
-  const trades = await fetchCongressTrades(apiKey);
+  const { rows } = await fetchLiveCongressTradeRows({
+    maxPages: 12,
+    lookbackMonths: 18,
+  });
 
-  return trades
-    .filter(
-      (trade) =>
-        trade.BioGuideID === target.politicianId ||
-        slugify(trade.Representative) === target.politicianId
-    )
-    .map(quiverTradeToRow);
+  return rows.filter((row) => row.politician_id === target.politicianId);
 }
 
 export async function syncSecFilingsForPolitician(

@@ -9,11 +9,15 @@ import {
   getSupabaseServiceRoleKey,
 } from "@/lib/supabase/env";
 
+import { isUnusualWhalesConfigured } from "@/lib/unusual-whales";
+
 export interface SetupStatus {
   supabase: boolean;
   supabaseServiceRole: boolean;
   anthropic: boolean;
+  unusualWhales: boolean;
   quiverQuant: boolean;
+  congressData: boolean;
   databaseUrl: boolean;
   cronSecret: boolean;
   resend: boolean;
@@ -28,7 +32,9 @@ export function getSetupStatus(): SetupStatus {
   const supabase = isSupabaseConfigured();
   const supabaseServiceRole = Boolean(getSupabaseServiceRoleKey());
   const anthropic = Boolean(process.env.ANTHROPIC_API_KEY);
+  const unusualWhales = isUnusualWhalesConfigured();
   const quiverQuant = Boolean(process.env.QUIVERQUANT_API_KEY);
+  const congressData = unusualWhales || quiverQuant;
   const databaseUrl = Boolean(getDatabaseUrl());
   const cronSecret = Boolean(process.env.CRON_SECRET);
   const resend = Boolean(process.env.RESEND_API_KEY);
@@ -45,7 +51,9 @@ export function getSetupStatus(): SetupStatus {
     supabase,
     supabaseServiceRole,
     anthropic,
+    unusualWhales,
     quiverQuant,
+    congressData,
     databaseUrl,
     cronSecret,
     resend,

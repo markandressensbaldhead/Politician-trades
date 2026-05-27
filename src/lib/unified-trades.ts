@@ -3,53 +3,29 @@ import { politicians } from "@/lib/data";
 import { MOCK_TRADE_ENRICHMENT } from "@/lib/mock-enrichment";
 import { enrichTradeWithMetadata } from "@/lib/politician-metadata";
 import {
+  fetchLiveCongressTrades,
+  type CongressDataProvider,
+} from "@/lib/congress-trade-source";
+import {
   getDisclosureLagDays,
   getTrendingTickers,
   TrendingTicker,
 } from "@/lib/trade-analytics";
-import {
-  mapChamber,
-  mapParty,
-  slugify,
-} from "@/lib/quiver-mappers";
-import {
-  fetchCongressTrades,
-  normalizeTradeType,
-  QuiverCongressTrade,
-} from "@/lib/quiverquant";
+import { buildPoliticianMetaIndex } from "@/lib/unusual-whales";
 import { isSupabaseConfigured } from "@/lib/supabase/server";
 import { CongressTradeRow } from "@/types/supabase";
 
 export type TradeDataSource = "supabase" | "live" | "mock";
 
-function quiverToUnified(trade: QuiverCongressTrade, index: number): UnifiedCongressTrade {
-  const politicianId = trade.BioGuideID || slugify(trade.Representative);
-  const type = normalizeTradeType(trade.Transaction) === "buy" ? "Purchase" : "Sale";
-
-  return {
-    id: `${politicianId}-${trade.TransactionDate}-${trade.Ticker}-${index}`,
-    politicianId,
-    politicianName: trade.Representative,
-    party: mapParty(trade.Party),
-    chamber: mapChamber(trade.House),
-    ticker: trade.Ticker.toUpperCase(),
-    company: trade.Description?.trim() || trade.Ticker,
-    type,
-    amount: trade.Range || "Amount undisclosed",
-    tradeDate: trade.TransactionDate,
-    filingDate: trade.ReportDate || null,
-    disclosureLagDays: getDisclosureLagDays(
-      trade.TransactionDate,
-      trade.ReportDate
-    ),
-    sector: trade.TickerType ?? "",
-    excessReturn: trade.ExcessReturn ?? null,
-    priceChange: trade.PriceChange ?? null,
-    spyChange: trade.SPYChange ?? null,
-  };
-}
-
 function rowToUnified(row: CongressTradeRow, index: number): UnifiedCongressTrade {
+  const secData = row.sec_data as Record<string, unknown> | null;
+  const source =
+    secData?.source === "unusual_whales"
+      ? "unusual_whales"
+      : secData?.source === "quiverquant"
+        ? "quiverquant"
+        : undefined;
+
   return {
     id: row.trade_key || `${row.politician_id}-${index}`,
     politicianId: row.politician_id,
@@ -65,6 +41,15 @@ function rowToUnified(row: CongressTradeRow, index: number): UnifiedCongressTrad
     disclosureLagDays: getDisclosureLagDays(row.trade_date, row.filing_date),
     sector: row.sector ?? "",
     excessReturn: row.excess_return,
+    dataSource: source,
+    uwPoliticianId:
+      typeof secData?.uw_politician_id === "string"
+        ? secData.uw_politician_id
+        : undefined,
+    filingNotes:
+      typeof secData?.notes === "string" ? secData.notes : null,
+    isActiveFiling:
+      typeof secData?.is_active === "boolean" ? secData.is_active : undefined,
   };
 }
 
@@ -92,6 +77,7 @@ function mockToUnified(): UnifiedCongressTrade[] {
         disclosureLagDays: getDisclosureLagDays(trade.date, filingDate),
         sector: trade.sector,
         excessReturn,
+        dataSource: "mock",
       });
     }
   }
@@ -134,34 +120,20 @@ async function loadFromSupabase(): Promise<UnifiedCongressTrade[]> {
     return [];
   }
 
-  const partyChamberByPolitician = new Map<
-    string,
-    { party: UnifiedCongressTrade["party"]; chamber: UnifiedCongressTrade["chamber"] }
-  >();
-
-  const apiKey = process.env.QUIVERQUANT_API_KEY;
-  if (apiKey) {
-    try {
-      const live = await fetchCongressTrades(apiKey);
-      for (const trade of live) {
-        const id = trade.BioGuideID || slugify(trade.Representative);
-        partyChamberByPolitician.set(id, {
-          party: mapParty(trade.Party),
-          chamber: mapChamber(trade.House),
-        });
-      }
-    } catch {
-      // Enrichment optional
-    }
-  }
+  const metaIndex = await buildPoliticianMetaIndex().catch(() => new Map());
 
   return rows.map((row, index) => {
     const unified = enrichTradeWithMetadata(rowToUnified(row, index));
-    const meta = partyChamberByPolitician.get(row.politician_id);
+    const meta =
+      metaIndex.get(row.politician_id) ??
+      (unified.uwPoliticianId
+        ? metaIndex.get(unified.uwPoliticianId)
+        : undefined);
 
     if (meta) {
       unified.party = meta.party;
       unified.chamber = meta.chamber;
+      unified.politicianName = meta.name;
     }
 
     return unified;
@@ -177,53 +149,59 @@ let cache:
       expiresAt: number;
       trades: UnifiedCongressTrade[];
       source: TradeDataSource;
+      provider: CongressDataProvider;
     }
   | undefined;
 
 export async function loadUnifiedTrades(): Promise<{
   trades: UnifiedCongressTrade[];
   source: TradeDataSource;
+  provider: CongressDataProvider;
 }> {
   if (cache && cache.expiresAt > Date.now()) {
-    return { trades: cache.trades, source: cache.source };
+    return {
+      trades: cache.trades,
+      source: cache.source,
+      provider: cache.provider,
+    };
   }
 
   const fromDb = await loadFromSupabase();
 
   if (fromDb.length >= 50) {
     const trades = enrichTrades(fromDb);
+    const provider =
+      trades.some((trade) => trade.dataSource === "unusual_whales")
+        ? "unusual_whales"
+        : trades.some((trade) => trade.dataSource === "quiverquant")
+          ? "quiverquant"
+          : "none";
+
     cache = {
       expiresAt: Date.now() + 5 * 60 * 1000,
       trades,
       source: "supabase",
+      provider,
     };
 
-    return { trades, source: "supabase" };
+    return { trades, source: "supabase", provider };
   }
 
-  const apiKey = process.env.QUIVERQUANT_API_KEY;
+  const { trades: liveTrades, provider } = await fetchLiveCongressTrades({
+    maxPages: 12,
+    lookbackMonths: 18,
+  });
 
-  if (apiKey) {
-    try {
-      const live = await fetchCongressTrades(apiKey);
+  if (liveTrades.length > 0) {
+    const trades = enrichTrades(liveTrades);
+    cache = {
+      expiresAt: Date.now() + 5 * 60 * 1000,
+      trades,
+      source: "live",
+      provider,
+    };
 
-      if (live.length > 0) {
-        const trades = enrichTrades(live.map(quiverToUnified));
-
-        cache = {
-          expiresAt: Date.now() + 5 * 60 * 1000,
-          trades,
-          source: "live",
-        };
-
-        return { trades, source: "live" };
-      }
-    } catch (error) {
-      console.error(
-        "Unified trade load failed:",
-        error instanceof Error ? error.message : error
-      );
-    }
+    return { trades, source: "live", provider };
   }
 
   const trades = enrichTrades(mockToUnified());
@@ -231,9 +209,10 @@ export async function loadUnifiedTrades(): Promise<{
     expiresAt: Date.now() + 5 * 60 * 1000,
     trades,
     source: "mock",
+    provider: "none",
   };
 
-  return { trades, source: "mock" };
+  return { trades, source: "mock", provider: "none" };
 }
 
 export async function getTradesByTicker(

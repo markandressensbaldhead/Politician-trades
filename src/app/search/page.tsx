@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { SearchResults } from "@/components/search/search-results";
 import { SiteContainer } from "@/components/layout/site-container";
 import { BRAND } from "@/lib/brand";
+import { getLiveDataSetupMessage } from "@/lib/data-provider";
 import { getSearchIndex, getAllTrades } from "@/lib/congress-data";
 import { getTrendingTickers } from "@/lib/trade-analytics";
 
@@ -29,7 +30,7 @@ export default async function SearchPage() {
           retail actually uses.
           {source === "live"
             ? ` ${politicians.length} members · ${tickers.length} tickers with activity.`
-            : " Showing demo data — add QUIVERQUANT_API_KEY for live results."}
+            : ` ${getLiveDataSetupMessage()}`}
         </p>
       </div>
 

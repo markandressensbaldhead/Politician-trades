@@ -155,6 +155,10 @@ export function SiteFooter() {
           <p className="max-w-2xl text-xs leading-relaxed text-muted-foreground">
             {COPY.disclosureDisclaimer}
           </p>
+          <p className="text-xs text-muted-foreground">
+            Live disclosures via Unusual Whales (primary) and QuiverQuant
+            (fallback).
+          </p>
         </div>
       </div>
     </footer>

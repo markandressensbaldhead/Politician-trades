@@ -18,6 +18,7 @@ export interface TradeInsertRow {
   filing_date: string | null;
   sector: string | null;
   excess_return: number | null;
+  sec_data?: Record<string, unknown> | null;
 }
 
 export function buildTradeKey(input: {
@@ -58,6 +59,7 @@ export function quiverTradeToRow(trade: QuiverCongressTrade): TradeInsertRow {
     filing_date: trade.ReportDate,
     sector: trade.TickerType ?? null,
     excess_return: trade.ExcessReturn ?? null,
+    sec_data: { source: "quiverquant" },
   };
 }
 

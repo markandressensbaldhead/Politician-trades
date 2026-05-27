@@ -1,4 +1,5 @@
 import { LeaderboardPanel } from "@/components/leaderboard/leaderboard-panel";
+import { CongressStatsPanel } from "@/components/dashboard/congress-stats-panel";
 import { DiscoveryRail } from "@/components/dashboard/discovery-rail";
 import { EdgeLeadersPanel } from "@/components/dashboard/edge-leaders-panel";
 import { HighConvictionFeed } from "@/components/dashboard/high-conviction-feed";
@@ -27,17 +28,26 @@ import { COPY } from "@/lib/brand";
 import { getMarketPulse, getTrendingTickers } from "@/lib/trade-analytics";
 import { getTradeOfTheDay } from "@/lib/trade-of-the-day";
 import { buildTopicalXNews } from "@/lib/x-news";
+import {
+  fetchCongressUnusualTradeStats,
+  isUnusualWhalesConfigured,
+} from "@/lib/unusual-whales";
 
 export default async function HomePage() {
   const [
     { entries, source },
     { trades: recentTrades },
-    { trades: allTrades, source: tradeSource },
+    { trades: allTrades, source: tradeSource, provider },
   ] = await Promise.all([
     getLeaderboardData(),
     getRecentTrades(200),
     getAllTrades(),
   ]);
+
+  const congressStats =
+    isUnusualWhalesConfigured()
+      ? await fetchCongressUnusualTradeStats().catch(() => null)
+      : null;
 
   const pulse = getMarketPulse(allTrades);
   const trending = getTrendingTickers(allTrades, 12);
@@ -105,7 +115,10 @@ export default async function HomePage() {
         tradeCount90d={pulse.totalTrades90d}
         memberCount={entries.length}
         isLive={isLive}
+        dataProvider={provider}
       />
+
+      {congressStats && <CongressStatsPanel stats={congressStats} />}
 
       {tradeOfTheDay && <TradeOfTheDaySpotlight pick={tradeOfTheDay} />}
 

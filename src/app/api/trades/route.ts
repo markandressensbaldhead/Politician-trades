@@ -1,27 +1,34 @@
 import { NextResponse } from "next/server";
 
 import {
-  fetchCongressTrades,
-  parseCongressTrades,
-} from "@/lib/quiverquant";
+  fetchLiveCongressTrades,
+  getPreferredCongressProvider,
+} from "@/lib/congress-trade-source";
 
 export async function GET() {
-  const apiKey = process.env.QUIVERQUANT_API_KEY;
+  const provider = getPreferredCongressProvider();
 
-  if (!apiKey) {
+  if (provider === "none") {
     return NextResponse.json(
-      { error: "QUIVERQUANT_API_KEY is not configured" },
-      { status: 500 }
+      {
+        error:
+          "Configure UNUSUAL_WHALES_API_KEY or QUIVERQUANT_API_KEY for live trade data",
+      },
+      { status: 503 }
     );
   }
 
   try {
-    const rawTrades = await fetchCongressTrades(apiKey);
-    const trades = parseCongressTrades(rawTrades);
+    const { trades, provider: resolvedProvider } = await fetchLiveCongressTrades({
+      maxPages: 12,
+      lookbackMonths: 18,
+    });
 
     return NextResponse.json({
       trades,
       count: trades.length,
+      provider: resolvedProvider,
+      source: resolvedProvider,
     });
   } catch (error) {
     const message =

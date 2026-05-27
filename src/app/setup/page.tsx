@@ -20,7 +20,9 @@ interface SetupResponse {
     supabase: boolean;
     supabaseServiceRole: boolean;
     anthropic: boolean;
+    unusualWhales: boolean;
     quiverQuant: boolean;
+    congressData: boolean;
     databaseUrl: boolean;
     cronSecret: boolean;
     resend: boolean;
@@ -156,7 +158,18 @@ export default function SetupPage() {
                 label="Database URL (auto table setup)"
                 ok={data.status.databaseUrl}
               />
-              <StatusRow label="QuiverQuant API key" ok={data.status.quiverQuant} />
+              <StatusRow
+                label="Unusual Whales API key (primary)"
+                ok={data.status.unusualWhales}
+              />
+              <StatusRow
+                label="QuiverQuant API key (fallback)"
+                ok={data.status.quiverQuant}
+              />
+              <StatusRow
+                label="Congress trade data ready"
+                ok={data.status.congressData}
+              />
               <StatusRow label="Database tables exist" ok={data.tables.ok} />
               <StatusRow label="AI Insights ready" ok={data.insightsReady} />
             </>
