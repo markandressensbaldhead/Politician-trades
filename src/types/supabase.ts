@@ -38,6 +38,8 @@ export interface SubscriptionRow {
   email: string;
   politician_name: string;
   politician_id: string | null;
+  subscription_type?: "politician" | "ticker" | null;
+  ticker?: string | null;
   created_at: string;
 }
 

@@ -18,10 +18,13 @@ import {
 import { Input } from "@/components/ui/input";
 import { RecentCongressTrade } from "@/lib/congress-data";
 import { slugifyFilename, unifiedTradeToCsvRow } from "@/lib/csv-export";
+import { TradeSignificanceBadge } from "@/components/shared/trade-significance-badge";
 import { ExportCsvButton } from "@/components/shared/export-csv-button";
 import { filterTrades } from "@/lib/trade-analytics";
+import { buildClusterIndex, getTradeClusters } from "@/lib/trade-clusters";
+import { scoreTrades } from "@/lib/trade-significance";
 import { UnifiedCongressTrade, Party, Chamber } from "@/types";
-import { cn, formatDate } from "@/lib/utils";
+import { cn, formatDate, formatRelativeTime } from "@/lib/utils";
 
 interface LiveTradeFeedProps {
   trades: RecentCongressTrade[];
@@ -65,6 +68,15 @@ export function LiveTradeFeed({
     const unified = trades.map(toUnified);
     return filterTrades(unified, { query, type, days }).slice(0, 80);
   }, [trades, query, type, days]);
+
+  const significanceById = useMemo(() => {
+    const unified = trades.map(toUnified);
+    const clusters = getTradeClusters(unified, { days: 30, minPoliticians: 2, limit: 20 });
+    const clusterIndex = buildClusterIndex(clusters);
+    const scored = scoreTrades(unified, clusterIndex);
+
+    return new Map(scored.map((trade) => [trade.id, trade]));
+  }, [trades]);
 
   const exportRows = useMemo(
     () => filtered.map((trade) => unifiedTradeToCsvRow(trade)),
@@ -126,7 +138,10 @@ export function LiveTradeFeed({
       </CardHeader>
       <CardContent className="p-0">
         <div className="divide-y divide-border/40">
-          {filtered.map((trade) => (
+          {filtered.map((trade) => {
+            const scored = significanceById.get(trade.id);
+
+            return (
             <article
               key={trade.id}
               className="flex flex-col gap-3 p-4 transition-colors hover:bg-gain/5 lg:flex-row lg:items-center lg:justify-between"
@@ -144,6 +159,12 @@ export function LiveTradeFeed({
                     {trade.chamber}
                   </Badge>
                   <DisclosureLagBadge days={trade.disclosureLagDays} />
+                  {scored && scored.significanceTier !== "low" && (
+                    <TradeSignificanceBadge
+                      tier={scored.significanceTier}
+                      score={scored.significanceScore}
+                    />
+                  )}
                 </div>
                 <p className="text-sm">
                   <Badge
@@ -165,13 +186,17 @@ export function LiveTradeFeed({
                 </p>
               </div>
               <div className="shrink-0 text-right text-xs text-muted-foreground">
-                <p>Trade {formatDate(trade.tradeDate)}</p>
+                <p>
+                  Filed{" "}
+                  {formatRelativeTime(trade.filingDate ?? trade.tradeDate)}
+                </p>
                 {trade.filingDate && (
-                  <p>Filed {formatDate(trade.filingDate)}</p>
+                  <p>Trade {formatRelativeTime(trade.tradeDate)}</p>
                 )}
               </div>
             </article>
-          ))}
+            );
+          })}
 
           {filtered.length === 0 && (
             <p className="p-8 text-center text-sm text-muted-foreground">

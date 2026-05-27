@@ -1,5 +1,5 @@
 import { NewTradeAlert } from "@/types/supabase";
-import { getSubscribersForPolitician } from "@/lib/supabase/subscriptions";
+import { getSubscribersForPolitician, getSubscribersForTicker } from "@/lib/supabase/subscriptions";
 import {
   getExistingTradeKeys,
   insertNewTrades,
@@ -93,8 +93,17 @@ export async function syncTradesAndSendAlerts(): Promise<SyncTradesResult> {
   let emailsSent = 0;
 
   for (const alert of alerts) {
-    const subscribers = await getSubscribersForPolitician(alert.politicianName);
-    const emails = [...new Set(subscribers.map((sub) => sub.email))];
+    const [politicianSubscribers, tickerSubscribers] = await Promise.all([
+      getSubscribersForPolitician(alert.politicianName),
+      getSubscribersForTicker(alert.ticker),
+    ]);
+
+    const emails = [
+      ...new Set([
+        ...politicianSubscribers.map((sub) => sub.email),
+        ...tickerSubscribers.map((sub) => sub.email),
+      ]),
+    ];
 
     if (emails.length === 0) {
       continue;

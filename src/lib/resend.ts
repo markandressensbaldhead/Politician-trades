@@ -27,8 +27,8 @@ function buildTradeAlertEmail(alert: NewTradeAlert): {
     html: `
       <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; max-width: 560px; margin: 0 auto; color: #111827;">
         <div style="background: #0f172a; color: #f8fafc; padding: 24px; border-radius: 12px 12px 0 0;">
-          <p style="margin: 0 0 8px; font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase; color: #f59e0b;">
-            Capitol Trades Alert
+          <p style="margin: 0 0 8px; font-size: 12px; letter-spacing: 0.04em; color: #93c5fd;">
+            Trade alert
           </p>
           <h1 style="margin: 0; font-size: 24px;">New Congressional Trade</h1>
         </div>

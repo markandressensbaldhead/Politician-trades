@@ -37,9 +37,18 @@ create table if not exists public.subscriptions (
   email text not null,
   politician_name text not null,
   politician_id text,
+  subscription_type text not null default 'politician',
+  ticker text,
   created_at timestamptz not null default now(),
   unique (email, politician_name)
 );
+
+alter table public.subscriptions add column if not exists subscription_type text not null default 'politician';
+alter table public.subscriptions add column if not exists ticker text;
+
+create unique index if not exists idx_subscriptions_ticker_email
+  on public.subscriptions (email, ticker)
+  where subscription_type = 'ticker' and ticker is not null;
 
 create index if not exists idx_subscriptions_politician_name
   on public.subscriptions (politician_name);
