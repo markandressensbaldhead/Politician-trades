@@ -33,7 +33,12 @@ function sanitizeHoldings(raw: unknown): PortfolioHolding[] {
         averageCost != null && Number.isFinite(averageCost)
           ? Number(averageCost.toFixed(2))
           : null,
-      source: row.source === "robinhood_csv" ? "robinhood_csv" : "manual",
+      source:
+        row.source === "robinhood_csv"
+          ? "robinhood_csv"
+          : row.source === "snaptrade"
+            ? "snaptrade"
+            : "manual",
     });
   }
 

@@ -1,10 +1,10 @@
-export type PortfolioBroker = "robinhood" | "manual" | "other";
+export type PortfolioBroker = "robinhood" | "manual" | "other" | "snaptrade";
 
 export interface PortfolioHolding {
   ticker: string;
   quantity: number;
   averageCost?: number | null;
-  source: "manual" | "robinhood_csv";
+  source: "manual" | "robinhood_csv" | "snaptrade";
 }
 
 export interface SavedPortfolio {

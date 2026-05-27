@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import {
   CheckCircle2,
@@ -25,19 +25,26 @@ import { Label } from "@/components/ui/label";
 import { parseRobinhoodCsv } from "@/lib/robinhood-csv";
 import {
   clearPortfolio,
-  loadPortfolio,
   mergeHoldings,
   savePortfolio,
 } from "@/lib/portfolio-storage";
 import { PortfolioHolding, SavedPortfolio } from "@/types/portfolio";
 import { formatUsd } from "@/lib/utils";
+import { SnapTradeConnect } from "@/components/portfolio/snaptrade-connect";
 
 interface PortfolioConnectProps {
+  portfolio: SavedPortfolio | null;
   onPortfolioChange: (portfolio: SavedPortfolio | null) => void;
+  onStatusMessage?: (message: string | null) => void;
+  onError?: (message: string | null) => void;
 }
 
-export function PortfolioConnect({ onPortfolioChange }: PortfolioConnectProps) {
-  const [portfolio, setPortfolio] = useState<SavedPortfolio | null>(null);
+export function PortfolioConnect({
+  portfolio,
+  onPortfolioChange,
+  onStatusMessage,
+  onError,
+}: PortfolioConnectProps) {
   const [ticker, setTicker] = useState("");
   const [quantity, setQuantity] = useState("");
   const [averageCost, setAverageCost] = useState("");
@@ -45,16 +52,8 @@ export function PortfolioConnect({ onPortfolioChange }: PortfolioConnectProps) {
   const [error, setError] = useState<string | null>(null);
   const [importNote, setImportNote] = useState<string | null>(null);
 
-  useEffect(() => {
-    const saved = loadPortfolio();
-    setPortfolio(saved);
-    onPortfolioChange(saved);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
   function persist(next: SavedPortfolio) {
     savePortfolio(next);
-    setPortfolio(next);
     onPortfolioChange(next);
   }
 
@@ -118,6 +117,7 @@ export function PortfolioConnect({ onPortfolioChange }: PortfolioConnectProps) {
       setImportNote(
         `Imported ${result.holdings.length} positions from ${result.format} CSV (${result.rowsParsed} rows).`
       );
+      onStatusMessage?.(null);
     } catch (uploadError) {
       setError(
         uploadError instanceof Error
@@ -139,7 +139,6 @@ export function PortfolioConnect({ onPortfolioChange }: PortfolioConnectProps) {
 
     if (nextHoldings.length === 0) {
       clearPortfolio();
-      setPortfolio(null);
       onPortfolioChange(null);
       return;
     }
@@ -153,7 +152,6 @@ export function PortfolioConnect({ onPortfolioChange }: PortfolioConnectProps) {
 
   function disconnectPortfolio() {
     clearPortfolio();
-    setPortfolio(null);
     onPortfolioChange(null);
     setImportNote(null);
     setError(null);
@@ -170,13 +168,9 @@ export function PortfolioConnect({ onPortfolioChange }: PortfolioConnectProps) {
                 Link Robinhood portfolio
               </CardTitle>
               <CardDescription className="max-w-2xl leading-relaxed">
-                Robinhood does not offer a public stock API. Import your
-                holdings via CSV from{" "}
-                <span className="text-foreground">
-                  Account → Settings → Privacy & Security → Download my data
-                </span>
-                , or add positions manually. Your portfolio stays in your
-                browser — we only send holdings to AI when you request advice.
+                Connect Robinhood with one-click OAuth (via SnapTrade), import
+                a CSV export, or add positions manually. Holdings stay in your
+                browser until you request AI advice.
               </CardDescription>
             </div>
             {portfolio && (
@@ -189,6 +183,13 @@ export function PortfolioConnect({ onPortfolioChange }: PortfolioConnectProps) {
         </CardHeader>
 
         <CardContent className="space-y-6 p-6">
+          <SnapTradeConnect
+            portfolio={portfolio}
+            onPortfolioChange={onPortfolioChange}
+            onStatusMessage={onStatusMessage ?? (() => undefined)}
+            onError={onError ?? (() => undefined)}
+          />
+
           <div className="rounded-lg border border-dashed border-border bg-secondary/20 p-5">
             <Label htmlFor="robinhood-csv" className="text-sm font-medium">
               Import Robinhood CSV
@@ -220,9 +221,15 @@ export function PortfolioConnect({ onPortfolioChange }: PortfolioConnectProps) {
                 className="hidden"
                 onChange={handleCsvUpload}
               />
-              {portfolio?.broker === "robinhood" && (
+              {portfolio &&
+                (portfolio.broker === "snaptrade" ||
+                  portfolio.broker === "robinhood") && (
                 <span className="text-xs text-muted-foreground">
-                  Last linked {new Date(portfolio.updatedAt).toLocaleString()}
+                  {portfolio.broker === "snaptrade"
+                    ? "Robinhood (OAuth)"
+                    : "Robinhood (CSV)"}{" "}
+                  · Last synced{" "}
+                  {new Date(portfolio.updatedAt).toLocaleString()}
                 </span>
               )}
             </div>

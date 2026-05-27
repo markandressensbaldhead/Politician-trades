@@ -17,9 +17,9 @@ export default function PortfolioPage() {
           Portfolio advisor
         </h1>
         <p className="max-w-2xl text-base leading-relaxed text-muted-foreground">
-          Link your Robinhood holdings and see how congressional disclosure flow
-          overlaps with your book — plus Washington signals you may want to
-          research.
+          Connect Robinhood with secure OAuth, import a CSV, or add holdings
+          manually — then get AI research tailored to your book vs. congressional
+          trades.
         </p>
       </div>
 
