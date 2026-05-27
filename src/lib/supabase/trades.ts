@@ -87,17 +87,46 @@ export function profileTradeToRow(
 }
 
 export async function getExistingTradeKeys(): Promise<Set<string>> {
+  return getExistingTradeKeysForPolitician();
+}
+
+export async function getExistingTradeKeysForPolitician(
+  politicianId?: string
+): Promise<Set<string>> {
   const supabase = getSupabaseServerClient();
+  const keys = new Set<string>();
+  const pageSize = 1000;
+  let from = 0;
 
-  const { data, error } = await supabase
-    .from("congress_trades")
-    .select("trade_key");
+  while (true) {
+    let query = supabase.from("congress_trades").select("trade_key");
 
-  if (error) {
-    throw new Error(`Failed to fetch trade keys: ${error.message}`);
+    if (politicianId) {
+      query = query.eq("politician_id", politicianId);
+    }
+
+    const { data, error } = await query.range(from, from + pageSize - 1);
+
+    if (error) {
+      throw new Error(`Failed to fetch trade keys: ${error.message}`);
+    }
+
+    if (!data || data.length === 0) {
+      break;
+    }
+
+    for (const row of data) {
+      keys.add(row.trade_key as string);
+    }
+
+    if (data.length < pageSize) {
+      break;
+    }
+
+    from += pageSize;
   }
 
-  return new Set((data ?? []).map((row) => row.trade_key as string));
+  return keys;
 }
 
 export async function insertNewTrades(rows: TradeInsertRow[]): Promise<number> {
@@ -107,7 +136,10 @@ export async function insertNewTrades(rows: TradeInsertRow[]): Promise<number> {
 
   const supabase = getSupabaseServerClient();
 
-  const { error } = await supabase.from("congress_trades").insert(rows);
+  const { error } = await supabase.from("congress_trades").upsert(rows, {
+    onConflict: "trade_key",
+    ignoreDuplicates: true,
+  });
 
   if (error) {
     throw new Error(`Failed to insert trades: ${error.message}`);
@@ -145,7 +177,7 @@ export async function syncPoliticianTradesIfMissing(
     return 0;
   }
 
-  const existingKeys = await getExistingTradeKeys();
+  const existingKeys = await getExistingTradeKeysForPolitician(politicianId);
   const newRows = trades
     .slice(0, 100)
     .map((trade) => profileTradeToRow(politicianId, politicianName, trade))

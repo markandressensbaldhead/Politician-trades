@@ -31,6 +31,13 @@ async function ensureTradesInSupabase(politicianId: string) {
     trades = await getTradesForPolitician(politicianId, 100);
   }
 
+  if (trades.length === 0 && profile.trades.length > 0) {
+    const fallbackId = profile.bioGuideId ?? profile.id;
+    if (fallbackId !== politicianId) {
+      trades = await getTradesForPolitician(fallbackId, 100);
+    }
+  }
+
   return { profile, trades };
 }
 
