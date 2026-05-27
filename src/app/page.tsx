@@ -12,6 +12,7 @@ import { TradeClustersPanel } from "@/components/dashboard/trade-clusters-panel"
 import { TradeOfTheDaySpotlight } from "@/components/dashboard/trade-of-the-day-spotlight";
 import { TrendingTickers } from "@/components/dashboard/trending-tickers";
 import { XNewsPanel } from "@/components/dashboard/x-news-panel";
+import { SectionBlock } from "@/components/layout/section-block";
 import { SiteContainer } from "@/components/layout/site-container";
 import {
   getAllTrades,
@@ -108,7 +109,7 @@ export default async function HomePage() {
   });
 
   return (
-    <SiteContainer className="space-y-10 pb-12">
+    <SiteContainer className="space-y-14 pb-16 sm:space-y-16">
       <RetailHero
         avgReturnVsSpy={avgReturn}
         topPerformerId={topPerformer?.id ?? ""}
@@ -121,50 +122,91 @@ export default async function HomePage() {
         dataProvider={provider}
       />
 
-      {congressStats && <CongressStatsPanel stats={congressStats} />}
-      <OfficialPtrPanel filings={housePtrFilings} />
-
       {tradeOfTheDay && <TradeOfTheDaySpotlight pick={tradeOfTheDay} />}
 
-      <DiscoveryRail
-        topTicker={trending[0] ?? null}
-        topPerformer={topPerformer ?? null}
-        topCluster={clusters[0] ?? null}
-      />
-
-      <EdgeLeadersPanel entries={sortedEntries} />
-
-      <XNewsPanel topical={xTopical} />
-
-      <div className="grid gap-8 2xl:grid-cols-2">
-        <HighConvictionFeed trades={highConviction} />
-        <TradeClustersPanel
-          clusters={clusters}
-          sectorClusters={sectorClusters}
+      <SectionBlock
+        title="Quick paths"
+        description="Jump to the highest-signal views without digging through menus."
+      >
+        <DiscoveryRail
+          topTicker={trending[0] ?? null}
+          topPerformer={topPerformer ?? null}
+          topCluster={clusters[0] ?? null}
         />
-      </div>
+      </SectionBlock>
 
-      <MarketPulse pulse={pulse} />
+      <SectionBlock
+        title="Who has repeatable edge"
+        description="Members ranked by consistency and hit rate — not one lucky headline trade."
+      >
+        <EdgeLeadersPanel entries={sortedEntries} />
+      </SectionBlock>
+
+      <SectionBlock
+        id="x-news"
+        title="Market pulse on X"
+        description="Curated posts tied to today's Hill activity."
+      >
+        <XNewsPanel topical={xTopical} />
+      </SectionBlock>
+
+      <SectionBlock
+        title="High-conviction moves"
+        description="Trades with size, timing, and crowd overlap worth a closer look."
+      >
+        <div className="grid gap-8 2xl:grid-cols-2">
+          <HighConvictionFeed trades={highConviction} />
+          <TradeClustersPanel
+            clusters={clusters}
+            sectorClusters={sectorClusters}
+          />
+        </div>
+      </SectionBlock>
+
+      <SectionBlock
+        title="Activity snapshot"
+        description="Volume, disclosure lag, and buy/sell mix across the last 90 days."
+      >
+        <MarketPulse pulse={pulse} />
+      </SectionBlock>
 
       {trending.length > 0 && (
-        <TrendingTickers
-          tickers={trending}
+        <SectionBlock
           title="Hot on the Hill"
-          description={`The tickers getting the most ${COPY.hillFlow} right now — each one is a page full of trades.`}
-        />
+          description={`Tickers with the most ${COPY.hillFlow} — each opens a full trade history.`}
+        >
+          <TrendingTickers tickers={trending} embedded />
+        </SectionBlock>
+      )}
+
+      {(congressStats || housePtrFilings.length > 0) && (
+        <SectionBlock
+          title="Source intelligence"
+          description="Supplemental feeds from data partners and official House filings."
+        >
+          <div className="space-y-6">
+            {congressStats && <CongressStatsPanel stats={congressStats} />}
+            <OfficialPtrPanel filings={housePtrFilings} />
+          </div>
+        </SectionBlock>
       )}
 
       <PortfolioCtaBanner />
 
-      <div className="grid gap-8 2xl:grid-cols-[minmax(0,1.35fr)_minmax(0,1fr)]">
-        <LeaderboardPanel entries={sortedEntries} source={source} />
-        <LiveTradeFeed
-          trades={recentTrades.slice(0, 80)}
-          showFilters={false}
-          title="Fresh from the Hill"
-          description="Just disclosed — click any row before the crowd catches up."
-        />
-      </div>
+      <SectionBlock
+        title="Leaderboard & live feed"
+        description="Compare member performance and scan the freshest disclosures side by side."
+      >
+        <div className="grid gap-8 2xl:grid-cols-[minmax(0,1.35fr)_minmax(0,1fr)]">
+          <LeaderboardPanel entries={sortedEntries} source={source} />
+          <LiveTradeFeed
+            trades={recentTrades.slice(0, 80)}
+            showFilters={false}
+            title="Fresh from the Hill"
+            description="Just disclosed — tap any row for the full profile or ticker view."
+          />
+        </div>
+      </SectionBlock>
     </SiteContainer>
   );
 }

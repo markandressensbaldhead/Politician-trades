@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowRight, Sparkles, TrendingUp, Zap } from "lucide-react";
+import { ArrowRight, Sparkles, TrendingUp } from "lucide-react";
 
 import { NextDisclosureSync } from "@/components/shared/next-disclosure-sync";
 import { DataSourceBadge } from "@/components/shared/data-source-badge";
@@ -34,11 +34,11 @@ export function RetailHero({
   const lastName = topPerformerName.split(" ").pop() ?? topPerformerName;
 
   return (
-    <section className="hero-mesh relative overflow-hidden rounded-2xl border border-border/80 px-5 py-8 sm:px-8 sm:py-10 lg:px-10 lg:py-12">
-      <div className="relative grid gap-8 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,0.8fr)] lg:items-center">
-        <div className="space-y-6">
+    <section className="hero-mesh relative overflow-hidden rounded-2xl border border-border/80 px-6 py-8 sm:px-8 sm:py-10 lg:px-10 lg:py-12">
+      <div className="relative grid gap-10 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)] lg:items-center">
+        <div className="space-y-7">
           <div className="flex flex-wrap items-center gap-2">
-            <span className="status-pill status-pill-live gap-1.5">
+            <span className="status-pill status-pill-live gap-2">
               <span className="live-dot animate-pulse" />
               {isLive ? "Live disclosures" : "Demo mode"}
             </span>
@@ -46,44 +46,42 @@ export function RetailHero({
             {dataProvider !== "none" && (
               <DataSourceBadge provider={dataProvider} />
             )}
-            <span className="status-pill">Free · No login</span>
-            <span className="status-pill">STOCK Act data</span>
           </div>
 
           <div className="space-y-4">
-            <h1 className="max-w-3xl text-3xl font-semibold leading-[1.1] tracking-tight sm:text-4xl lg:text-5xl">
+            <h1 className="max-w-3xl text-4xl font-semibold leading-[1.05] tracking-tight sm:text-5xl lg:text-[3.25rem]">
               {COPY.heroHeadline}
-              <span className="block text-primary">{COPY.heroSubhead}</span>
+              <span className="mt-2 block text-primary">{COPY.heroSubhead}</span>
             </h1>
-            <p className="max-w-2xl text-base leading-relaxed text-muted-foreground sm:text-lg">
+            <p className="max-w-xl text-[15px] leading-7 text-muted-foreground sm:text-base sm:leading-8">
               {COPY.heroBody}
             </p>
           </div>
 
           <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
-            <Button asChild size="lg" className="h-12 px-6 text-base">
+            <Button asChild size="lg" className="h-11 px-6">
               <Link href="#trade-of-day">
                 {COPY.heroCtaPrimary}
-                <ArrowRight className="ml-2 h-4 w-4" />
+                <ArrowRight className="ml-1 h-4 w-4" />
               </Link>
             </Button>
-            <Button asChild size="lg" variant="outline" className="h-12 px-6 text-base">
+            <Button asChild size="lg" variant="outline" className="h-11 px-6">
               <Link href="/feed">{COPY.heroCtaSecondary}</Link>
             </Button>
-            <Button asChild size="lg" variant="outline" className="h-12 px-6 text-base">
+            <Button asChild size="lg" variant="ghost" className="h-11 px-6">
               <Link href="/portfolio">
-                <Sparkles className="mr-2 h-4 w-4" />
+                <Sparkles className="mr-1.5 h-4 w-4" />
                 Match my portfolio
               </Link>
             </Button>
           </div>
 
-          <p className="text-xs text-muted-foreground">
-            Research tool only — not financial advice. {COPY.nextDisclosureSync}
+          <p className="text-xs leading-relaxed text-muted-foreground">
+            Research only — not financial advice. {COPY.nextDisclosureSync}
           </p>
         </div>
 
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-1">
+        <div className="grid gap-3 sm:grid-cols-2">
           <HeroStat
             label={COPY.heroStatCongress}
             value={formatPercent(avgReturnVsSpy)}
@@ -92,28 +90,23 @@ export function RetailHero({
             highlight
           />
           <HeroStat
-            label="Hottest ticker right now"
+            label="Hottest ticker"
             value={topTicker ? `$${topTicker}` : "—"}
-            sub={`${tradeCount90d} trades · ${memberCount} members tracked`}
+            sub={`${tradeCount90d} trades · ${memberCount} members`}
             href={topTicker ? `/ticker/${topTicker}` : undefined}
           />
           <HeroStat
-            label="Best performer to copy-study"
+            label="Top copy-study"
             value={lastName}
             sub={`${formatPercent(topPerformerReturn)} vs S&P`}
             positive={topPerformerReturn >= 0}
-            href={`/politician/${topPerformerId}`}
+            href={topPerformerId ? `/politician/${topPerformerId}` : undefined}
           />
-          <div className="rounded-xl border border-primary/20 bg-primary/5 p-4 sm:col-span-2 lg:col-span-1">
-            <div className="flex items-start gap-3">
-              <Zap className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
-              <div>
-                <p className="text-sm font-semibold">Built for retail on {BRAND.hill}</p>
-                <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
-                  {COPY.heroRetailBlurb}
-                </p>
-              </div>
-            </div>
+          <div className="rounded-xl border border-primary/20 bg-primary/[0.06] p-5 sm:col-span-2 lg:col-span-1">
+            <p className="text-sm font-semibold">Built for retail on {BRAND.hill}</p>
+            <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+              {COPY.heroRetailBlurb}
+            </p>
           </div>
         </div>
       </div>
@@ -141,16 +134,16 @@ function HeroStat({
   const content = (
     <div
       className={cn(
-        "rounded-xl border border-border/80 bg-background/50 p-4 transition-colors",
-        href && "hover:border-primary/30 hover:bg-primary/[0.03]"
+        "h-full rounded-xl border border-border/70 bg-background/60 p-5 transition-colors",
+        href && "hover:border-primary/25 hover:bg-primary/[0.04]"
       )}
     >
-      <p className="text-[11px] font-medium text-muted-foreground">{label}</p>
-      <div className="mt-2 flex items-center gap-2">
+      <p className="metric-label">{label}</p>
+      <div className="mt-3 flex items-center gap-2">
         {Icon && <Icon className="h-4 w-4 text-primary" />}
         <p
           className={cn(
-            "text-2xl font-semibold tabular-nums tracking-tight",
+            "metric-value",
             highlight && "text-primary",
             positive === true && "text-gain",
             positive === false && "text-loss"
@@ -159,7 +152,7 @@ function HeroStat({
           {value}
         </p>
       </div>
-      {sub && <p className="mt-1 text-xs text-muted-foreground">{sub}</p>}
+      {sub && <p className="mt-2 text-sm text-muted-foreground">{sub}</p>}
     </div>
   );
 

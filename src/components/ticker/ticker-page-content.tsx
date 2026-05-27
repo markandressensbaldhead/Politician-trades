@@ -82,33 +82,33 @@ export async function TickerPageContent({ symbol }: TickerPageProps) {
   const recentLegacy = trades.slice(0, 100).map(toLegacyRecentTrade);
 
   return (
-    <div className="space-y-8">
-      <div className="space-y-3">
-        <p className="page-eyebrow">Stock view</p>
-        <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">
-          Who on {BRAND.hill} traded{" "}
-          <span className="ticker-symbol text-primary">{ticker}</span>?
-        </h1>
-        <p className="max-w-3xl text-muted-foreground">
-          Intelligence brief, vs-S&P performance, crowd clusters, and every
-          disclosed buy and sell — the deep dive {BRAND.name} is built for.
+    <div className="space-y-12 pb-4">
+      <PageHeader
+        eyebrow="Ticker deep dive"
+        title={
+          <>
+            Who on {BRAND.hill} traded{" "}
+            <span className="ticker-symbol text-primary">{ticker}</span>?
+          </>
+        }
+        description="Intelligence brief, disclosure lag, crowd overlap, and every disclosed buy and sell in one place."
+        actions={
+          <>
+            <DataSourceBadge provider={provider} />
+            <ExportCsvLink
+              href={`/api/export/trades?ticker=${encodeURIComponent(ticker)}`}
+              label={`Export ${ticker}`}
+            />
+            <FollowTickerButton ticker={ticker} />
+          </>
+        }
+      />
+
+      {source === "mock" && (
+        <p className="-mt-4 rounded-xl border border-primary/20 bg-primary/[0.04] px-4 py-3 text-sm text-muted-foreground">
+          {getLiveDataSetupMessage()}
         </p>
-        <div className="flex flex-wrap items-center gap-2">
-          <DataSourceBadge provider={provider} />
-        </div>
-        {source === "mock" && (
-          <p className="rounded-lg border border-primary/20 bg-primary/[0.04] px-3 py-2 text-sm text-muted-foreground">
-            {getLiveDataSetupMessage()}
-          </p>
-        )}
-        <div className="flex flex-wrap items-center gap-3">
-          <ExportCsvLink
-            href={`/api/export/trades?ticker=${encodeURIComponent(ticker)}`}
-            label={`Export ${ticker} CSV`}
-          />
-          <FollowTickerButton ticker={ticker} />
-        </div>
-      </div>
+      )}
 
       {trades.length === 0 ? (
         <Card className="border-border/60 bg-card/40">
@@ -118,9 +118,15 @@ export async function TickerPageContent({ symbol }: TickerPageProps) {
         </Card>
       ) : (
         <>
-          {intelligence && <TickerIntelligencePanel intelligence={intelligence} />}
+          {intelligence && (
+            <SectionBlock title="Intelligence brief">
+              <TickerIntelligencePanel intelligence={intelligence} />
+            </SectionBlock>
+          )}
           {holders.length > 0 && (
-            <TickerHoldersPanel ticker={ticker} holders={holders} />
+            <SectionBlock title="Current holders">
+              <TickerHoldersPanel ticker={ticker} holders={holders} />
+            </SectionBlock>
           )}
           <TickerAltDataPanel
             ticker={ticker}

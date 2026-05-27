@@ -17,25 +17,29 @@ interface TrendingTickersProps {
   tickers: TrendingTicker[];
   title?: string;
   description?: string;
+  embedded?: boolean;
 }
 
 export function TrendingTickers({
   tickers,
   title = "Hot on the Hill",
   description = `Most-traded stocks on ${BRAND.hill} in the last 90 days — the question everyone asks first.`,
+  embedded = false,
 }: TrendingTickersProps) {
   return (
-    <Card className="border-border/60 bg-card/40">
-      <CardHeader>
-        <CardTitle>{title}</CardTitle>
-        <CardDescription>{description}</CardDescription>
-      </CardHeader>
-      <CardContent className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+    <Card className={cn(!embedded && "border-border/60 bg-card/40")}>
+      {!embedded && (
+        <CardHeader>
+          <CardTitle>{title}</CardTitle>
+          <CardDescription>{description}</CardDescription>
+        </CardHeader>
+      )}
+      <CardContent className={cn("grid gap-3 sm:grid-cols-2 lg:grid-cols-3", embedded && "p-0")}>
         {tickers.slice(0, 9).map((entry, index) => (
           <Link
             key={entry.ticker}
             href={`/ticker/${entry.ticker}`}
-            className="group rounded-lg border border-border bg-background/30 p-3 transition-colors hover:border-primary/30 hover:bg-primary/[0.03]"
+            className="group rounded-xl border border-border/70 bg-background/40 p-4 transition-all hover:border-primary/30 hover:bg-primary/[0.04]"
           >
             <div className="flex items-start justify-between gap-2">
               <div>

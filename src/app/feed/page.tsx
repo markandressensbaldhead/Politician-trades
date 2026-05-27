@@ -4,6 +4,8 @@ import { OfficialPtrPanel } from "@/components/dashboard/official-ptr-panel";
 import { LiveTradeFeed } from "@/components/dashboard/live-trade-feed";
 import { MarketPulse } from "@/components/dashboard/market-pulse";
 import { TrendingTickers } from "@/components/dashboard/trending-tickers";
+import { PageHeader } from "@/components/layout/page-header";
+import { SectionBlock } from "@/components/layout/section-block";
 import { SiteContainer } from "@/components/layout/site-container";
 import { NextDisclosureSync } from "@/components/shared/next-disclosure-sync";
 import { BRAND, COPY } from "@/lib/brand";
@@ -30,35 +32,61 @@ export default async function FeedPage() {
   const trending = getTrendingTickers(allTrades, 12);
 
   return (
-    <SiteContainer>
-      <div className="mb-8 space-y-3">
-        <p className="page-eyebrow">{COPY.hillTrades}</p>
-        <h1 className="text-3xl font-semibold sm:text-4xl">
-          Every disclosed trade on {BRAND.hill}
-        </h1>
-        <p className="max-w-2xl text-base leading-relaxed text-muted-foreground">
-          Search by stock ticker, filter by party, and see how long each trade
-          took to be reported.
-          {source === "supabase" && " Data is synced from our database."}
-        </p>
-        {source === "supabase" && <NextDisclosureSync variant="card" className="max-w-xl" />}
-        <div className="flex flex-wrap gap-2 pt-1">
-          <ExportCsvLink
-            href="/api/export/trades?scope=feed"
-            label="Download recent trades"
-          />
-          <ExportCsvLink
-            href="/api/export/trades?scope=all"
-            label="Download full history"
-          />
-        </div>
-      </div>
+    <SiteContainer className="pb-16">
+      <PageHeader
+        eyebrow={COPY.hillTrades}
+        title={`Every disclosed trade on ${BRAND.hill}`}
+        description={
+          <>
+            Filter by ticker, party, or date range. Each row links to the member
+            profile and ticker deep dive.
+            {source === "supabase" && " Synced nightly from our database."}
+          </>
+        }
+        actions={
+          <>
+            <ExportCsvLink
+              href="/api/export/trades?scope=feed"
+              label="Recent CSV"
+            />
+            <ExportCsvLink
+              href="/api/export/trades?scope=all"
+              label="Full history"
+            />
+          </>
+        }
+      />
 
-      <div className="space-y-8">
-        <OfficialPtrPanel filings={housePtrFilings} />
-        <MarketPulse pulse={pulse} />
-        <TrendingTickers tickers={trending} />
-        <LiveTradeFeed trades={recentTrades} />
+      {source === "supabase" && (
+        <NextDisclosureSync variant="card" className="mb-8 max-w-xl" />
+      )}
+
+      <div className="space-y-12">
+        <SectionBlock title="At a glance">
+          <MarketPulse pulse={pulse} />
+        </SectionBlock>
+
+        {housePtrFilings.length > 0 && (
+          <SectionBlock
+            title="Official House filings"
+            description="Fresh PTR PDFs from the Clerk of the House."
+          >
+            <OfficialPtrPanel filings={housePtrFilings} />
+          </SectionBlock>
+        )}
+
+        {trending.length > 0 && (
+          <SectionBlock title="Trending tickers">
+            <TrendingTickers tickers={trending} />
+          </SectionBlock>
+        )}
+
+        <SectionBlock
+          title="All recent trades"
+          description="Search and filter the full disclosure stream."
+        >
+          <LiveTradeFeed trades={recentTrades} />
+        </SectionBlock>
       </div>
     </SiteContainer>
   );

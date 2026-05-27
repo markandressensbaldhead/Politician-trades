@@ -123,7 +123,46 @@ export function LeaderboardPanel({ entries, source }: LeaderboardPanelProps) {
         </div>
       </div>
 
-      <div className="overflow-x-auto">
+      <div className="space-y-3 p-4 md:hidden">
+        {filteredEntries.map((entry, index) => {
+          const rank = index + 1;
+          const isPositive = entry.returnVsSpy >= 0;
+
+          return (
+            <Link
+              key={entry.id}
+              href={`/politician/${entry.id}`}
+              className="block rounded-xl border border-border/70 bg-background/40 p-4 transition-colors hover:border-primary/25"
+            >
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <p className="text-xs font-semibold text-muted-foreground">
+                    #{String(rank).padStart(2, "0")}
+                  </p>
+                  <p className="mt-1 font-semibold">{entry.name}</p>
+                  <p className="text-sm text-muted-foreground">
+                    {entry.chamber}
+                    {entry.state ? ` · ${entry.state}` : ""}
+                  </p>
+                </div>
+                <div className="text-right">
+                  <p
+                    className={cn(
+                      "text-base font-semibold tabular-nums",
+                      isPositive ? "text-gain" : "text-loss"
+                    )}
+                  >
+                    {formatPercent(entry.returnVsSpy)}
+                  </p>
+                  <p className="text-xs text-muted-foreground">Edge {entry.edgeScore ?? "—"}</p>
+                </div>
+              </div>
+            </Link>
+          );
+        })}
+      </div>
+
+      <div className="hidden overflow-x-auto md:block">
         <Table>
           <TableHeader>
             <TableRow className="border-border hover:bg-transparent">

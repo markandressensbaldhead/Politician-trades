@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 
 import { SearchResults } from "@/components/search/search-results";
+import { PageHeader } from "@/components/layout/page-header";
 import { SiteContainer } from "@/components/layout/site-container";
 import { BRAND } from "@/lib/brand";
 import { getLiveDataSetupMessage } from "@/lib/data-provider";
@@ -22,17 +23,16 @@ export default async function SearchPage() {
   const tickers = getTrendingTickers(trades, 50, 365);
 
   return (
-    <SiteContainer>
-      <div className="mb-8 space-y-2">
-        <h1 className="text-3xl font-bold tracking-tight">Search the Hill</h1>
-        <p className="text-muted-foreground">
-          Find {BRAND.hill} members or jump straight to a ticker — the workflow
-          retail actually uses.
-          {source === "live"
-            ? ` ${politicians.length} members · ${tickers.length} tickers with activity.`
-            : ` ${getLiveDataSetupMessage()}`}
-        </p>
-      </div>
+    <SiteContainer className="pb-16">
+      <PageHeader
+        eyebrow="Search"
+        title="Find a member or ticker"
+        description={
+          source === "live"
+            ? `${politicians.length} members and ${tickers.length} active tickers in our index.`
+            : getLiveDataSetupMessage()
+        }
+      />
 
       <SearchResults politicians={politicians} tickers={tickers} source={source} />
     </SiteContainer>

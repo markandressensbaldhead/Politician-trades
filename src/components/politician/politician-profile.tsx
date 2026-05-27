@@ -200,10 +200,10 @@ export function PoliticianProfile({
               key={stat.label}
               className="bg-card/80 px-4 py-4 sm:px-5"
             >
-              <p className="field-label">{stat.label}</p>
+              <p className="metric-label">{stat.label}</p>
               <p
                 className={cn(
-                  "mt-1.5 flex items-center gap-1 text-xl font-semibold tabular-nums sm:text-2xl",
+                  "mt-2 flex items-center gap-1 text-xl font-semibold tabular-nums sm:text-2xl",
                   stat.highlight === true && "text-gain",
                   stat.highlight === false && "text-loss"
                 )}

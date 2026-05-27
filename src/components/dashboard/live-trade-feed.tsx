@@ -139,25 +139,22 @@ export function LiveTradeFeed({
         )}
       </CardHeader>
       <CardContent className="p-0">
-        <div className="divide-y divide-border/40">
+        <div>
           {filtered.map((trade) => {
             const scored = significanceById.get(trade.id);
 
             return (
-            <article
-              key={trade.id}
-              className="flex flex-col gap-3 p-4 transition-colors hover:bg-gain/5 lg:flex-row lg:items-center lg:justify-between"
-            >
-              <div className="min-w-0 space-y-2">
+            <article key={trade.id} className="data-row group">
+              <div className="min-w-0 flex-1 space-y-2.5">
                 <div className="flex flex-wrap items-center gap-2">
                   <Link
                     href={`/politician/${trade.politicianId}`}
-                    className="font-semibold hover:text-primary"
+                    className="text-[15px] font-semibold hover:text-primary"
                   >
                     {trade.politicianName}
                   </Link>
                   <PartyBadge party={trade.party} />
-                  <Badge variant="outline" className="text-[10px]">
+                  <Badge variant="outline" className="text-[11px] font-normal">
                     {trade.chamber}
                   </Badge>
                   <DisclosureLagBadge days={trade.disclosureLagDays} />
@@ -168,10 +165,10 @@ export function LiveTradeFeed({
                     />
                   )}
                 </div>
-                <p className="text-sm">
+                <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm">
                   <Badge
                     variant={trade.type === "Purchase" ? "gain" : "loss"}
-                    className="mr-2"
+                    className="text-[11px]"
                   >
                     {trade.type}
                   </Badge>
@@ -180,20 +177,23 @@ export function LiveTradeFeed({
                     className="ticker-symbol hover:text-primary"
                   >
                     {trade.ticker}
-                  </Link>{" "}
-                  · {trade.company}
-                </p>
-                <p className="text-sm tabular-nums text-foreground/90">
-                  {trade.amount}
-                </p>
+                  </Link>
+                  <span className="text-muted-foreground">·</span>
+                  <span className="text-muted-foreground">{trade.company}</span>
+                </div>
+                <p className="text-sm font-medium tabular-nums">{trade.amount}</p>
               </div>
-              <div className="shrink-0 text-right text-xs text-muted-foreground">
+              <div className="shrink-0 text-left text-sm text-muted-foreground sm:text-right">
                 <p>
                   Filed{" "}
-                  {formatRelativeTime(trade.filingDate ?? trade.tradeDate)}
+                  <span className="text-foreground">
+                    {formatRelativeTime(trade.filingDate ?? trade.tradeDate)}
+                  </span>
                 </p>
                 {trade.filingDate && (
-                  <p>Trade {formatRelativeTime(trade.tradeDate)}</p>
+                  <p className="mt-0.5">
+                    Trade {formatRelativeTime(trade.tradeDate)}
+                  </p>
                 )}
               </div>
             </article>
@@ -201,7 +201,7 @@ export function LiveTradeFeed({
           })}
 
           {filtered.length === 0 && (
-            <p className="p-8 text-center text-sm text-muted-foreground">
+            <p className="px-6 py-12 text-center text-sm text-muted-foreground">
               No trades match your filters.
             </p>
           )}
