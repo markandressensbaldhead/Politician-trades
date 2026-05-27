@@ -39,7 +39,9 @@ export default async function HomePage() {
     limit: 4,
   });
   const clusterIndex = buildClusterIndex(clusters);
-  const highConviction = getHighConvictionTrades(allTrades, 6, clusterIndex);
+  const highConviction = getHighConvictionTrades(allTrades, 5, clusterIndex, {
+    days: 90,
+  });
   const totalTrades = entries.reduce(
     (sum, entry) => sum + entry.tradesLast90Days,
     0

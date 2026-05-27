@@ -67,10 +67,35 @@ function rowToUnified(row: CongressTradeRow, index: number): UnifiedCongressTrad
 }
 
 function mockToUnified(): UnifiedCongressTrade[] {
+  const enrichment: Record<
+    string,
+    { filingDate: string; excessReturn: number | null }
+  > = {
+    t1: { filingDate: "2026-05-18", excessReturn: 22.4 },
+    t2: { filingDate: "2026-04-10", excessReturn: 8.6 },
+    t3: { filingDate: "2026-03-25", excessReturn: -4.2 },
+    t4: { filingDate: "2026-05-08", excessReturn: 11.3 },
+    t5: { filingDate: "2026-04-28", excessReturn: 6.1 },
+    t6: { filingDate: "2026-05-02", excessReturn: 14.8 },
+    t7: { filingDate: "2026-04-22", excessReturn: 9.2 },
+    t8: { filingDate: "2026-03-18", excessReturn: 5.4 },
+    t8b: { filingDate: "2026-04-26", excessReturn: 19.7 },
+    t9: { filingDate: "2026-04-12", excessReturn: 7.8 },
+    t9b: { filingDate: "2026-05-01", excessReturn: 12.5 },
+    t10: { filingDate: "2026-03-08", excessReturn: -9.6 },
+    t11: { filingDate: "2026-05-20", excessReturn: 3.2 },
+    t12: { filingDate: "2026-04-20", excessReturn: 16.9 },
+    t12b: { filingDate: "2026-05-22", excessReturn: 21.1 },
+  };
+
   const rows: UnifiedCongressTrade[] = [];
 
   for (const politician of politicians) {
     for (const [index, trade] of politician.trades.entries()) {
+      const meta = enrichment[trade.id];
+      const filingDate = meta?.filingDate ?? trade.date;
+      const excessReturn = meta?.excessReturn ?? null;
+
       rows.push({
         id: `${politician.id}-${trade.id}`,
         politicianId: politician.id,
@@ -82,10 +107,10 @@ function mockToUnified(): UnifiedCongressTrade[] {
         type: trade.type,
         amount: trade.amount,
         tradeDate: trade.date,
-        filingDate: trade.date,
-        disclosureLagDays: getDisclosureLagDays(trade.date, trade.date),
+        filingDate,
+        disclosureLagDays: getDisclosureLagDays(trade.date, filingDate),
         sector: trade.sector,
-        excessReturn: null,
+        excessReturn,
       });
     }
   }
