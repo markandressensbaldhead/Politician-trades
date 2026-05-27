@@ -57,7 +57,7 @@ export function LiveTradeFeed({
   trades,
   showFilters = true,
   title = "Recent trades",
-  description = "Search and filter recent stock disclosures from members of Congress.",
+  description = "Search and filter recent stock disclosures from the Hill.",
   exportFilename = "tradethehill-feed.csv",
 }: LiveTradeFeedProps) {
   const [query, setQuery] = useState("");

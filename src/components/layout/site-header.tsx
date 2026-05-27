@@ -15,12 +15,12 @@ import {
 
 import { ShareOnXButton } from "@/components/shared/share-on-x-button";
 import { Button } from "@/components/ui/button";
-import { BRAND } from "@/lib/brand";
+import { BRAND, COPY } from "@/lib/brand";
 import { buildSiteTweet, SITE_URL } from "@/lib/share";
 import { cn } from "@/lib/utils";
 
 const navItems = [
-  { href: "/#trade-of-day", label: "Today", icon: Target },
+  { href: "/#trade-of-day", label: "Hill pick", icon: Target },
   { href: "/#x-news", label: "X Pulse", icon: MessageCircle },
   { href: "/feed", label: "Trades", icon: BarChart3 },
   { href: "/portfolio", label: "Portfolio", icon: Wallet },
@@ -95,7 +95,7 @@ export function SiteHeader() {
             label="Share"
           />
           <Button asChild size="sm" className="hidden sm:inline-flex">
-            <Link href="/#trade-of-day">Today&apos;s pick</Link>
+            <Link href="/#trade-of-day">Today&apos;s {COPY.hillPick}</Link>
           </Button>
           <Button asChild size="sm" variant="outline" className="sm:hidden">
             <Link href="/feed">Trades</Link>
@@ -113,11 +113,10 @@ export function SiteFooter() {
         <div className="flex flex-col items-center gap-6 text-center">
           <div>
             <p className="text-lg font-semibold tracking-tight">
-              Congress has to disclose. You get to deploy smarter.
+              {COPY.footerHeadline}
             </p>
             <p className="mt-2 max-w-xl text-sm text-muted-foreground">
-              Free for retail. Share today&apos;s pick on X — that&apos;s how
-              this spreads.
+              {COPY.footerSub}
             </p>
           </div>
 
@@ -128,7 +127,7 @@ export function SiteFooter() {
               label="Share on X"
             />
             <Button asChild variant="outline">
-              <Link href="/#trade-of-day">Today&apos;s trade</Link>
+              <Link href="/#trade-of-day">Today&apos;s {COPY.hillPick}</Link>
             </Button>
             <Button asChild variant="outline">
               <Link href="/portfolio">Portfolio check</Link>
@@ -154,9 +153,7 @@ export function SiteFooter() {
           </div>
 
           <p className="max-w-2xl text-xs leading-relaxed text-muted-foreground">
-            STOCK Act public filings only. Research and education — not
-            investment advice. Past congressional performance does not
-            guarantee future results.
+            {COPY.disclosureDisclaimer}
           </p>
         </div>
       </div>

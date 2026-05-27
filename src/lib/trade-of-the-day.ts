@@ -1,4 +1,5 @@
 import { TradeCluster } from "@/lib/trade-clusters";
+import { BRAND, COPY } from "@/lib/brand";
 import {
   PoliticianScoreContext,
   ScoreTradeContext,
@@ -54,7 +55,7 @@ function buildActionCopy(
       action: "research-buy",
       actionLabel: `See all $${trade.ticker} trades`,
       actionHeadline: `${trade.clusterPoliticianCount} lawmakers piled into $${trade.ticker}`,
-      actionSummary: `When multiple members of Congress buy the same stock, retail watches. This is today's crowd signal — open the ticker page before it hits your timeline.`,
+      actionSummary: `When multiple ${COPY.lawmakers} buy the same stock, retail watches. Today's ${COPY.hillSignal} — open the ticker page before it hits your timeline.`,
     };
   }
 
@@ -72,7 +73,7 @@ function buildActionCopy(
       action: "research-buy",
       actionLabel: `Track $${trade.ticker}`,
       actionHeadline: `${lastName} just bought $${trade.ticker}`,
-      actionSummary: `Fresh congressional buying in ${trade.sector || "this name"}. One click to every related trade — then set an alert so you don't miss the next filing.`,
+      actionSummary: `Fresh ${COPY.hillFlow} in ${trade.sector || "this name"}. One click to every related trade — then set an alert so you don't miss the next filing.`,
     };
   }
 
@@ -80,8 +81,8 @@ function buildActionCopy(
     return {
       action: "review-sell",
       actionLabel: `Review $${trade.ticker}`,
-      actionHeadline: `Capitol is selling $${trade.ticker}`,
-      actionSummary: `Multiple lawmakers trimming the same name. If you're holding it, read the filings — don't ignore the signal.`,
+      actionHeadline: `${BRAND.hill} is selling $${trade.ticker}`,
+      actionSummary: `Multiple ${COPY.lawmakers} trimming the same name. If you're holding it, read the filings — don't ignore the ${COPY.hillSignal}.`,
     };
   }
 
@@ -90,14 +91,14 @@ function buildActionCopy(
       action: "review-sell",
       actionLabel: `See $${trade.ticker} sales`,
       actionHeadline: `${lastName} sold $${trade.ticker}`,
-      actionSummary: `Congressional selling often flags profit-taking or risk reduction. Check whether it overlaps your portfolio.`,
+      actionSummary: `${COPY.hillFlow} selling often flags profit-taking or risk reduction. Check whether it overlaps your portfolio.`,
     };
   }
 
   return {
     action: "watch",
     actionLabel: `Watch ${trade.ticker}`,
-    actionHeadline: `${trade.ticker} is today's Capitol signal`,
+    actionHeadline: `$${trade.ticker} is today's ${COPY.hillSignal}`,
     actionSummary: trade.investorTake,
   };
 }

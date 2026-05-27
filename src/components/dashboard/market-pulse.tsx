@@ -9,6 +9,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import type { MarketPulse as MarketPulseStats } from "@/lib/trade-analytics";
+import { BRAND } from "@/lib/brand";
 
 interface MarketPulseProps {
   pulse: MarketPulseStats;
@@ -44,9 +45,9 @@ export function MarketPulse({ pulse }: MarketPulseProps) {
   return (
     <Card className="overflow-hidden border-border bg-card shadow-sm">
       <CardHeader className="border-b border-border pb-4">
-        <CardTitle className="text-lg font-semibold">At a glance</CardTitle>
+        <CardTitle className="text-lg font-semibold">Hill pulse</CardTitle>
         <CardDescription>
-          A quick snapshot of congressional trading activity over the last 90
+          A quick snapshot of trading activity on {BRAND.hill} over the last 90
           days.
         </CardDescription>
       </CardHeader>

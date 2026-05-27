@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { Badge } from "@/components/ui/badge";
+import { BRAND } from "@/lib/brand";
 import {
   Card,
   CardContent,
@@ -41,7 +42,7 @@ export function RecentTrades({ trades }: RecentTradesProps) {
       <CardHeader>
         <CardTitle>Recent Trades</CardTitle>
         <CardDescription>
-          Latest reported transactions across Congress
+          Latest reported transactions on {BRAND.hill}
         </CardDescription>
       </CardHeader>
       <CardContent>

@@ -29,7 +29,7 @@ function buildTradeAlertEmail(alert: NewTradeAlert): {
           <p style="margin: 0 0 8px; font-size: 12px; letter-spacing: 0.04em; color: #93c5fd;">
             Trade alert
           </p>
-          <h1 style="margin: 0; font-size: 24px;">New Congressional Trade</h1>
+          <h1 style="margin: 0; font-size: 24px;">New trade on {BRAND.hill}</h1>
         </div>
         <div style="border: 1px solid #e5e7eb; border-top: none; padding: 24px; border-radius: 0 0 12px 12px;">
           <p style="font-size: 16px; margin-top: 0;">

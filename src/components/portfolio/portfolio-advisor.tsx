@@ -17,6 +17,7 @@ import {
   PortfolioAdviceResponse,
   SavedPortfolio,
 } from "@/types/portfolio";
+import { BRAND, COPY } from "@/lib/brand";
 
 interface PortfolioAdvisorProps {
   portfolio: SavedPortfolio | null;
@@ -71,9 +72,9 @@ export function PortfolioAdvisor({ portfolio }: PortfolioAdvisorProps) {
               AI portfolio advisor
             </CardTitle>
             <CardDescription className="max-w-2xl leading-relaxed">
-              Compare your holdings to congressional disclosure flow — overlaps,
-              cluster activity, and high-conviction Washington signals you may
-              be missing.
+              Compare your holdings to {COPY.hillFlow} — overlaps, crowd
+              activity, and high-conviction {BRAND.hill} signals you may be
+              missing.
             </CardDescription>
           </div>
           <Button
@@ -111,14 +112,14 @@ export function PortfolioAdvisor({ portfolio }: PortfolioAdvisorProps) {
               </p>
               <p className="mt-3 text-xs text-muted-foreground">
                 Based on {result.holdingsCount} holdings and{" "}
-                {result.congressTradesReviewed.toLocaleString()} congressional
-                trades · Updated{" "}
+                {result.congressTradesReviewed.toLocaleString()} {COPY.hillTrades}{" "}
+                reviewed · Updated{" "}
                 {new Date(result.generatedAt).toLocaleString()}
               </p>
             </div>
 
             {result.advice.overlaps.length > 0 && (
-              <AdviceSection title="Congress overlap in your holdings">
+              <AdviceSection title={`${COPY.hillFlow} in your holdings`}>
                 <div className="space-y-3">
                   {result.advice.overlaps.map((overlap) => (
                     <div
@@ -147,7 +148,7 @@ export function PortfolioAdvisor({ portfolio }: PortfolioAdvisorProps) {
             )}
 
             {result.advice.opportunities.length > 0 && (
-              <AdviceSection title="Congress signals to review">
+              <AdviceSection title={`${COPY.hillSignal} to review`}>
                 <div className="space-y-3">
                   {result.advice.opportunities.map((item) => (
                     <div
@@ -168,7 +169,7 @@ export function PortfolioAdvisor({ portfolio }: PortfolioAdvisorProps) {
                       </div>
                       <p className="mt-2 text-sm">{item.rationale}</p>
                       <p className="mt-1 text-xs text-muted-foreground">
-                        Congress signal: {item.congressSignal}
+                        {COPY.hillSignal}: {item.congressSignal}
                       </p>
                     </div>
                   ))}
@@ -220,7 +221,7 @@ export function PortfolioAdvisor({ portfolio }: PortfolioAdvisorProps) {
 
             <p className="text-xs leading-relaxed text-muted-foreground">
               For research and education only — not personalized investment
-              advice. Congressional disclosures can lag trades by up to 45 days.
+              advice. {BRAND.hill} disclosures can lag trades by up to 45 days.
             </p>
           </div>
         )}

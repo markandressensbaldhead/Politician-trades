@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 
 import { TickerPageContent } from "@/components/ticker/ticker-page-content";
 import { SiteContainer } from "@/components/layout/site-container";
+import { BRAND } from "@/lib/brand";
 
 interface PageProps {
   params: { symbol: string };
@@ -11,8 +12,8 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const symbol = params.symbol.toUpperCase();
 
   return {
-    title: `${symbol} Congressional Trades`,
-    description: `See every member of Congress who disclosed trading ${symbol}, with amounts, dates, and disclosure lag.`,
+    title: `$${symbol} on ${BRAND.hill}`,
+    description: `See every ${BRAND.hill} member who disclosed trading ${symbol}, with amounts, dates, and disclosure lag.`,
   };
 }
 

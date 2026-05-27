@@ -22,6 +22,7 @@ import {
 } from "@/lib/trade-clusters";
 import { getHighConvictionTrades } from "@/lib/trade-significance";
 import { buildPoliticianMetadataIndex } from "@/lib/politician-metadata";
+import { COPY } from "@/lib/brand";
 import { getMarketPulse, getTrendingTickers } from "@/lib/trade-analytics";
 import { getTradeOfTheDay } from "@/lib/trade-of-the-day";
 import { buildTopicalXNews } from "@/lib/x-news";
@@ -123,8 +124,8 @@ export default async function HomePage() {
       {trending.length > 0 && (
         <TrendingTickers
           tickers={trending}
-          title="What retail is clicking"
-          description="The tickers getting the most congressional flow right now — each one is a page full of trades."
+          title="Hot on the Hill"
+          description={`The tickers getting the most ${COPY.hillFlow} right now — each one is a page full of trades.`}
         />
       )}
 
@@ -135,7 +136,7 @@ export default async function HomePage() {
         <LiveTradeFeed
           trades={recentTrades.slice(0, 80)}
           showFilters={false}
-          title="Fresh filings"
+          title="Fresh from the Hill"
           description="Just disclosed — click any row before the crowd catches up."
         />
       </div>

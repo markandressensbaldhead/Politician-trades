@@ -94,7 +94,7 @@ export function FollowTickerButton({
             Ticker alerts
           </DialogTitle>
           <DialogDescription>
-            Get an email whenever any member of Congress reports a new{" "}
+            Get an email whenever any {BRAND.hill} member reports a new{" "}
             {ticker.toUpperCase()} trade — a feature users request over generic
             email alerts and newsletters on {BRAND.name} and Quiver.
           </DialogDescription>

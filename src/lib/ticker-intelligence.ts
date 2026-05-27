@@ -4,6 +4,7 @@ import {
   getMarketPulse,
 } from "@/lib/trade-analytics";
 import { getPoliticianMetadata } from "@/lib/politician-metadata";
+import { BRAND } from "@/lib/brand";
 import {
   buildClusterIndex,
   getTradeClusters,
@@ -120,11 +121,11 @@ function buildHeadline(input: {
   }
 
   if (input.netFlow === "buying") {
-    return `$${input.ticker}: Capitol net buying (${input.politicianCount} members)`;
+    return `$${input.ticker}: ${BRAND.hill} net buying (${input.politicianCount} members)`;
   }
 
   if (input.netFlow === "selling") {
-    return `$${input.ticker}: Capitol net selling (${input.politicianCount} members)`;
+    return `$${input.ticker}: ${BRAND.hill} net selling (${input.politicianCount} members)`;
   }
 
   return `$${input.ticker}: ${input.politicianCount} member${input.politicianCount !== 1 ? "s" : ""} · mixed flow`;

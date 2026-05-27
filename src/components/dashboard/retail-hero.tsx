@@ -2,6 +2,7 @@ import Link from "next/link";
 import { ArrowRight, Sparkles, TrendingUp, Zap } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { BRAND, COPY } from "@/lib/brand";
 import { cn, formatPercent } from "@/lib/utils";
 
 interface RetailHeroProps {
@@ -42,25 +43,23 @@ export function RetailHero({
 
           <div className="space-y-4">
             <h1 className="max-w-3xl text-3xl font-semibold leading-[1.1] tracking-tight sm:text-4xl lg:text-5xl">
-              Congress trades stocks.
-              <span className="block text-primary">Now you can see every buy.</span>
+              {COPY.heroHeadline}
+              <span className="block text-primary">{COPY.heroSubhead}</span>
             </h1>
             <p className="max-w-2xl text-base leading-relaxed text-muted-foreground sm:text-lg">
-              Lawmakers file every trade by law — but the data is buried in PDFs.
-              We turn it into a retail-ready feed: who bought, how much, and
-              whether it beat the S&amp;P. Your edge is speed, not insider access.
+              {COPY.heroBody}
             </p>
           </div>
 
           <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
             <Button asChild size="lg" className="h-12 px-6 text-base">
               <Link href="#trade-of-day">
-                See today&apos;s pick
+                {COPY.heroCtaPrimary}
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Link>
             </Button>
             <Button asChild size="lg" variant="outline" className="h-12 px-6 text-base">
-              <Link href="/feed">Browse all trades</Link>
+              <Link href="/feed">{COPY.heroCtaSecondary}</Link>
             </Button>
             <Button asChild size="lg" variant="outline" className="h-12 px-6 text-base">
               <Link href="/portfolio">
@@ -78,7 +77,7 @@ export function RetailHero({
 
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-1">
           <HeroStat
-            label="Congress vs S&P (90d avg)"
+            label={COPY.heroStatCongress}
             value={formatPercent(avgReturnVsSpy)}
             positive={avgReturnVsSpy >= 0}
             icon={TrendingUp}
@@ -101,11 +100,9 @@ export function RetailHero({
             <div className="flex items-start gap-3">
               <Zap className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
               <div>
-                <p className="text-sm font-semibold">Built for retail deployers</p>
+                <p className="text-sm font-semibold">Built for retail on {BRAND.hill}</p>
                 <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
-                  One page for today&apos;s signal, one click to the ticker, one
-                  alert when Congress moves again. Share the daily pick — that&apos;s
-                  the whole story.
+                  {COPY.heroRetailBlurb}
                 </p>
               </div>
             </div>

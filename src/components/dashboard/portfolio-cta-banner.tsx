@@ -2,6 +2,7 @@ import Link from "next/link";
 import { ArrowRight, Sparkles } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { BRAND, COPY } from "@/lib/brand";
 
 export function PortfolioCtaBanner() {
   return (
@@ -13,12 +14,12 @@ export function PortfolioCtaBanner() {
             Portfolio overlap check
           </p>
           <h2 className="text-2xl font-semibold tracking-tight sm:text-3xl">
-            Already hold what Congress just bought?
+            Already trading what {BRAND.hill} just bought?
           </h2>
           <p className="text-sm leading-relaxed text-muted-foreground sm:text-base">
             Link Robinhood, import a CSV, or type your tickers. We&apos;ll show
-            where your book overlaps Capitol flow — and where you&apos;re missing
-            the signal entirely.
+            where your book overlaps {COPY.hillFlow} — and where you&apos;re missing
+            the {COPY.hillSignal} entirely.
           </p>
         </div>
         <div className="flex flex-col gap-3 sm:flex-row">

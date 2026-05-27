@@ -4,14 +4,15 @@ import { LiveTradeFeed } from "@/components/dashboard/live-trade-feed";
 import { MarketPulse } from "@/components/dashboard/market-pulse";
 import { TrendingTickers } from "@/components/dashboard/trending-tickers";
 import { SiteContainer } from "@/components/layout/site-container";
+import { BRAND, COPY } from "@/lib/brand";
 import { ExportCsvLink } from "@/components/shared/export-csv-button";
 import { getAllTrades, getRecentTrades } from "@/lib/congress-data";
 import { getMarketPulse, getTrendingTickers } from "@/lib/trade-analytics";
 
 export const metadata: Metadata = {
-  title: "Recent Trades",
+  title: "Hill Trades Feed",
   description:
-    "Browse recent congressional stock trades with filters for ticker, party, and date.",
+    "Browse recent trades on the Hill with filters for ticker, party, and date.",
 };
 
 export default async function FeedPage() {
@@ -24,9 +25,9 @@ export default async function FeedPage() {
   return (
     <SiteContainer>
       <div className="mb-8 space-y-3">
-        <p className="page-eyebrow">Recent trades</p>
+        <p className="page-eyebrow">{COPY.hillTrades}</p>
         <h1 className="text-3xl font-semibold sm:text-4xl">
-          Every disclosed congressional trade
+          Every disclosed trade on {BRAND.hill}
         </h1>
         <p className="max-w-2xl text-base leading-relaxed text-muted-foreground">
           Search by stock ticker, filter by party, and see how long each trade

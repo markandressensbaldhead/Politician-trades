@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Search as SearchIcon, X } from "lucide-react";
 
 import { TrendingTickers } from "@/components/dashboard/trending-tickers";
+import { BRAND } from "@/lib/brand";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -200,7 +201,7 @@ export function SearchResults({
         <TrendingTickers
           tickers={tickerResults}
           title="Matching Tickers"
-          description="Open any ticker to see every member of Congress who traded it."
+          description={`Open any ticker to see every ${BRAND.hill} member who traded it.`}
         />
       )}
     </div>

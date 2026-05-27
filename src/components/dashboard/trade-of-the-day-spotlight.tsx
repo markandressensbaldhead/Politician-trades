@@ -15,6 +15,7 @@ import { PartyBadge } from "@/components/leaderboard/party-badge";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { buildTradeOfDayTweet, SITE_URL } from "@/lib/share";
+import { COPY } from "@/lib/brand";
 import { TradeOfTheDay } from "@/lib/trade-of-the-day";
 import { cn, formatDate, formatPercent, formatRelativeTime } from "@/lib/utils";
 
@@ -64,7 +65,7 @@ export function TradeOfTheDaySpotlight({ pick }: TradeOfTheDaySpotlightProps) {
           <div className="flex flex-wrap items-center gap-2">
             <Badge className="gap-1 bg-primary text-primary-foreground hover:bg-primary">
               <Target className="h-3 w-3" />
-              Today&apos;s trade
+              Today&apos;s {COPY.hillPick}
             </Badge>
             <span className="text-xs text-muted-foreground">
               {formatDate(pick.pickDate)} · The one to share

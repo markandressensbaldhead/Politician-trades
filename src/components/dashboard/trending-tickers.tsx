@@ -10,6 +10,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { TrendingTicker } from "@/lib/trade-analytics";
+import { BRAND } from "@/lib/brand";
 import { cn, formatDate } from "@/lib/utils";
 
 interface TrendingTickersProps {
@@ -20,8 +21,8 @@ interface TrendingTickersProps {
 
 export function TrendingTickers({
   tickers,
-  title = "Trending Tickers",
-  description = "Most-traded stocks across Congress in the last 90 days — the question everyone asks first.",
+  title = "Hot on the Hill",
+  description = `Most-traded stocks on ${BRAND.hill} in the last 90 days — the question everyone asks first.`,
 }: TrendingTickersProps) {
   return (
     <Card className="border-border/60 bg-card/40">

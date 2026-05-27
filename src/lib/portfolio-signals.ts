@@ -1,4 +1,5 @@
 import { buildClusterIndex, getTradeClusters } from "@/lib/trade-clusters";
+import { COPY } from "@/lib/brand";
 import { buildPoliticianMetadataIndex } from "@/lib/politician-metadata";
 import { getHighConvictionTrades } from "@/lib/trade-significance";
 import { getTrendingTickers } from "@/lib/trade-analytics";
@@ -118,7 +119,7 @@ export function getPortfolioCongressSignals(
 
   let summary = "No recent congressional activity in your holdings.";
   if (overlapTrades.length > 0 && missingClusters.length > 0) {
-    summary = `You hold ${overlapTickers.length} ticker${overlapTickers.length !== 1 ? "s" : ""} with recent Capitol flow, but you're missing ${missingClusters.length} crowd signal${missingClusters.length !== 1 ? "s" : ""} lawmakers are chasing.`;
+    summary = `You hold ${overlapTickers.length} ticker${overlapTickers.length !== 1 ? "s" : ""} with recent ${COPY.hillFlow}, but you're missing ${missingClusters.length} crowd signal${missingClusters.length !== 1 ? "s" : ""} ${COPY.lawmakers} are chasing.`;
   } else if (overlapTrades.length > 0) {
     summary = `${overlapTrades.length} recent congressional trade${overlapTrades.length !== 1 ? "s" : ""} overlap your book — review direction (buy vs sell) before sizing.`;
   } else if (missingClusters.length > 0) {

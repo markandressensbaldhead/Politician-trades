@@ -1,4 +1,4 @@
-import { BRAND, SITE_URL } from "@/lib/brand";
+import { BRAND, COPY, SITE_URL } from "@/lib/brand";
 import { TradeOfTheDay } from "@/lib/trade-of-the-day";
 import { formatPercent } from "@/lib/utils";
 
@@ -20,16 +20,16 @@ export function buildTradeOfDayTweet(pick: TradeOfTheDay, url = SITE_URL): strin
       : "";
   const clusterNote =
     cluster && cluster.politicianCount >= 2
-      ? `\n${cluster.politicianCount} lawmakers on $${trade.ticker}.`
+      ? `\n${cluster.politicianCount} ${COPY.lawmakers} on $${trade.ticker}.`
       : "";
 
-  return `${actionHeadline}${performance}${clusterNote}\n\n${BRAND.name} tracks every disclosed congressional stock trade 👇`;
+  return `${actionHeadline}${performance}${clusterNote}\n\n${BRAND.name} — ${BRAND.tagline} 👇`;
 }
 
 export function buildSiteTweet(url = SITE_URL): string {
-  return `Congress has to disclose every stock trade.\n\n${BRAND.name} shows what they bought, what they sold, and who's beating the S&P.\n\nToday's picks update daily 👇`;
+  return `${COPY.heroSubhead}\n\n${BRAND.name} tracks every disclosed trade on ${BRAND.hill} — who bought, who sold, and who's beating the S&P.\n\nToday's ${COPY.hillPick} updates daily 👇`;
 }
 
 export function buildTickerTweet(ticker: string, politicianCount: number, url: string): string {
-  return `$${ticker}: ${politicianCount} members of Congress traded it recently.\n\nSee every buy, sell, and return vs the S&P on ${BRAND.name} 👇\n${url}/ticker/${ticker}`;
+  return `$${ticker}: ${politicianCount} ${COPY.lawmakers} on ${BRAND.hill} traded it recently.\n\nEvery buy, sell, and return vs the S&P on ${BRAND.name} 👇\n${url}/ticker/${ticker}`;
 }

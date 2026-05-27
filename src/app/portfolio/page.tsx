@@ -2,11 +2,12 @@ import type { Metadata } from "next";
 
 import { PortfolioPageContent } from "@/components/portfolio/portfolio-page-content";
 import { SiteContainer } from "@/components/layout/site-container";
+import { BRAND, COPY } from "@/lib/brand";
 
 export const metadata: Metadata = {
   title: "Portfolio Advisor",
   description:
-    "Link your Robinhood portfolio and get AI research tailored to your holdings vs congressional trades.",
+    `Link your portfolio and see where ${BRAND.hill} flow overlaps your holdings — plus AI research on Trade the Hill.`,
 };
 
 export default function PortfolioPage() {
@@ -15,12 +16,12 @@ export default function PortfolioPage() {
       <div className="mb-8 space-y-3">
         <p className="page-eyebrow">Personalized research</p>
         <h1 className="text-3xl font-semibold sm:text-4xl">
-          Portfolio advisor
+          {COPY.vsYourBook}
         </h1>
         <p className="max-w-2xl text-base leading-relaxed text-muted-foreground">
-          Connect Robinhood with secure OAuth, import a CSV, or add holdings
-          manually — then get AI research tailored to your book vs. congressional
-          trades.
+          Connect Robinhood, import a CSV, or add holdings manually — then see
+          where {COPY.hillFlow} hits your book and get AI research tailored to
+          your tickers.
         </p>
       </div>
 

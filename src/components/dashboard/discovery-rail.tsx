@@ -8,6 +8,7 @@ import {
   Wallet,
 } from "lucide-react";
 
+import { BRAND, COPY } from "@/lib/brand";
 import { TradeCluster } from "@/lib/trade-clusters";
 import { LeaderboardEntry } from "@/types";
 import { TrendingTicker } from "@/lib/trade-analytics";
@@ -61,7 +62,7 @@ export function DiscoveryRail({
       eyebrow: "Personalized",
       title: "Match your book",
       description:
-        "Link Robinhood or paste holdings — see where Congress overlaps your portfolio.",
+        "Link Robinhood or paste holdings — see where {BRAND.hill} overlaps your portfolio.",
       accent: "text-primary",
     },
     {
@@ -70,7 +71,7 @@ export function DiscoveryRail({
       eyebrow: "Deep dive",
       title: "By state",
       description:
-        "Which states generate the most congressional trading flow? Explore the map.",
+        "Which states generate the most {COPY.hillFlow}? Explore the map.",
       accent: "text-muted-foreground",
     },
   ].filter(Boolean) as Array<{

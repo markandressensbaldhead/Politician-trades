@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Inter, JetBrains_Mono } from "next/font/google";
 
-import { BRAND } from "@/lib/brand";
+import { BRAND, COPY } from "@/lib/brand";
 import { SiteFooter, SiteHeader } from "@/components/layout/site-header";
 
 import "./globals.css";
@@ -23,19 +23,19 @@ export const metadata: Metadata = {
     template: `%s | ${BRAND.name}`,
   },
   description:
-    "Free tracker for every congressional stock trade. See today's pick, who's beating the S&P, and where lawmakers are converging — built for retail.",
+    "Track every disclosed trade on the Hill. Today's pick, crowd signals, vs-S&P performance — built for retail on Trade the Hill.",
   openGraph: {
-    title: "Congress trades stocks. Now you can see every buy.",
+    title: "Trade the Hill — see every congressional buy.",
     description:
-      "Free STOCK Act dashboard: today's trade pick, crowd signals, and performance vs the S&P.",
+      "Free STOCK Act feed: today's Hill pick, crowd signals, and performance vs the S&P.",
     type: "website",
     siteName: BRAND.name,
   },
   twitter: {
     card: "summary_large_image",
-    title: "See what Congress is buying — free",
+    title: `${BRAND.name} — ${BRAND.tagline}`,
     description:
-      "Today's congressional trade pick + every disclosed buy/sell. Built for retail.",
+      `Today's ${COPY.hillPick} + every disclosed buy and sell on ${BRAND.hill}. Built for retail.`,
   },
 };
 

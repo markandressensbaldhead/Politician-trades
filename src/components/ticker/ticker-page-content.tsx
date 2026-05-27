@@ -24,6 +24,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { buildPoliticianMetadataIndex } from "@/lib/politician-metadata";
+import { BRAND } from "@/lib/brand";
 import { buildClusterIndex, getTradeClusters } from "@/lib/trade-clusters";
 import { scoreTrades } from "@/lib/trade-significance";
 import { buildTickerIntelligence } from "@/lib/ticker-intelligence";
@@ -65,13 +66,12 @@ export async function TickerPageContent({ symbol }: TickerPageProps) {
       <div className="space-y-3">
         <p className="page-eyebrow">Stock view</p>
         <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">
-          Who in Congress traded{" "}
+          Who on {BRAND.hill} traded{" "}
           <span className="ticker-symbol text-primary">{ticker}</span>?
         </h1>
         <p className="max-w-3xl text-muted-foreground">
           Intelligence brief, vs-S&P performance, crowd clusters, and every
-          disclosed buy and sell — the view power users search for on QuiverQuant
-          QuiverQuant, and other congressional trade trackers.
+          disclosed buy and sell — the deep dive {BRAND.name} is built for.
         </p>
         {source === "mock" && (
           <p className="rounded-lg border border-primary/20 bg-primary/[0.04] px-3 py-2 text-sm text-muted-foreground">

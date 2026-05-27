@@ -1,4 +1,5 @@
 import { UnifiedCongressTrade } from "@/types";
+import { COPY } from "@/lib/brand";
 import {
   committeeOverlapsSector,
   getDisclosureLagDays,
@@ -296,7 +297,7 @@ function buildInvestorTake(input: {
     return `${input.clusterPoliticianCount} members touched ${input.ticker} recently. Watch for follow-on filings that confirm whether this is a one-off or a theme.`;
   }
 
-  return `Scored ${input.significanceScore}/100 on size, timing, trader track record, and overlap with other Capitol activity in ${input.ticker}.`;
+  return `Scored ${input.significanceScore}/100 on size, timing, trader track record, and overlap with other ${COPY.hillFlow} in ${input.ticker}.`;
 }
 
 function buildSignalTag(input: {
@@ -310,7 +311,7 @@ function buildSignalTag(input: {
   type: UnifiedCongressTrade["type"];
 }): string {
   if (input.clusterPoliticianCount >= 3 && input.clusterNetFlow === "buying") {
-    return "Congress cluster";
+    return "Hill cluster";
   }
   if (input.amountTier === "mega") return "Whale disclosure";
   if (input.hasCommitteeOverlap) return "Committee overlap";

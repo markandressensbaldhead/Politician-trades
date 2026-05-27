@@ -2,13 +2,14 @@ import type { Metadata } from "next";
 
 import { SearchResults } from "@/components/search/search-results";
 import { SiteContainer } from "@/components/layout/site-container";
+import { BRAND } from "@/lib/brand";
 import { getSearchIndex, getAllTrades } from "@/lib/congress-data";
 import { getTrendingTickers } from "@/lib/trade-analytics";
 
 export const metadata: Metadata = {
   title: "Search",
   description:
-    "Search congressional stock trading by politician name or ticker symbol.",
+    "Search trades on the Hill by politician name or ticker symbol.",
 };
 
 export default async function SearchPage() {
@@ -22,10 +23,10 @@ export default async function SearchPage() {
   return (
     <SiteContainer>
       <div className="mb-8 space-y-2">
-        <h1 className="text-3xl font-bold tracking-tight">Search</h1>
+        <h1 className="text-3xl font-bold tracking-tight">Search the Hill</h1>
         <p className="text-muted-foreground">
-          Find members of Congress or jump straight to a ticker — the workflow
-          investors actually use.
+          Find {BRAND.hill} members or jump straight to a ticker — the workflow
+          retail actually uses.
           {source === "live"
             ? ` ${politicians.length} members · ${tickers.length} tickers with activity.`
             : " Showing demo data — add QUIVERQUANT_API_KEY for live results."}

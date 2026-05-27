@@ -16,6 +16,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { BRAND, COPY } from "@/lib/brand";
 import {
   buildXProfileUrl,
   getCuratedAccountsByCategory,
@@ -41,10 +42,10 @@ export function XNewsPanel({ topical }: XNewsPanelProps) {
             <p className="page-eyebrow">FinX pulse</p>
           </div>
           <h2 className="text-2xl font-semibold tracking-tight sm:text-3xl">
-            What X is saying about Capitol trades
+            What X is saying about {COPY.hillTrades}
           </h2>
           <p className="mt-2 max-w-2xl text-sm leading-relaxed text-muted-foreground sm:text-base">
-            Topical searches and accounts that break congressional trading
+            Topical searches and accounts that break {BRAND.hill} trading
             stories — cross-check every post against our filing data before you
             act.
           </p>
@@ -88,7 +89,7 @@ export function XNewsPanel({ topical }: XNewsPanelProps) {
               Accounts that cover this
             </CardTitle>
             <CardDescription>
-              Major X voices on congressional trading, investigations, and
+              Major X voices on {BRAND.hill} trading, investigations, and
               retail market news.
             </CardDescription>
           </CardHeader>

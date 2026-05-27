@@ -13,6 +13,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { PortfolioCongressSignals } from "@/lib/portfolio-signals";
+import { BRAND, COPY } from "@/lib/brand";
 import { SavedPortfolio } from "@/types/portfolio";
 
 interface PortfolioSignalsPanelProps {
@@ -60,10 +61,9 @@ export function PortfolioSignalsPanel({ portfolio }: PortfolioSignalsPanelProps)
   return (
     <Card className="surface-card overflow-hidden">
       <CardHeader className="surface-header border-b border-border">
-        <CardTitle className="text-lg">Congress vs your book</CardTitle>
+        <CardTitle className="text-lg">{COPY.vsYourBook}</CardTitle>
         <CardDescription>
-          Instant overlap analysis — no AI wait. Updated when your holdings
-          change.
+          Instant overlap analysis — see where {BRAND.hill} flow hits your holdings.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-5 p-5">

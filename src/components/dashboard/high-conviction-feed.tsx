@@ -25,6 +25,7 @@ import {
   ScoredTrade,
   summarizeHighConviction,
 } from "@/lib/trade-significance";
+import { BRAND } from "@/lib/brand";
 import { cn, formatPercent, formatRelativeTime } from "@/lib/utils";
 
 interface HighConvictionFeedProps {
@@ -32,7 +33,7 @@ interface HighConvictionFeedProps {
 }
 
 const tagStyles: Record<string, string> = {
-  "Congress cluster": "border-gain/30 bg-gain/10 text-gain",
+  "Hill cluster": "border-gain/30 bg-gain/10 text-gain",
   "Whale disclosure": "border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-300",
   "Committee overlap": "border-primary/30 bg-primary/10 text-primary",
   "Beating market": "border-gain/30 bg-gain/10 text-gain",
@@ -374,7 +375,7 @@ function FeaturedTrade({ trade, rank }: { trade: ScoredTrade; rank: number }) {
           href={`/ticker/${trade.ticker}`}
           className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline"
         >
-          View {trade.ticker} congressional activity
+          View {trade.ticker} on {BRAND.hill}
           <ChevronRight className="h-3.5 w-3.5" />
         </Link>
         <Link

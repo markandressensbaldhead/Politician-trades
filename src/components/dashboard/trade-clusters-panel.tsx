@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 
 import { PartyBadge } from "@/components/leaderboard/party-badge";
+import { BRAND } from "@/lib/brand";
 import { Badge } from "@/components/ui/badge";
 import {
   Card,
@@ -71,7 +72,7 @@ export function TradeClustersPanel({
           When everyone&apos;s buying the same thing
         </CardTitle>
         <CardDescription className="leading-relaxed">
-          Stocks where Capitol is piling in together — bipartisan overlap,
+          Stocks where {BRAND.hill} is piling in together — bipartisan overlap,
           recent bursts, and net buy pressure ranked for you.
         </CardDescription>
       </CardHeader>
