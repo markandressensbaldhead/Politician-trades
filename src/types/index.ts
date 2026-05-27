@@ -46,7 +46,24 @@ export interface LeaderboardEntry {
   state: string;
   district?: string;
   tradesLast90Days: number;
+  totalTrades?: number;
   returnVsSpy: number;
+}
+
+export interface SearchPoliticianEntry {
+  id: string;
+  name: string;
+  party: Party;
+  chamber: Chamber;
+  state: string;
+  district?: string;
+  committee?: string;
+  tradesLast90Days: number;
+  totalTrades: number;
+  returnVsSpy: number;
+  ytdReturn?: number;
+  portfolioValue?: number;
+  source: "live" | "mock";
 }
 
 export interface ProfileTrade {

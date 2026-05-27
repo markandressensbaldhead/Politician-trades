@@ -106,22 +106,31 @@ function buildProfileFromTrades(
 export async function getPoliticianProfile(
   id: string
 ): Promise<PoliticianProfileData | null> {
+  const apiKey = process.env.QUIVERQUANT_API_KEY;
+
+  if (apiKey) {
+    try {
+      const trades = await fetchCongressTrades(apiKey);
+      const liveProfile = buildProfileFromTrades(id, trades);
+
+      if (liveProfile) {
+        return liveProfile;
+      }
+    } catch (error) {
+      console.error(
+        "Live politician profile fetch failed:",
+        error instanceof Error ? error.message : error
+      );
+    }
+  }
+
   const mockPolitician = getPoliticianById(id);
+
   if (mockPolitician) {
     return buildProfileFromMock(mockPolitician);
   }
 
-  const apiKey = process.env.QUIVERQUANT_API_KEY;
-  if (!apiKey) {
-    return null;
-  }
-
-  try {
-    const trades = await fetchCongressTrades(apiKey);
-    return buildProfileFromTrades(id, trades);
-  } catch {
-    return null;
-  }
+  return null;
 }
 
 export async function getPoliticianProfileIds(): Promise<string[]> {

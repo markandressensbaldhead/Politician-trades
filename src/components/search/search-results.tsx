@@ -15,11 +15,12 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Politician } from "@/types";
+import { SearchPoliticianEntry } from "@/types";
 import { cn, formatCurrency, formatPercent } from "@/lib/utils";
 
 interface SearchResultsProps {
-  politicians: Politician[];
+  politicians: SearchPoliticianEntry[];
+  source: "live" | "mock";
 }
 
 function getInitials(name: string) {
@@ -30,7 +31,10 @@ function getInitials(name: string) {
     .slice(0, 2);
 }
 
-export function SearchResults({ politicians: allPoliticians }: SearchResultsProps) {
+export function SearchResults({
+  politicians: allPoliticians,
+  source,
+}: SearchResultsProps) {
   const [query, setQuery] = useState("");
 
   const results = useMemo(() => {
@@ -38,12 +42,12 @@ export function SearchResults({ politicians: allPoliticians }: SearchResultsProp
     if (!normalized) return allPoliticians;
 
     return allPoliticians.filter(
-      (p) =>
-        p.name.toLowerCase().includes(normalized) ||
-        p.state.toLowerCase().includes(normalized) ||
-        p.party.toLowerCase().includes(normalized) ||
-        p.chamber.toLowerCase().includes(normalized) ||
-        p.committee.toLowerCase().includes(normalized)
+      (politician) =>
+        politician.name.toLowerCase().includes(normalized) ||
+        politician.state.toLowerCase().includes(normalized) ||
+        politician.party.toLowerCase().includes(normalized) ||
+        politician.chamber.toLowerCase().includes(normalized) ||
+        politician.committee?.toLowerCase().includes(normalized)
     );
   }, [query, allPoliticians]);
 
@@ -53,9 +57,9 @@ export function SearchResults({ politicians: allPoliticians }: SearchResultsProp
         <SearchIcon className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
         <Input
           type="search"
-          placeholder="Search by name, state, party, or committee..."
+          placeholder="Search by name, party, or chamber..."
           value={query}
-          onChange={(e) => setQuery(e.target.value)}
+          onChange={(event) => setQuery(event.target.value)}
           className="pl-9 pr-9 h-11 bg-card/50 border-border/60"
         />
         {query && (
@@ -70,9 +74,14 @@ export function SearchResults({ politicians: allPoliticians }: SearchResultsProp
         )}
       </div>
 
-      <p className="text-sm text-muted-foreground">
-        {results.length} politician{results.length !== 1 ? "s" : ""} found
-      </p>
+      <div className="flex items-center justify-between gap-3">
+        <p className="text-sm text-muted-foreground">
+          {results.length} politician{results.length !== 1 ? "s" : ""} found
+        </p>
+        <span className="rounded border border-border/60 bg-background/50 px-2 py-1 font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
+          {source === "live" ? "Live Feed" : "Demo Data"}
+        </span>
+      </div>
 
       <div className="grid gap-3">
         {results.map((politician) => (
@@ -96,9 +105,11 @@ export function SearchResults({ politicians: allPoliticians }: SearchResultsProp
                     </Badge>
                   </div>
                   <p className="text-sm text-muted-foreground truncate">
-                    {politician.state}
-                    {politician.district ? `-${politician.district}` : ""} ·{" "}
-                    {politician.committee}
+                    {politician.state
+                      ? `${politician.state}${politician.district ? `-${politician.district}` : ""} · `
+                      : ""}
+                    {politician.committee ??
+                      `${politician.totalTrades} total trades · ${politician.tradesLast90Days} in last 90 days`}
                   </p>
                 </div>
 
@@ -106,13 +117,15 @@ export function SearchResults({ politicians: allPoliticians }: SearchResultsProp
                   <p
                     className={cn(
                       "font-mono tabular-nums font-medium",
-                      politician.ytdReturn >= 0 ? "text-gain" : "text-loss"
+                      politician.returnVsSpy >= 0 ? "text-gain" : "text-loss"
                     )}
                   >
-                    {formatPercent(politician.ytdReturn)}
+                    {formatPercent(politician.returnVsSpy)}
                   </p>
                   <p className="text-xs text-muted-foreground font-mono tabular-nums">
-                    {formatCurrency(politician.portfolioValue)}
+                    {source === "mock" && politician.portfolioValue
+                      ? formatCurrency(politician.portfolioValue)
+                      : `${politician.tradesLast90Days} trades (90d)`}
                   </p>
                 </div>
               </CardContent>
@@ -125,7 +138,7 @@ export function SearchResults({ politicians: allPoliticians }: SearchResultsProp
             <CardHeader className="text-center py-12">
               <CardTitle>No results found</CardTitle>
               <CardDescription>
-                Try searching by a different name, state, or committee
+                Try searching by a different name, party, or chamber
               </CardDescription>
             </CardHeader>
           </Card>

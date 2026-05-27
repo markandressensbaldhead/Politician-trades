@@ -1,9 +1,13 @@
 import { LeaderboardPanel } from "@/components/leaderboard/leaderboard-panel";
-import { getLeaderboardData } from "@/lib/leaderboard";
+import { RecentTrades } from "@/components/dashboard/recent-trades";
+import { getLeaderboardData, getRecentTrades } from "@/lib/congress-data";
 import { formatPercent } from "@/lib/utils";
 
 export default async function HomePage() {
-  const { entries, source } = await getLeaderboardData();
+  const [{ entries, source }, { trades: recentTrades }] = await Promise.all([
+    getLeaderboardData(),
+    getRecentTrades(20),
+  ]);
 
   const totalTrades = entries.reduce(
     (sum, entry) => sum + entry.tradesLast90Days,
@@ -32,6 +36,13 @@ export default async function HomePage() {
               performance relative to the S&amp;P 500, based on STOCK Act
               disclosures.
             </p>
+            {source === "mock" && (
+              <p className="rounded-md border border-terminal-amber/30 bg-terminal-amber/5 px-3 py-2 text-sm text-terminal-amber">
+                Demo mode — add{" "}
+                <code className="font-mono text-xs">QUIVERQUANT_API_KEY</code>{" "}
+                in Vercel to show live congressional trade data.
+              </p>
+            )}
           </div>
 
           <div className="terminal-ticker flex flex-wrap gap-px overflow-hidden rounded-md border border-border/60 bg-border/40">
@@ -51,7 +62,10 @@ export default async function HomePage() {
         </div>
       </div>
 
-      <LeaderboardPanel entries={entries} source={source} />
+      <div className="grid gap-6 xl:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)]">
+        <LeaderboardPanel entries={entries} source={source} />
+        <RecentTrades trades={recentTrades} />
+      </div>
     </div>
   );
 }
