@@ -130,4 +130,22 @@
   .status-pill-live {
     @apply border-gain/30 bg-gain/10 text-gain;
   }
+
+  .hero-mesh {
+    background-image:
+      radial-gradient(
+        ellipse 80% 60% at 10% 0%,
+        hsl(221 83% 53% / 0.12),
+        transparent 50%
+      ),
+      radial-gradient(
+        ellipse 60% 50% at 90% 20%,
+        hsl(152 69% 40% / 0.08),
+        transparent 45%
+      );
+  }
+
+  .discovery-card {
+    @apply shadow-sm;
+  }
 }

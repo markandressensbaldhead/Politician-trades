@@ -49,12 +49,11 @@ export function HighConvictionFeed({ trades }: HighConvictionFeedProps) {
       <Card className="surface-card overflow-hidden">
         <CardHeader className="surface-header border-b border-border">
           <CardTitle className="text-lg font-semibold">
-            High-conviction trades
+            Deploy-worthy signals
           </CardTitle>
           <CardDescription className="leading-relaxed">
-            The disclosures most likely to matter — ranked by size, cluster
-            overlap, trader track record, committee context, and post-filing
-            performance.
+            The trades retail actually clicks on — ranked by size, crowd overlap,
+            and post-filing performance vs the S&P.
           </CardDescription>
         </CardHeader>
         <CardContent className="p-6">
@@ -73,13 +72,11 @@ export function HighConvictionFeed({ trades }: HighConvictionFeedProps) {
         <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
           <div className="space-y-1.5">
             <CardTitle className="text-lg font-semibold">
-              High-conviction trades
+              Deploy-worthy signals
             </CardTitle>
             <CardDescription className="max-w-2xl leading-relaxed">
-              Not every disclosure is equal. We surface the trades with the
-              strongest combination of size, crowd overlap, committee context,
-              and market follow-through — one pick per ticker so you see breadth,
-              not duplicates.
+              Skip the noise. One strong pick per ticker — size, crowd overlap,
+              and market follow-through, ranked for capital deployers.
             </CardDescription>
           </div>
           <SummaryStats summary={summary} />

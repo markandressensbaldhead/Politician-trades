@@ -1,11 +1,13 @@
 import { LeaderboardPanel } from "@/components/leaderboard/leaderboard-panel";
+import { DiscoveryRail } from "@/components/dashboard/discovery-rail";
 import { HighConvictionFeed } from "@/components/dashboard/high-conviction-feed";
 import { LiveTradeFeed } from "@/components/dashboard/live-trade-feed";
 import { MarketPulse } from "@/components/dashboard/market-pulse";
+import { PortfolioCtaBanner } from "@/components/dashboard/portfolio-cta-banner";
+import { RetailHero } from "@/components/dashboard/retail-hero";
 import { TradeClustersPanel } from "@/components/dashboard/trade-clusters-panel";
 import { TradeOfTheDaySpotlight } from "@/components/dashboard/trade-of-the-day-spotlight";
-import { TrendingTickerStrip, TrendingTickers } from "@/components/dashboard/trending-tickers";
-import { TrumpSpotlight } from "@/components/dashboard/trump-spotlight";
+import { TrendingTickers } from "@/components/dashboard/trending-tickers";
 import { SiteContainer } from "@/components/layout/site-container";
 import {
   getAllTrades,
@@ -24,7 +26,6 @@ import {
 import { politicians } from "@/lib/data";
 import { getMarketPulse, getTrendingTickers } from "@/lib/trade-analytics";
 import { getTradeOfTheDay } from "@/lib/trade-of-the-day";
-import { cn, formatPercent } from "@/lib/utils";
 
 export default async function HomePage() {
   const [
@@ -73,82 +74,40 @@ export default async function HomePage() {
     days: 45,
     minScore: 40,
   });
-  const totalTrades = entries.reduce(
-    (sum, entry) => sum + entry.tradesLast90Days,
-    0
+
+  const sortedEntries = [...entries].sort(
+    (a, b) => b.returnVsSpy - a.returnVsSpy
   );
+  const topPerformer = sortedEntries[0];
   const avgReturn =
     entries.length > 0
       ? entries.reduce((sum, entry) => sum + entry.returnVsSpy, 0) /
         entries.length
       : 0;
-  const topPerformer = entries[0];
-  const dataLabel =
-    tradeSource === "supabase"
-      ? "Updated"
-      : source === "live"
-        ? "Live"
-        : "Sample";
+  const isLive = source === "live" || tradeSource === "supabase";
 
   return (
-    <SiteContainer>
-      {tradeOfTheDay && (
-        <div className="mb-8">
-          <TradeOfTheDaySpotlight pick={tradeOfTheDay} />
-        </div>
-      )}
+    <SiteContainer className="space-y-10 pb-12">
+      <RetailHero
+        avgReturnVsSpy={avgReturn}
+        topPerformerId={topPerformer?.id ?? ""}
+        topPerformerName={topPerformer?.name ?? "—"}
+        topPerformerReturn={topPerformer?.returnVsSpy ?? 0}
+        topTicker={trending[0]?.ticker ?? null}
+        tradeCount90d={pulse.totalTrades90d}
+        memberCount={entries.length}
+        isLive={isLive}
+      />
 
-      <div className="mb-10 space-y-6">
-        <div className="flex flex-col gap-8 xl:flex-row xl:items-end xl:justify-between">
-          <div className="space-y-3 xl:max-w-2xl">
-            <p className="page-eyebrow">Congressional stock tracker</p>
-            <h1 className="text-3xl font-semibold sm:text-4xl">
-              See what lawmakers are buying and selling
-            </h1>
-            <p className="text-base leading-relaxed text-muted-foreground">
-              Follow disclosed trades, compare returns to the S&amp;P 500, and
-              read plain-English summaries of what each filing means.
-            </p>
-            {source === "mock" && (
-              <p className="rounded-lg border border-border bg-secondary/50 px-4 py-3 text-sm text-muted-foreground">
-                You&apos;re viewing sample data. Connect a data provider in
-                settings to see live congressional trades.
-              </p>
-            )}
-          </div>
+      {tradeOfTheDay && <TradeOfTheDaySpotlight pick={tradeOfTheDay} />}
 
-          <div className="stat-strip grid grid-cols-2 gap-px bg-border sm:grid-cols-3 xl:min-w-[420px] xl:max-w-xl xl:flex-1 2xl:max-w-2xl">
-            <StatTile label="Data" value={dataLabel} />
-            <StatTile label="Members tracked" value={String(entries.length)} />
-            <StatTile label="Trades (90 days)" value={String(totalTrades)} />
-            <StatTile
-              label="Avg. vs S&P 500"
-              value={formatPercent(avgReturn)}
-              positive={avgReturn >= 0}
-            />
-            <StatTile
-              label="Top performer"
-              value={topPerformer?.name.split(" ").pop() ?? "—"}
-              className="col-span-2 sm:col-span-1"
-            />
-          </div>
-        </div>
+      <DiscoveryRail
+        topTicker={trending[0] ?? null}
+        topPerformer={topPerformer ?? null}
+        topCluster={clusters[0] ?? null}
+      />
 
-        {trending.length > 0 && (
-          <div className="space-y-3">
-            <p className="text-sm font-medium text-muted-foreground">
-              Popular stocks this month
-            </p>
-            <TrendingTickerStrip tickers={trending} />
-          </div>
-        )}
-      </div>
-
-      <div className="mb-8">
-        <MarketPulse pulse={pulse} />
-      </div>
-
-      <div className="mb-8 grid gap-8 2xl:grid-cols-2">
+      <div className="grid gap-8 2xl:grid-cols-2">
         <HighConvictionFeed trades={highConviction} />
         <TradeClustersPanel
           clusters={clusters}
@@ -156,51 +115,27 @@ export default async function HomePage() {
         />
       </div>
 
-      <TrumpSpotlight />
+      <MarketPulse pulse={pulse} />
 
-      <div className="my-8">
-        <TrendingTickers tickers={trending} />
-      </div>
+      {trending.length > 0 && (
+        <TrendingTickers
+          tickers={trending}
+          title="What retail is clicking"
+          description="The tickers getting the most congressional flow right now — each one is a page full of trades."
+        />
+      )}
+
+      <PortfolioCtaBanner />
 
       <div className="grid gap-8 2xl:grid-cols-[minmax(0,1.35fr)_minmax(0,1fr)]">
-        <LeaderboardPanel entries={entries} source={source} />
+        <LeaderboardPanel entries={sortedEntries} source={source} />
         <LiveTradeFeed
           trades={recentTrades.slice(0, 80)}
           showFilters={false}
-          title="Latest trades"
-          description="The most recent stock disclosures from Congress."
+          title="Fresh filings"
+          description="Just disclosed — click any row before the crowd catches up."
         />
       </div>
     </SiteContainer>
-  );
-}
-
-function StatTile({
-  label,
-  value,
-  positive,
-  className,
-}: {
-  label: string;
-  value: string;
-  positive?: boolean;
-  className?: string;
-}) {
-  return (
-    <div className={cn("bg-card px-4 py-4", className)}>
-      <p className="text-xs text-muted-foreground">{label}</p>
-      <p
-        className={cn(
-          "mt-1 text-lg font-semibold tabular-nums",
-          positive === undefined
-            ? "text-foreground"
-            : positive
-              ? "text-gain"
-              : "text-loss"
-        )}
-      >
-        {value}
-      </p>
-    </div>
   );
 }

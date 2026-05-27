@@ -52,45 +52,45 @@ function buildActionCopy(
   if (isPurchase && trade.clusterPoliticianCount >= 3 && clusterBuying) {
     return {
       action: "research-buy",
-      actionLabel: `Research ${trade.ticker}`,
-      actionHeadline: `${trade.clusterPoliticianCount} lawmakers are buying ${trade.ticker}`,
-      actionSummary: `Today's lead signal: bipartisan accumulation in ${trade.ticker}. Open the ticker page to see every disclosure, then decide if it belongs on your watchlist or in your portfolio.`,
+      actionLabel: `See all $${trade.ticker} trades`,
+      actionHeadline: `${trade.clusterPoliticianCount} lawmakers piled into $${trade.ticker}`,
+      actionSummary: `When multiple members of Congress buy the same stock, retail watches. This is today's crowd signal — open the ticker page before it hits your timeline.`,
     };
   }
 
   if (isPurchase && trade.significanceTier === "high") {
     return {
       action: "research-buy",
-      actionLabel: `Explore ${trade.ticker}`,
-      actionHeadline: `High-conviction ${trade.ticker} buy from ${lastName}`,
-      actionSummary: trade.investorTake,
+      actionLabel: `Research $${trade.ticker}`,
+      actionHeadline: `${lastName} dropped a major $${trade.ticker} buy`,
+      actionSummary: `High-conviction disclosure with real size. See the filing, the timing, and how it's performed vs the S&P since they traded.`,
     };
   }
 
   if (isPurchase) {
     return {
       action: "research-buy",
-      actionLabel: `View ${trade.ticker} trades`,
-      actionHeadline: `${lastName} just disclosed a ${trade.ticker} purchase`,
-      actionSummary: `Congressional buying in ${trade.sector || "this name"}. Start with the ticker page — then set an alert or compare against your holdings.`,
+      actionLabel: `Track $${trade.ticker}`,
+      actionHeadline: `${lastName} just bought $${trade.ticker}`,
+      actionSummary: `Fresh congressional buying in ${trade.sector || "this name"}. One click to every related trade — then set an alert so you don't miss the next filing.`,
     };
   }
 
   if (!isPurchase && trade.clusterPoliticianCount >= 2 && clusterSelling) {
     return {
       action: "review-sell",
-      actionLabel: `Review ${trade.ticker} exposure`,
-      actionHeadline: `Multiple members are selling ${trade.ticker}`,
-      actionSummary: `Net selling pressure from Capitol on ${trade.ticker}. If you hold it, review your exposure and read the underlying filings before making changes.`,
+      actionLabel: `Review $${trade.ticker}`,
+      actionHeadline: `Capitol is selling $${trade.ticker}`,
+      actionSummary: `Multiple lawmakers trimming the same name. If you're holding it, read the filings — don't ignore the signal.`,
     };
   }
 
   if (!isPurchase) {
     return {
       action: "review-sell",
-      actionLabel: `See ${trade.ticker} sales`,
-      actionHeadline: `${lastName} disclosed a ${trade.ticker} sale`,
-      actionSummary: `Lawmaker selling can flag risk or profit-taking. Check the ticker activity page and your portfolio for overlap.`,
+      actionLabel: `See $${trade.ticker} sales`,
+      actionHeadline: `${lastName} sold $${trade.ticker}`,
+      actionSummary: `Congressional selling often flags profit-taking or risk reduction. Check whether it overlaps your portfolio.`,
     };
   }
 

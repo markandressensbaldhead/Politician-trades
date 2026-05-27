@@ -62,9 +62,10 @@ export function LeaderboardPanel({ entries, source }: LeaderboardPanelProps) {
     <div className="surface-card overflow-hidden">
       <div className="surface-header flex flex-col gap-4 px-5 py-5 sm:flex-row sm:items-center sm:justify-between sm:px-6">
         <div className="space-y-1">
-          <h2 className="section-title">Top performers</h2>
+          <h2 className="section-title">Who beats the S&amp;P</h2>
           <p className="section-description">
-            Ranked by estimated return vs. the S&amp;P 500 over the last 90 days
+            Copy-study list — ranked by estimated return vs the S&amp;P over the
+            last 90 days. Click a name, see every trade.
           </p>
         </div>
 

@@ -47,12 +47,11 @@ export function TradeClustersPanel({
       <Card className="surface-card overflow-hidden">
         <CardHeader className="surface-header border-b border-border">
           <CardTitle className="text-lg font-semibold">
-            Where Congress is converging
+            When everyone&apos;s buying the same thing
           </CardTitle>
           <CardDescription className="leading-relaxed">
-            We surface stocks and sectors where multiple lawmakers are trading
-            the same names — a signal many investors watch for on Quiver and
-            Capitol Trades.
+            Multiple lawmakers, one ticker — the crowd signal retail traders
+            watch before deploying capital.
           </CardDescription>
         </CardHeader>
         <CardContent className="p-6">
@@ -69,11 +68,11 @@ export function TradeClustersPanel({
     <Card className="surface-card overflow-hidden">
       <CardHeader className="surface-header border-b border-border">
         <CardTitle className="text-lg font-semibold">
-          Where Congress is converging
+          When everyone&apos;s buying the same thing
         </CardTitle>
         <CardDescription className="leading-relaxed">
-          Stocks with multiple lawmakers trading the same name — ranked by
-          bipartisan overlap, recent burst activity, and net buy/sell pressure.
+          Stocks where Capitol is piling in together — bipartisan overlap,
+          recent bursts, and net buy pressure ranked for you.
         </CardDescription>
       </CardHeader>
 

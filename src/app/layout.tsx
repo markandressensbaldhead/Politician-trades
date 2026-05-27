@@ -16,12 +16,28 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(
+    process.env.NEXT_PUBLIC_APP_URL ?? "https://politician-trades.vercel.app"
+  ),
   title: {
-    default: "Capitol Trades | Congressional Stock Tracker",
+    default: "Capitol Trades — See What Congress Buys",
     template: "%s | Capitol Trades",
   },
   description:
-    "Track congressional stock trades, compare returns to the market, and read plain-English summaries of public filings.",
+    "Free tracker for every congressional stock trade. See today's pick, who's beating the S&P, and where lawmakers are converging — built for retail.",
+  openGraph: {
+    title: "Congress trades stocks. Now you can see every buy.",
+    description:
+      "Free STOCK Act dashboard: today's trade pick, crowd signals, and performance vs the S&P.",
+    type: "website",
+    siteName: "Capitol Trades",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "See what Congress is buying — free",
+    description:
+      "Today's congressional trade pick + every disclosed buy/sell. Built for retail.",
+  },
 };
 
 export default function RootLayout({

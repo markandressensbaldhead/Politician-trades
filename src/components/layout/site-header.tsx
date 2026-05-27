@@ -2,17 +2,27 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { BarChart3, Landmark, MapPin, Search, TrendingUp, Wallet } from "lucide-react";
+import {
+  BarChart3,
+  Landmark,
+  MapPin,
+  Search,
+  Target,
+  TrendingUp,
+  Wallet,
+} from "lucide-react";
 
+import { ShareOnXButton } from "@/components/shared/share-on-x-button";
+import { Button } from "@/components/ui/button";
+import { buildSiteTweet, SITE_URL } from "@/lib/share";
 import { cn } from "@/lib/utils";
 
 const navItems = [
-  { href: "/", label: "Home", icon: TrendingUp },
+  { href: "/#trade-of-day", label: "Today", icon: Target },
   { href: "/feed", label: "Trades", icon: BarChart3 },
-  { href: "/states", label: "States", icon: MapPin },
   { href: "/portfolio", label: "Portfolio", icon: Wallet },
   { href: "/search", label: "Search", icon: Search },
-  { href: "/politician/donald-trump", label: "Trump", icon: Landmark },
+  { href: "/states", label: "States", icon: MapPin },
 ];
 
 export function SiteHeader() {
@@ -20,29 +30,27 @@ export function SiteHeader() {
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
-      <div className="flex h-16 w-full items-center justify-between px-4 sm:px-6 lg:px-8 xl:px-10 2xl:px-12">
-        <Link href="/" className="flex items-center gap-3">
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-            <BarChart3 className="h-4 w-4" />
+      <div className="flex h-16 w-full items-center justify-between gap-4 px-4 sm:px-6 lg:px-8 xl:px-10 2xl:px-12">
+        <Link href="/" className="flex min-w-0 items-center gap-3">
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+            <TrendingUp className="h-4 w-4" />
           </div>
-          <div>
+          <div className="min-w-0">
             <span className="text-base font-semibold tracking-tight">
               Capitol Trades
             </span>
-            <p className="hidden text-xs text-muted-foreground sm:block">
-              Congressional stock disclosures
+            <p className="truncate text-xs text-muted-foreground sm:block">
+              See what Congress buys · Free
             </p>
           </div>
         </Link>
 
-        <nav className="flex items-center gap-1">
+        <nav className="hidden items-center gap-1 md:flex">
           {navItems.map(({ href, label, icon: Icon }) => {
             const isActive =
-              href === "/"
+              href === "/#trade-of-day"
                 ? pathname === "/"
-                : href.startsWith("/politician/")
-                  ? pathname === href
-                  : pathname.startsWith(href);
+                : pathname.startsWith(href.replace("/#trade-of-day", "/"));
 
             return (
               <Link
@@ -56,11 +64,40 @@ export function SiteHeader() {
                 )}
               >
                 <Icon className="h-4 w-4" />
-                <span className="hidden sm:inline">{label}</span>
+                {label}
               </Link>
             );
           })}
+          <Link
+            href="/politician/donald-trump"
+            className={cn(
+              "flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
+              pathname === "/politician/donald-trump"
+                ? "bg-secondary text-foreground"
+                : "text-muted-foreground hover:bg-secondary/70 hover:text-foreground"
+            )}
+          >
+            <Landmark className="h-4 w-4" />
+            Trump
+          </Link>
         </nav>
+
+        <div className="flex shrink-0 items-center gap-2">
+          <ShareOnXButton
+            text={buildSiteTweet(SITE_URL)}
+            url={SITE_URL}
+            size="sm"
+            variant="ghost"
+            className="hidden lg:inline-flex"
+            label="Share"
+          />
+          <Button asChild size="sm" className="hidden sm:inline-flex">
+            <Link href="/#trade-of-day">Today&apos;s pick</Link>
+          </Button>
+          <Button asChild size="sm" variant="outline" className="sm:hidden">
+            <Link href="/feed">Trades</Link>
+          </Button>
+        </div>
       </div>
     </header>
   );
@@ -68,12 +105,36 @@ export function SiteHeader() {
 
 export function SiteFooter() {
   return (
-    <footer className="mt-auto w-full border-t border-border py-10">
+    <footer className="mt-auto w-full border-t border-border py-12">
       <div className="w-full px-4 sm:px-6 lg:px-8 xl:px-10 2xl:px-12">
-        <div className="flex flex-col items-center gap-4 text-center">
+        <div className="flex flex-col items-center gap-6 text-center">
+          <div>
+            <p className="text-lg font-semibold tracking-tight">
+              Congress has to disclose. You get to deploy smarter.
+            </p>
+            <p className="mt-2 max-w-xl text-sm text-muted-foreground">
+              Free for retail. Share today&apos;s pick on X — that&apos;s how
+              this spreads.
+            </p>
+          </div>
+
+          <div className="flex flex-wrap justify-center gap-3">
+            <ShareOnXButton
+              text={buildSiteTweet(SITE_URL)}
+              url={SITE_URL}
+              label="Share on X"
+            />
+            <Button asChild variant="outline">
+              <Link href="/#trade-of-day">Today&apos;s trade</Link>
+            </Button>
+            <Button asChild variant="outline">
+              <Link href="/portfolio">Portfolio check</Link>
+            </Button>
+          </div>
+
           <div className="flex flex-wrap justify-center gap-6 text-sm text-muted-foreground">
             <Link href="/feed" className="hover:text-foreground">
-              Recent trades
+              All trades
             </Link>
             <Link href="/search" className="hover:text-foreground">
               Search
@@ -81,17 +142,15 @@ export function SiteFooter() {
             <Link href="/states" className="hover:text-foreground">
               By state
             </Link>
-            <Link href="/portfolio" className="hover:text-foreground">
-              Portfolio advisor
-            </Link>
             <Link href="/ticker/NVDA" className="hover:text-foreground">
-              Stock lookup
+              Ticker lookup
             </Link>
           </div>
+
           <p className="max-w-2xl text-xs leading-relaxed text-muted-foreground">
-            Data comes from public financial disclosure filings required by the
-            STOCK Act. This site is for research and education only — not
-            investment advice.
+            STOCK Act public filings only. Research and education — not
+            investment advice. Past congressional performance does not
+            guarantee future results.
           </p>
         </div>
       </div>
