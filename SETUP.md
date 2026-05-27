@@ -29,7 +29,7 @@ Also confirm these exist (you may have added them already):
 
 | Key | Value |
 |-----|--------|
-| `NEXT_PUBLIC_APP_URL` | `https://tradethehill.com` |
+| `NEXT_PUBLIC_APP_URL` | `https://tradethehill.org` |
 | `QUIVERQUANT_API_KEY` | your QuiverQuant key |
 | `CRON_SECRET` | any random string |
 
@@ -55,7 +55,7 @@ Deployments → top **Ready** row → **⋯** → **Redeploy**
 
 ## Test
 
-https://tradethehill.com/politician/nancy-pelosi
+https://tradethehill.org/politician/nancy-pelosi
 
 Wait ~20 seconds on **AI Insights**.
 
@@ -76,24 +76,8 @@ Then redeploy on Vercel.
 
 ---
 
-## Custom domain: tradethehill.com
+## Custom domain: tradethehill.org
 
-Code defaults and share links use `https://tradethehill.com`. To attach the domain on Vercel:
+Purchased through Vercel — DNS is automatic. Code defaults and share links use `https://tradethehill.org`.
 
-```bash
-export VERCEL_TOKEN=...   # https://vercel.com/account/tokens
-APP_DOMAIN=tradethehill.com bash scripts/setup-capitoltrades-domain.sh
-```
-
-Or manually: Vercel → **Settings** → **Domains** → add `tradethehill.com` and `www.tradethehill.com`, set `NEXT_PUBLIC_APP_URL=https://tradethehill.com`, then redeploy.
-
-**DNS at your registrar:**
-
-| Host | Type | Value |
-|------|------|--------|
-| `@` | A | `76.76.21.21` |
-| `www` | CNAME | `cname.vercel-dns.com` |
-
-**GoDaddy:** see [docs/godaddy-dns-tradethehill.md](docs/godaddy-dns-tradethehill.md) for click-by-click steps.
-
-Redirect `www` → apex in Vercel Domains. SSL is automatic once DNS validates.
+Confirm in Vercel → **Settings** → **Domains** that `tradethehill.org` is primary and `NEXT_PUBLIC_APP_URL=https://tradethehill.org`.
