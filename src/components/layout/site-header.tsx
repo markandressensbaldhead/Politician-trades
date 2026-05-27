@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { BarChart3, Landmark, MapPin, Search, TrendingUp } from "lucide-react";
+import { BarChart3, Landmark, MapPin, Search, TrendingUp, Wallet } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 
@@ -10,6 +10,7 @@ const navItems = [
   { href: "/", label: "Home", icon: TrendingUp },
   { href: "/feed", label: "Trades", icon: BarChart3 },
   { href: "/states", label: "States", icon: MapPin },
+  { href: "/portfolio", label: "Portfolio", icon: Wallet },
   { href: "/search", label: "Search", icon: Search },
   { href: "/politician/donald-trump", label: "Trump", icon: Landmark },
 ];
@@ -79,6 +80,9 @@ export function SiteFooter() {
             </Link>
             <Link href="/states" className="hover:text-foreground">
               By state
+            </Link>
+            <Link href="/portfolio" className="hover:text-foreground">
+              Portfolio advisor
             </Link>
             <Link href="/ticker/NVDA" className="hover:text-foreground">
               Stock lookup

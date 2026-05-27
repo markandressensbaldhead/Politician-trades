@@ -309,3 +309,171 @@ function normalizeConviction(
   if (text === "High" || text === "Low") return text;
   return "Medium";
 }
+
+const PORTFOLIO_ADVICE_SYSTEM_PROMPT = `You are a research analyst on a Washington Signal desk helping a retail investor understand how congressional disclosure flow relates to THEIR existing portfolio.
+
+You receive:
+1) The user's current stock holdings (typically imported from Robinhood)
+2) Recent congressional trade data — overlaps, clusters, high-conviction flow, trending tickers
+
+Your job: give personalized, portfolio-aware research — NOT generic congress commentary. Every insight must reference specific tickers the user holds OR specific high-conviction congress trades they do NOT hold.
+
+Rules:
+- Compare their holdings to congressional activity: overlap, confirmation, crowding, divergence
+- Flag when multiple members are trading names they own (cluster risk / signal confirmation)
+- Suggest congress-backed ideas ONLY for tickers that appear in the congressional data provided
+- Use plain English suitable for a smart retail investor — not hedge fund jargon
+- Never tell them to buy or sell; frame as "research considerations", "monitor", "worth reviewing"
+- Do not invent holdings, prices, or trades absent from the input
+- If portfolio is concentrated, say so. If no overlap with congress flow, explain what that implies
+
+Return ONLY valid JSON (no markdown fences):
+{
+  "headline": "One line summarizing the biggest portfolio + congress insight",
+  "portfolioSummary": "2-3 sentences on their book vs current Washington flow",
+  "overlaps": [
+    {
+      "ticker": "SYMBOL",
+      "yourQuantity": 0,
+      "congressActivity": "Brief summary of recent congress trades in this name",
+      "note": "What this means for the user specifically"
+    }
+  ],
+  "opportunities": [
+    {
+      "ticker": "SYMBOL",
+      "direction": "Add" | "Trim" | "Hold" | "Watch" | "Hedge",
+      "conviction": "high" | "medium" | "low",
+      "rationale": "Why this matters given their portfolio",
+      "congressSignal": "The congress flow supporting this view"
+    }
+  ],
+  "risks": [
+    { "ticker": "SYMBOL", "concern": "Specific risk given overlap or concentration" }
+  ],
+  "actions": [
+    {
+      "priority": "high" | "medium" | "low",
+      "action": "Concrete research step (not a trade order)",
+      "rationale": "Why do this now"
+    }
+  ]
+}`;
+
+interface PortfolioAdvicePromptInput {
+  holdingsText: string;
+  congressContext: string;
+  holdingsCount: number;
+}
+
+export async function generatePortfolioAdvice(
+  input: PortfolioAdvicePromptInput
+): Promise<string> {
+  return callClaude(
+    PORTFOLIO_ADVICE_SYSTEM_PROMPT,
+    `The user linked a ${input.holdingsCount}-position portfolio (Robinhood or manual entry). Tailor all output to these holdings.
+
+USER HOLDINGS:
+---
+${input.holdingsText}
+---
+
+CONGRESSIONAL FLOW CONTEXT:
+---
+${input.congressContext}
+---`,
+    2200
+  );
+}
+
+export function parsePortfolioAdviceJson(
+  raw: string
+): import("@/types/portfolio").PortfolioAdviceContent {
+  const jsonText = extractJsonPayload(raw);
+
+  let parsed: unknown;
+
+  try {
+    parsed = JSON.parse(jsonText);
+  } catch {
+    throw new Error("Portfolio advice response was not valid JSON");
+  }
+
+  if (!parsed || typeof parsed !== "object") {
+    throw new Error("Portfolio advice response was empty");
+  }
+
+  const data = parsed as Record<string, unknown>;
+
+  return {
+    headline: String(
+      data.headline ?? "Your portfolio vs. congressional flow"
+    ),
+    portfolioSummary: String(data.portfolioSummary ?? ""),
+    overlaps: Array.isArray(data.overlaps)
+      ? data.overlaps.slice(0, 6).map((item) => {
+          const row = item as Record<string, unknown>;
+          return {
+            ticker: String(row.ticker ?? "—").toUpperCase(),
+            yourQuantity: Number(row.yourQuantity ?? 0),
+            congressActivity: String(row.congressActivity ?? ""),
+            note: String(row.note ?? ""),
+          };
+        })
+      : [],
+    opportunities: Array.isArray(data.opportunities)
+      ? data.opportunities.slice(0, 5).map((item) => {
+          const row = item as Record<string, unknown>;
+          return {
+            ticker: String(row.ticker ?? "—").toUpperCase(),
+            direction: normalizePortfolioDirection(row.direction),
+            conviction: normalizePortfolioPriority(row.conviction),
+            rationale: String(row.rationale ?? ""),
+            congressSignal: String(row.congressSignal ?? ""),
+          };
+        })
+      : [],
+    risks: Array.isArray(data.risks)
+      ? data.risks.slice(0, 5).map((item) => {
+          const row = item as Record<string, unknown>;
+          return {
+            ticker: String(row.ticker ?? "—").toUpperCase(),
+            concern: String(row.concern ?? ""),
+          };
+        })
+      : [],
+    actions: Array.isArray(data.actions)
+      ? data.actions.slice(0, 5).map((item) => {
+          const row = item as Record<string, unknown>;
+          return {
+            priority: normalizePortfolioPriority(row.priority),
+            action: String(row.action ?? ""),
+            rationale: String(row.rationale ?? ""),
+          };
+        })
+      : [],
+  };
+}
+
+function normalizePortfolioDirection(
+  value: unknown
+): import("@/types/portfolio").PortfolioAdviceDirection {
+  const text = String(value ?? "Watch");
+  if (
+    text === "Add" ||
+    text === "Trim" ||
+    text === "Hold" ||
+    text === "Hedge"
+  ) {
+    return text;
+  }
+  return "Watch";
+}
+
+function normalizePortfolioPriority(
+  value: unknown
+): import("@/types/portfolio").PortfolioAdvicePriority {
+  const text = String(value ?? "medium").toLowerCase();
+  if (text === "high" || text === "low") return text;
+  return "medium";
+}
