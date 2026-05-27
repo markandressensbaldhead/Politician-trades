@@ -2,6 +2,7 @@ import Link from "next/link";
 import { ArrowRight, Sparkles, TrendingUp, Zap } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { NextDisclosureSync } from "@/components/shared/next-disclosure-sync";
 import { BRAND, COPY } from "@/lib/brand";
 import { cn, formatPercent } from "@/lib/utils";
 
@@ -37,6 +38,7 @@ export function RetailHero({
               <span className="live-dot animate-pulse" />
               {isLive ? "Live disclosures" : "Demo mode"}
             </span>
+            {isLive && <NextDisclosureSync variant="pill" />}
             <span className="status-pill">Free · No login</span>
             <span className="status-pill">STOCK Act data</span>
           </div>
@@ -70,8 +72,7 @@ export function RetailHero({
           </div>
 
           <p className="text-xs text-muted-foreground">
-            Research tool only — not financial advice. Public filings, updated as
-            they sync.
+            Research tool only — not financial advice. {COPY.nextDisclosureSync}
           </p>
         </div>
 

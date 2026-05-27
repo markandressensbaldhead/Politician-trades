@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Filter, Search } from "lucide-react";
 
 import { DisclosureLagBadge } from "@/components/shared/disclosure-lag-badge";
+import { NextDisclosureSync } from "@/components/shared/next-disclosure-sync";
 import { PartyBadge } from "@/components/leaderboard/party-badge";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -95,6 +96,7 @@ export function LiveTradeFeed({
             <CardDescription className="text-sm leading-relaxed">
               {description}
             </CardDescription>
+            <NextDisclosureSync variant="inline" />
           </div>
           <ExportCsvButton rows={exportRows} filename={exportFilename} />
         </div>

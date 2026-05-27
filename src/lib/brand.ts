@@ -35,6 +35,8 @@ export const COPY = {
   lawmakers: "lawmakers",
   disclosureDisclaimer:
     "STOCK Act public filings only. Research and education — not investment advice. Past Hill performance does not guarantee future results.",
+  nextDisclosureSync:
+    "We pull new STOCK Act filings every morning when House & Senate data updates.",
 } as const;
 
 export const SITE_URL = BRAND.url;

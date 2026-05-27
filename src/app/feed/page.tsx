@@ -4,6 +4,7 @@ import { LiveTradeFeed } from "@/components/dashboard/live-trade-feed";
 import { MarketPulse } from "@/components/dashboard/market-pulse";
 import { TrendingTickers } from "@/components/dashboard/trending-tickers";
 import { SiteContainer } from "@/components/layout/site-container";
+import { NextDisclosureSync } from "@/components/shared/next-disclosure-sync";
 import { BRAND, COPY } from "@/lib/brand";
 import { ExportCsvLink } from "@/components/shared/export-csv-button";
 import { getAllTrades, getRecentTrades } from "@/lib/congress-data";
@@ -34,6 +35,7 @@ export default async function FeedPage() {
           took to be reported.
           {source === "supabase" && " Data is synced from our database."}
         </p>
+        {source === "supabase" && <NextDisclosureSync variant="card" className="max-w-xl" />}
         <div className="flex flex-wrap gap-2 pt-1">
           <ExportCsvLink
             href="/api/export/trades?scope=feed"

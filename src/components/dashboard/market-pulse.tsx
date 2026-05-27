@@ -9,6 +9,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import type { MarketPulse as MarketPulseStats } from "@/lib/trade-analytics";
+import { NextDisclosureSync } from "@/components/shared/next-disclosure-sync";
 import { BRAND } from "@/lib/brand";
 
 interface MarketPulseProps {
@@ -89,6 +90,9 @@ export function MarketPulse({ pulse }: MarketPulseProps) {
           )}
         </div>
       )}
+      <div className="border-t border-border bg-secondary/10 px-5 py-3">
+        <NextDisclosureSync variant="inline" />
+      </div>
     </Card>
   );
 }
