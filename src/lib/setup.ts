@@ -116,6 +116,20 @@ function createSchemaPgClient(connectionString: string): pg.Client {
   });
 }
 
+function stripSqlComments(sql: string): string {
+  return sql
+    .split("\n")
+    .filter((line) => !line.trim().startsWith("--"))
+    .join("\n");
+}
+
+function splitSqlStatements(sql: string): string[] {
+  return stripSqlComments(sql)
+    .split(";")
+    .map((statement) => statement.trim())
+    .filter((statement) => statement.length > 0);
+}
+
 export async function runSupabaseSchema(): Promise<{ executed: number }> {
   const connectionString = getSchemaDatabaseUrl();
 
@@ -127,14 +141,7 @@ export async function runSupabaseSchema(): Promise<{ executed: number }> {
 
   const schemaPath = join(process.cwd(), "supabase", "schema.sql");
   const sql = readFileSync(schemaPath, "utf8");
-
-  const statements = sql
-    .split(";")
-    .map((statement) => statement.trim())
-    .filter(
-      (statement) =>
-        statement.length > 0 && !statement.startsWith("--")
-    );
+  const statements = splitSqlStatements(sql);
 
   const client = createSchemaPgClient(connectionString);
 
