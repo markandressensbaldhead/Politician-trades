@@ -42,6 +42,8 @@ function quiverToUnified(trade: QuiverCongressTrade, index: number): UnifiedCong
     ),
     sector: trade.TickerType ?? "",
     excessReturn: trade.ExcessReturn ?? null,
+    priceChange: trade.PriceChange ?? null,
+    spyChange: trade.SPYChange ?? null,
   };
 }
 

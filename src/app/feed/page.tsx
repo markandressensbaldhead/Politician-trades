@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { LiveTradeFeed } from "@/components/dashboard/live-trade-feed";
 import { MarketPulse } from "@/components/dashboard/market-pulse";
 import { TrendingTickers } from "@/components/dashboard/trending-tickers";
+import { ExportCsvLink } from "@/components/shared/export-csv-button";
 import { getAllTrades, getRecentTrades } from "@/lib/congress-data";
 import { getMarketPulse, getTrendingTickers } from "@/lib/trade-analytics";
 
@@ -33,6 +34,16 @@ export default async function FeedPage() {
           filter by party, and see disclosure lag on every row.
           {source === "supabase" && " Reading from locked database cache."}
         </p>
+        <div className="flex flex-wrap gap-2 pt-2">
+          <ExportCsvLink
+            href="/api/export/trades?scope=feed"
+            label="Export feed (500 rows)"
+          />
+          <ExportCsvLink
+            href="/api/export/trades?scope=all"
+            label="Export full database"
+          />
+        </div>
       </div>
 
       <div className="space-y-6">

@@ -20,6 +20,8 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { MarketQuote, ProfileTrade } from "@/types";
+import { ExportCsvButton } from "@/components/shared/export-csv-button";
+import { profileTradeToCsvRow, slugifyFilename } from "@/lib/csv-export";
 import { translateTradeToInvestment } from "@/lib/filing-translator";
 import { cn, formatDate, formatPercent, formatUsd } from "@/lib/utils";
 
@@ -27,12 +29,16 @@ interface TradeHistoryTableProps {
   trades: ProfileTrade[];
   showExcessReturn: boolean;
   politicianName?: string;
+  politicianParty?: string;
+  politicianChamber?: string;
 }
 
 export function TradeHistoryTable({
   trades,
   showExcessReturn,
   politicianName = "This member",
+  politicianParty = "",
+  politicianChamber = "",
 }: TradeHistoryTableProps) {
   const [quotes, setQuotes] = useState<Record<string, MarketQuote>>({});
   const [loadingQuotes, setLoadingQuotes] = useState(true);
@@ -40,6 +46,24 @@ export function TradeHistoryTable({
   const tickers = useMemo(
     () => [...new Set(trades.map((trade) => trade.ticker.toUpperCase()))],
     [trades]
+  );
+
+  const csvRows = useMemo(
+    () =>
+      trades.map((trade) =>
+        profileTradeToCsvRow(
+          politicianName,
+          politicianParty,
+          politicianChamber,
+          trade,
+          translateTradeToInvestment(
+            trade,
+            politicianName,
+            trade.secFilings ?? []
+          ).plainSummary
+        )
+      ),
+    [trades, politicianName, politicianParty, politicianChamber]
   );
 
   useEffect(() => {
@@ -87,13 +111,21 @@ export function TradeHistoryTable({
   return (
     <Card className="terminal-panel overflow-hidden border-border/60 bg-card/40">
       <CardHeader className="terminal-header border-b border-border/60">
-        <CardTitle className="font-mono text-sm uppercase tracking-[0.2em] text-terminal-amber">
-          Trade History
-        </CardTitle>
-        <CardDescription>
-          Reported transactions with live Yahoo Finance prices. Linked SEC filings
-          are locked from EDGAR sync when available.
-        </CardDescription>
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+          <div>
+            <CardTitle className="font-mono text-sm uppercase tracking-[0.2em] text-terminal-amber">
+              Trade History
+            </CardTitle>
+            <CardDescription>
+              Reported transactions with live Yahoo Finance prices. Linked SEC
+              filings are locked from EDGAR sync when available.
+            </CardDescription>
+          </div>
+          <ExportCsvButton
+            rows={csvRows}
+            filename={`${slugifyFilename(politicianName)}-trades.csv`}
+          />
+        </div>
       </CardHeader>
       <CardContent className="p-0">
         <Table>

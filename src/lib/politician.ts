@@ -63,6 +63,8 @@ function quiverTradeToProfileTrade(
     tradeDate: trade.TransactionDate,
     filingDate: trade.ReportDate,
     excessReturn: trade.ExcessReturn,
+    priceChange: trade.PriceChange ?? null,
+    spyChange: trade.SPYChange ?? null,
     sector: trade.TickerType,
   };
 }

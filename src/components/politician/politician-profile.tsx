@@ -5,7 +5,9 @@ import { AiInsightsCard } from "@/components/politician/ai-insights-card";
 import { EdgarFilingsCard } from "@/components/politician/edgar-filings-card";
 import { FollowPoliticianButton } from "@/components/politician/follow-politician-button";
 import { ProfileIntelligence } from "@/components/politician/profile-intelligence";
+import { PerformanceChart } from "@/components/politician/performance-chart";
 import { TradeHistoryTable } from "@/components/politician/trade-history-table";
+import { ExportCsvLink } from "@/components/shared/export-csv-button";
 import { PartyBadge } from "@/components/leaderboard/party-badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -167,10 +169,16 @@ export function PoliticianProfile({ politician }: PoliticianProfileProps) {
                 </p>
               )}
 
-              <FollowPoliticianButton
-                politicianId={politician.id}
-                politicianName={politician.name}
-              />
+              <div className="flex flex-wrap items-center gap-2 pt-1">
+                <FollowPoliticianButton
+                  politicianId={politician.id}
+                  politicianName={politician.name}
+                />
+                <ExportCsvLink
+                  href={`/api/export/trades?politician=${encodeURIComponent(politician.id)}`}
+                  label="Export CSV"
+                />
+              </div>
             </div>
           </div>
         </div>
@@ -209,6 +217,19 @@ export function PoliticianProfile({ politician }: PoliticianProfileProps) {
       </div>
 
       {politician.trades.length > 0 && (
+        <PerformanceChart
+          politicianName={politician.name}
+          trades={politician.trades.map((trade) => ({
+            tradeDate: trade.tradeDate,
+            type: trade.type,
+            excessReturn: trade.excessReturn,
+            priceChange: trade.priceChange,
+            spyChange: trade.spyChange,
+          }))}
+        />
+      )}
+
+      {politician.trades.length > 0 && (
         <ProfileIntelligence
           politicianName={politician.name}
           lagStats={lagStats}
@@ -230,6 +251,8 @@ export function PoliticianProfile({ politician }: PoliticianProfileProps) {
       <TradeHistoryTable
         trades={politician.trades}
         politicianName={politician.name}
+        politicianParty={politician.party}
+        politicianChamber={politician.chamber}
         showExcessReturn={
           politician.source === "live" || politician.source === "disclosure"
         }

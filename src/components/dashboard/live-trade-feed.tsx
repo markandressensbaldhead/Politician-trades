@@ -17,6 +17,8 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { RecentCongressTrade } from "@/lib/congress-data";
+import { slugifyFilename, unifiedTradeToCsvRow } from "@/lib/csv-export";
+import { ExportCsvButton } from "@/components/shared/export-csv-button";
 import { filterTrades } from "@/lib/trade-analytics";
 import { UnifiedCongressTrade, Party, Chamber } from "@/types";
 import { cn, formatDate } from "@/lib/utils";
@@ -26,6 +28,7 @@ interface LiveTradeFeedProps {
   showFilters?: boolean;
   title?: string;
   description?: string;
+  exportFilename?: string;
 }
 
 function toUnified(trade: RecentCongressTrade): UnifiedCongressTrade {
@@ -52,6 +55,7 @@ export function LiveTradeFeed({
   showFilters = true,
   title = "Live Trade Feed",
   description = "Filterable firehose of every disclosed congressional trade — search by ticker, politician, or party.",
+  exportFilename = "capitol-trades-feed.csv",
 }: LiveTradeFeedProps) {
   const [query, setQuery] = useState("");
   const [type, setType] = useState<"all" | "Purchase" | "Sale">("all");
@@ -62,14 +66,24 @@ export function LiveTradeFeed({
     return filterTrades(unified, { query, type, days }).slice(0, 80);
   }, [trades, query, type, days]);
 
+  const exportRows = useMemo(
+    () => filtered.map((trade) => unifiedTradeToCsvRow(trade)),
+    [filtered]
+  );
+
   return (
     <Card className="terminal-panel overflow-hidden border-border/60 bg-card/40">
       <CardHeader className="terminal-header border-b border-border/60">
-        <CardTitle className="flex items-center gap-2 font-mono text-sm uppercase tracking-[0.2em] text-terminal-amber">
-          <Filter className="h-4 w-4" />
-          {title}
-        </CardTitle>
-        <CardDescription>{description}</CardDescription>
+        <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+          <div className="space-y-2">
+            <CardTitle className="flex items-center gap-2 font-mono text-sm uppercase tracking-[0.2em] text-terminal-amber">
+              <Filter className="h-4 w-4" />
+              {title}
+            </CardTitle>
+            <CardDescription>{description}</CardDescription>
+          </div>
+          <ExportCsvButton rows={exportRows} filename={exportFilename} />
+        </div>
         {showFilters && (
           <div className="flex flex-col gap-3 pt-2 lg:flex-row lg:items-center">
             <div className="relative flex-1">

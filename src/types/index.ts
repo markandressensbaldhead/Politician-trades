@@ -17,6 +17,8 @@ export interface UnifiedCongressTrade {
   disclosureLagDays: number | null;
   sector: string;
   excessReturn: number | null;
+  priceChange?: number | null;
+  spyChange?: number | null;
 }
 
 export interface TrendingTickerEntry {
@@ -102,6 +104,8 @@ export interface ProfileTrade {
   tradeDate: string;
   filingDate: string;
   excessReturn?: number;
+  priceChange?: number | null;
+  spyChange?: number | null;
   sector?: string;
   disclosureType?: "transaction" | "reported-holding" | "corporate-event";
   sourceNote?: string;

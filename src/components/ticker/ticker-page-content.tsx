@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { LiveTradeFeed } from "@/components/dashboard/live-trade-feed";
+import { ExportCsvLink } from "@/components/shared/export-csv-button";
 import { DisclosureLagBadge } from "@/components/shared/disclosure-lag-badge";
 import { PartyBadge } from "@/components/leaderboard/party-badge";
 import { Badge } from "@/components/ui/badge";
@@ -57,6 +58,10 @@ export async function TickerPageContent({ symbol }: TickerPageProps) {
             Demo data — add QUIVERQUANT_API_KEY for live congressional trades.
           </p>
         )}
+        <ExportCsvLink
+          href={`/api/export/trades?ticker=${encodeURIComponent(ticker)}`}
+          label={`Export ${ticker} CSV`}
+        />
       </div>
 
       {trades.length === 0 ? (
