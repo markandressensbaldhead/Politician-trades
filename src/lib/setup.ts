@@ -66,7 +66,12 @@ export async function checkDatabaseTables(): Promise<{
 
   const { getSupabaseServerClient } = await import("@/lib/supabase/server");
   const supabase = getSupabaseServerClient();
-  const tables = ["congress_trades", "politician_insights", "subscriptions"];
+  const tables = [
+    "congress_trades",
+    "politician_insights",
+    "politician_filing_insights",
+    "subscriptions",
+  ];
   const missingTables: string[] = [];
 
   for (const table of tables) {

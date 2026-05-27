@@ -41,60 +41,10 @@ export function getDatabaseUrl(): string | undefined {
   );
 }
 
-function extractSupabaseProjectRef(): string | undefined {
-  const supabaseUrl = getSupabaseUrl();
-
-  if (!supabaseUrl) {
-    return undefined;
-  }
-
-  try {
-    const hostname = new URL(supabaseUrl).hostname;
-    return hostname.split(".")[0] || undefined;
-  } catch {
-    return undefined;
-  }
-}
-
-function toDirectSupabaseConnectionString(connectionString: string): string {
-  const url = new URL(connectionString.replace(/^postgres:\/\//, "postgresql://"));
-  const projectRef =
-    extractSupabaseProjectRef() ||
-    url.username.split(".")[1] ||
-    undefined;
-
-  if (!projectRef) {
-    return connectionString;
-  }
-
-  const password = url.password;
-  const directHost = `db.${projectRef}.supabase.co`;
-
-  if (url.hostname === directHost && url.port === "5432") {
-    return connectionString;
-  }
-
-  url.hostname = directHost;
-  url.port = "5432";
-  url.username = "postgres";
-
-  if (password) {
-    url.password = password;
-  }
-
-  return url.toString().replace(/^postgresql:\/\//, "postgres://");
-}
-
 export function getSchemaDatabaseUrl(): string | undefined {
-  const connectionString = firstDefined(
+  return firstDefined(
     process.env.POSTGRES_URL_NON_POOLING,
     process.env.DATABASE_URL,
     process.env.POSTGRES_URL
   );
-
-  if (!connectionString) {
-    return undefined;
-  }
-
-  return toDirectSupabaseConnectionString(connectionString);
 }

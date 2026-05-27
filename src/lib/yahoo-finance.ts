@@ -1,49 +1,25 @@
 import { MarketQuote } from "@/types";
 
-const YAHOO_QUOTE_URL = "https://query1.finance.yahoo.com/v7/finance/quote";
+const YAHOO_CHART_URL = "https://query1.finance.yahoo.com/v8/finance/chart";
 
 function normalizeTicker(ticker: string): string {
   return ticker.trim().toUpperCase().replace(/\./g, "-");
 }
 
-function parseQuote(raw: Record<string, unknown>): MarketQuote {
-  const ticker = String(raw.symbol ?? "");
-
+function yahooHeaders(): HeadersInit {
   return {
-    ticker,
-    price:
-      typeof raw.regularMarketPrice === "number" ? raw.regularMarketPrice : null,
-    changePercent:
-      typeof raw.regularMarketChangePercent === "number"
-        ? raw.regularMarketChangePercent
-        : null,
-    marketCap: typeof raw.marketCap === "number" ? raw.marketCap : null,
-    currency: String(raw.currency ?? "USD"),
-    shortName:
-      typeof raw.shortName === "string"
-        ? raw.shortName
-        : typeof raw.longName === "string"
-          ? raw.longName
-          : null,
+    Accept: "application/json",
+    "User-Agent":
+      "Mozilla/5.0 (compatible; CapitolTrades/1.0; +https://politician-trades.vercel.app)",
   };
 }
 
-export async function getMarketQuotes(
-  tickers: string[]
-): Promise<Record<string, MarketQuote>> {
-  const uniqueTickers = [...new Set(tickers.map(normalizeTicker).filter(Boolean))];
-
-  if (uniqueTickers.length === 0) {
-    return {};
-  }
-
-  const url = `${YAHOO_QUOTE_URL}?symbols=${encodeURIComponent(uniqueTickers.join(","))}`;
+async function fetchChartQuote(ticker: string): Promise<MarketQuote> {
+  const normalized = normalizeTicker(ticker);
+  const url = `${YAHOO_CHART_URL}/${encodeURIComponent(normalized)}?interval=1d&range=1d`;
 
   const response = await fetch(url, {
-    headers: {
-      Accept: "application/json",
-      "User-Agent": "CapitolTrades/1.0",
-    },
+    headers: yahooHeaders(),
     next: { revalidate: 900 },
   });
 
@@ -52,28 +28,70 @@ export async function getMarketQuotes(
   }
 
   const payload = (await response.json()) as {
-    quoteResponse?: { result?: Array<Record<string, unknown>> };
+    chart?: {
+      result?: Array<{
+        meta?: {
+          symbol?: string;
+          regularMarketPrice?: number;
+          chartPreviousClose?: number;
+          shortName?: string;
+          longName?: string;
+          currency?: string;
+        };
+      }>;
+    };
   };
 
+  const meta = payload.chart?.result?.[0]?.meta;
+  const price =
+    typeof meta?.regularMarketPrice === "number" ? meta.regularMarketPrice : null;
+  const previousClose =
+    typeof meta?.chartPreviousClose === "number" ? meta.chartPreviousClose : null;
+  const changePercent =
+    price != null && previousClose != null && previousClose !== 0
+      ? ((price - previousClose) / previousClose) * 100
+      : null;
+
+  return {
+    ticker: meta?.symbol ?? normalized,
+    price,
+    changePercent,
+    marketCap: null,
+    currency: meta?.currency ?? "USD",
+    shortName: meta?.shortName ?? meta?.longName ?? null,
+  };
+}
+
+export async function getMarketQuotes(
+  tickers: string[]
+): Promise<Record<string, MarketQuote>> {
+  const uniqueTickers = [...new Set(tickers.map(normalizeTicker).filter(Boolean))];
   const quotes: Record<string, MarketQuote> = {};
 
-  for (const row of payload.quoteResponse?.result ?? []) {
-    const quote = parseQuote(row);
-    quotes[quote.ticker.toUpperCase()] = quote;
-    quotes[normalizeTicker(quote.ticker)] = quote;
+  if (uniqueTickers.length === 0) {
+    return quotes;
   }
 
-  for (const ticker of uniqueTickers) {
-    if (!quotes[ticker]) {
-      quotes[ticker] = {
-        ticker,
-        price: null,
-        changePercent: null,
-        marketCap: null,
-        currency: "USD",
-        shortName: null,
-      };
-    }
+  const results = await Promise.all(
+    uniqueTickers.map(async (ticker) => {
+      try {
+        return await fetchChartQuote(ticker);
+      } catch {
+        return {
+          ticker,
+          price: null,
+          changePercent: null,
+          marketCap: null,
+          currency: "USD",
+          shortName: null,
+        } satisfies MarketQuote;
+      }
+    })
+  );
+
+  for (const quote of results) {
+    const key = normalizeTicker(quote.ticker);
+    quotes[key] = quote;
   }
 
   return quotes;
@@ -81,10 +99,9 @@ export async function getMarketQuotes(
 
 export async function getMarketQuote(ticker: string): Promise<MarketQuote> {
   const quotes = await getMarketQuotes([ticker]);
-  const normalized = normalizeTicker(ticker);
   return (
-    quotes[normalized] ?? {
-      ticker: normalized,
+    quotes[normalizeTicker(ticker)] ?? {
+      ticker: normalizeTicker(ticker),
       price: null,
       changePercent: null,
       marketCap: null,

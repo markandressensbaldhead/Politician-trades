@@ -19,7 +19,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { MarketQuote, ProfileTrade } from "@/types";
-import { cn, formatCompactUsd, formatDate, formatPercent, formatUsd } from "@/lib/utils";
+import { cn, formatDate, formatPercent, formatUsd } from "@/lib/utils";
 
 interface TradeHistoryTableProps {
   trades: ProfileTrade[];
@@ -87,7 +87,7 @@ export function TradeHistoryTable({
           Trade History
         </CardTitle>
         <CardDescription>
-          Reported transactions with live Yahoo Finance price and market cap
+          Reported transactions with live Yahoo Finance prices
         </CardDescription>
       </CardHeader>
       <CardContent className="p-0">
@@ -112,12 +112,12 @@ export function TradeHistoryTable({
               <TableHead className="text-right font-mono text-[10px] uppercase tracking-wider text-terminal-amber">
                 Amount
               </TableHead>
-              <TableHead className="text-right font-mono text-[10px] uppercase tracking-wider text-terminal-amber">
-                Price
-              </TableHead>
-              <TableHead className="text-right font-mono text-[10px] uppercase tracking-wider text-terminal-amber">
-                Mkt Cap
-              </TableHead>
+                    <TableHead className="text-right font-mono text-[10px] uppercase tracking-wider text-terminal-amber">
+                      Price
+                    </TableHead>
+                    <TableHead className="text-right font-mono text-[10px] uppercase tracking-wider text-terminal-amber">
+                      Day Chg
+                    </TableHead>
               {showExcessReturn && (
                 <TableHead className="text-right font-mono text-[10px] uppercase tracking-wider text-terminal-amber">
                   vs. SPY
@@ -201,8 +201,14 @@ export function TradeHistoryTable({
                     <TableCell className="text-right font-mono tabular-nums text-sm">
                       {loadingQuotes ? (
                         <span className="text-muted-foreground">…</span>
-                      ) : quote?.marketCap != null ? (
-                        formatCompactUsd(quote.marketCap)
+                      ) : quote?.changePercent != null ? (
+                        <span
+                          className={cn(
+                            changePositive ? "text-gain" : "text-loss"
+                          )}
+                        >
+                          {formatPercent(quote.changePercent)}
+                        </span>
                       ) : (
                         <span className="text-muted-foreground">—</span>
                       )}
