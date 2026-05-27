@@ -3,7 +3,7 @@
 #
 # Usage:
 #   export VERCEL_TOKEN=...   # https://vercel.com/account/tokens
-#   APP_DOMAIN=hilltape.com bash scripts/setup-capitoltrades-domain.sh
+#   APP_DOMAIN=tradethehill.com bash scripts/setup-capitoltrades-domain.sh
 #
 # After running, configure DNS at your registrar using the records Vercel prints.
 
@@ -11,7 +11,7 @@ set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 PROJECT_NAME="${VERCEL_PROJECT_NAME:-politician-trades}"
-DOMAIN="${APP_DOMAIN:-hilltape.com}"
+DOMAIN="${APP_DOMAIN:-tradethehill.com}"
 WWW_DOMAIN="www.${DOMAIN}"
 APP_URL="https://${DOMAIN}"
 

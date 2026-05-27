@@ -1,4 +1,4 @@
-# Hill Tape
+# Trade the Hill
 
 A dark-themed dashboard for tracking congressional stock trading activity from public financial disclosures.
 

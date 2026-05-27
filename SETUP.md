@@ -29,7 +29,7 @@ Also confirm these exist (you may have added them already):
 
 | Key | Value |
 |-----|--------|
-| `NEXT_PUBLIC_APP_URL` | `https://hilltape.com` |
+| `NEXT_PUBLIC_APP_URL` | `https://tradethehill.com` |
 | `QUIVERQUANT_API_KEY` | your QuiverQuant key |
 | `CRON_SECRET` | any random string |
 
@@ -55,7 +55,7 @@ Deployments → top **Ready** row → **⋯** → **Redeploy**
 
 ## Test
 
-https://hilltape.com/politician/nancy-pelosi
+https://tradethehill.com/politician/nancy-pelosi
 
 Wait ~20 seconds on **AI Insights**.
 
@@ -76,16 +76,16 @@ Then redeploy on Vercel.
 
 ---
 
-## Custom domain: hilltape.com
+## Custom domain: tradethehill.com
 
-Code defaults and share links use `https://hilltape.com`. To attach the domain on Vercel:
+Code defaults and share links use `https://tradethehill.com`. To attach the domain on Vercel:
 
 ```bash
 export VERCEL_TOKEN=...   # https://vercel.com/account/tokens
-APP_DOMAIN=hilltape.com bash scripts/setup-capitoltrades-domain.sh
+APP_DOMAIN=tradethehill.com bash scripts/setup-capitoltrades-domain.sh
 ```
 
-Or manually: Vercel → **Settings** → **Domains** → add `hilltape.com` and `www.hilltape.com`, set `NEXT_PUBLIC_APP_URL=https://hilltape.com`, then redeploy.
+Or manually: Vercel → **Settings** → **Domains** → add `tradethehill.com` and `www.tradethehill.com`, set `NEXT_PUBLIC_APP_URL=https://tradethehill.com`, then redeploy.
 
 **DNS at your registrar:**
 
