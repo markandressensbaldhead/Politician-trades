@@ -9,33 +9,57 @@ import { isSupabaseConfigured } from "@/lib/supabase/server";
 import {
   formatTradesForAnalysis,
   getTradesForPolitician,
+  profileTradesToCongressRows,
   syncPoliticianTradesIfMissing,
 } from "@/lib/supabase/trades";
-import { PoliticianInsight } from "@/types/supabase";
+import { CongressTradeRow, PoliticianInsight } from "@/types/supabase";
 
-async function ensureTradesInSupabase(politicianId: string) {
+function uniqueIds(...values: Array<string | undefined>): string[] {
+  return [...new Set(values.filter(Boolean) as string[])];
+}
+
+async function loadStoredTrades(ids: string[]): Promise<CongressTradeRow[]> {
+  for (const id of ids) {
+    const trades = await getTradesForPolitician(id, 100);
+    if (trades.length > 0) {
+      return trades;
+    }
+  }
+
+  return [];
+}
+
+async function ensureTradesForAnalysis(politicianId: string) {
   const profile = await getPoliticianProfile(politicianId);
 
   if (!profile) {
     return null;
   }
 
-  let trades = await getTradesForPolitician(politicianId, 100);
+  const storageId = profile.bioGuideId ?? profile.id;
+  const lookupIds = uniqueIds(politicianId, profile.id, profile.bioGuideId);
+  let trades = await loadStoredTrades(lookupIds);
 
   if (trades.length === 0 && profile.trades.length > 0) {
-    await syncPoliticianTradesIfMissing(
-      politicianId,
-      profile.name,
-      profile.trades.slice(0, 100)
-    );
-    trades = await getTradesForPolitician(politicianId, 100);
+    try {
+      await syncPoliticianTradesIfMissing(
+        storageId,
+        profile.name,
+        profile.trades.slice(0, 100)
+      );
+    } catch {
+      // Another request may have inserted these rows already.
+    }
+
+    trades = await loadStoredTrades(lookupIds);
   }
 
   if (trades.length === 0 && profile.trades.length > 0) {
-    const fallbackId = profile.bioGuideId ?? profile.id;
-    if (fallbackId !== politicianId) {
-      trades = await getTradesForPolitician(fallbackId, 100);
-    }
+    trades = profileTradesToCongressRows(
+      storageId,
+      profile.name,
+      profile.trades
+    );
   }
 
   return { profile, trades };
@@ -56,7 +80,7 @@ export async function getOrGenerateInsight(
     return { ...stored, cached: true };
   }
 
-  const result = await ensureTradesInSupabase(politicianId);
+  const result = await ensureTradesForAnalysis(politicianId);
 
   if (!result) {
     throw new Error("Politician not found");

@@ -86,6 +86,32 @@ export function profileTradeToRow(
   };
 }
 
+export function profileTradesToCongressRows(
+  politicianId: string,
+  politicianName: string,
+  trades: ProfileTrade[]
+): CongressTradeRow[] {
+  const createdAt = new Date().toISOString();
+
+  return trades.slice(0, 100).map((trade) => {
+    const row = profileTradeToRow(politicianId, politicianName, trade);
+
+    return {
+      id: row.trade_key,
+      created_at: createdAt,
+      ...row,
+    };
+  });
+}
+
+function isDuplicateTradeError(message: string, code?: string): boolean {
+  return (
+    code === "23505" ||
+    message.toLowerCase().includes("duplicate key") ||
+    message.includes("congress_trades_trade_key_key")
+  );
+}
+
 export async function getExistingTradeKeys(): Promise<Set<string>> {
   return getExistingTradeKeysForPolitician();
 }
@@ -135,17 +161,23 @@ export async function insertNewTrades(rows: TradeInsertRow[]): Promise<number> {
   }
 
   const supabase = getSupabaseServerClient();
+  let inserted = 0;
 
-  const { error } = await supabase.from("congress_trades").upsert(rows, {
-    onConflict: "trade_key",
-    ignoreDuplicates: true,
-  });
+  for (const row of rows) {
+    const { error } = await supabase.from("congress_trades").insert(row);
 
-  if (error) {
-    throw new Error(`Failed to insert trades: ${error.message}`);
+    if (error) {
+      if (isDuplicateTradeError(error.message, error.code)) {
+        continue;
+      }
+
+      throw new Error(`Failed to insert trades: ${error.message}`);
+    }
+
+    inserted += 1;
   }
 
-  return rows.length;
+  return inserted;
 }
 
 export async function getTradesForPolitician(

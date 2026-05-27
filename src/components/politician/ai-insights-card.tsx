@@ -125,8 +125,11 @@ export function AiInsightsCard({
           <div className="rounded-md border border-loss/30 bg-loss/5 p-4">
             <p className="font-mono text-sm text-loss">{error}</p>
             <p className="mt-2 text-sm text-muted-foreground">
-              Ensure Supabase tables are set up and ANTHROPIC_API_KEY is
-              configured in your environment.
+              Try refreshing the page. If the issue persists, check{" "}
+              <a href="/setup" className="text-primary underline-offset-4 hover:underline">
+                /setup
+              </a>{" "}
+              for missing API keys.
             </p>
           </div>
         )}
