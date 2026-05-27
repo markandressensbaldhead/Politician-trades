@@ -10,8 +10,16 @@ import {
   getLeaderboardData,
   getRecentTrades,
 } from "@/lib/congress-data";
-import { buildClusterIndex, getSectorClusters, getTradeClusters } from "@/lib/trade-clusters";
-import { getHighConvictionTrades } from "@/lib/trade-significance";
+import {
+  buildClusterIndex,
+  getSectorClusters,
+  getTradeClusters,
+} from "@/lib/trade-clusters";
+import {
+  buildPoliticianScoreIndex,
+  getHighConvictionTrades,
+} from "@/lib/trade-significance";
+import { politicians } from "@/lib/data";
 import { getMarketPulse, getTrendingTickers } from "@/lib/trade-analytics";
 import { cn, formatPercent } from "@/lib/utils";
 
@@ -39,8 +47,21 @@ export default async function HomePage() {
     limit: 4,
   });
   const clusterIndex = buildClusterIndex(clusters);
-  const highConviction = getHighConvictionTrades(allTrades, 5, clusterIndex, {
+  const politicianIndex = buildPoliticianScoreIndex([
+    ...politicians.map((politician) => ({
+      id: politician.id,
+      returnVsSpy: politician.returnVsSpy,
+      committee: politician.committee,
+    })),
+    ...entries.map((entry) => ({
+      id: entry.id,
+      returnVsSpy: entry.returnVsSpy,
+    })),
+  ]);
+  const highConviction = getHighConvictionTrades(allTrades, 6, clusterIndex, {
     days: 90,
+    politicianIndex,
+    diversify: true,
   });
   const totalTrades = entries.reduce(
     (sum, entry) => sum + entry.tradesLast90Days,
@@ -111,7 +132,7 @@ export default async function HomePage() {
         <MarketPulse pulse={pulse} />
       </div>
 
-      <div className="mb-8 grid gap-8 xl:grid-cols-2">
+      <div className="mb-8 space-y-8">
         <HighConvictionFeed trades={highConviction} />
         <TradeClustersPanel
           clusters={clusters}

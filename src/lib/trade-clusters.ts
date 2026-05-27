@@ -380,6 +380,8 @@ export function buildClusterIndex(
     index.set(cluster.ticker, {
       clusterPoliticianCount: cluster.politicianCount,
       clusterTradeCount: cluster.tradeCount,
+      clusterNetFlow: cluster.netFlow,
+      clusterMemberNames: cluster.members.map((member) => member.politicianName),
     });
   }
 

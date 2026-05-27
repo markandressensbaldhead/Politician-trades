@@ -204,7 +204,28 @@ const SECTOR_COMMITTEE_OVERLAP: Record<string, string[]> = {
   Oil: ["Energy and Commerce", "Natural Resources"],
   Defense: ["Armed Services", "Foreign Affairs"],
   Aerospace: ["Armed Services", "Transportation"],
+  Financials: ["Financial Services", "Banking", "Finance"],
+  "Consumer Discretionary": ["Commerce", "Energy and Commerce"],
 };
+
+export function committeeOverlapsSector(
+  committee: string | undefined,
+  sector: string
+): boolean {
+  if (!committee?.trim() || !sector?.trim()) {
+    return false;
+  }
+
+  const related = SECTOR_COMMITTEE_OVERLAP[sector];
+  if (!related) {
+    return false;
+  }
+
+  const normalizedCommittee = committee.toLowerCase();
+  return related.some((name) =>
+    normalizedCommittee.includes(name.toLowerCase())
+  );
+}
 
 export interface OverlapFlag {
   sector: string;

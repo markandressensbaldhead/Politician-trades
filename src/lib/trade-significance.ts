@@ -1,5 +1,8 @@
 import { UnifiedCongressTrade } from "@/types";
-import { getDisclosureLagDays } from "@/lib/trade-analytics";
+import {
+  committeeOverlapsSector,
+  getDisclosureLagDays,
+} from "@/lib/trade-analytics";
 
 export type SignificanceTier = "high" | "medium" | "low";
 
@@ -9,7 +12,9 @@ export type SignificanceFactorId =
   | "returns"
   | "disclosure"
   | "cluster"
-  | "conviction";
+  | "conviction"
+  | "trackrecord"
+  | "committee";
 
 export interface SignificanceFactor {
   id: SignificanceFactorId;
@@ -18,20 +23,34 @@ export interface SignificanceFactor {
   maxPoints: number;
 }
 
+export interface PoliticianScoreContext {
+  returnVsSpy?: number;
+  committee?: string;
+}
+
 export interface ScoredTrade extends UnifiedCongressTrade {
   significanceScore: number;
   significanceTier: SignificanceTier;
   significanceReasons: string[];
   headline: string;
+  investorTake: string;
+  signalTag: string;
   signalFactors: SignificanceFactor[];
   clusterPoliticianCount: number;
+  clusterNetFlow: "buying" | "selling" | "mixed" | null;
   disclosureLag: number | null;
   amountTier: "mega" | "large" | "medium" | "small" | "unknown";
+  politicianReturnVsSpy: number | null;
+  hasCommitteeOverlap: boolean;
 }
 
 export interface ScoreTradeContext {
   clusterPoliticianCount?: number;
   clusterTradeCount?: number;
+  clusterNetFlow?: "buying" | "selling" | "mixed";
+  clusterMemberNames?: string[];
+  politicianReturnVsSpy?: number;
+  politicianCommittee?: string;
 }
 
 export interface HighConvictionSummary {
@@ -41,6 +60,8 @@ export interface HighConvictionSummary {
   avgScore: number;
   purchaseCount: number;
   saleCount: number;
+  topScore: number;
+  avgReturn: number | null;
 }
 
 const FACTOR_MAX: Record<SignificanceFactorId, number> = {
@@ -50,6 +71,8 @@ const FACTOR_MAX: Record<SignificanceFactorId, number> = {
   disclosure: 10,
   cluster: 15,
   conviction: 4,
+  trackrecord: 12,
+  committee: 10,
 };
 
 function parseAmountWeight(amount: string): number {
@@ -147,6 +170,21 @@ function getClusterWeight(context?: ScoreTradeContext): number {
   return 0;
 }
 
+function getTraderTrackRecordWeight(returnVsSpy: number | undefined): number {
+  if (returnVsSpy == null || !Number.isFinite(returnVsSpy)) return 0;
+  if (returnVsSpy >= 12) return 12;
+  if (returnVsSpy >= 8) return 8;
+  if (returnVsSpy >= 5) return 5;
+  return 0;
+}
+
+function getCommitteeOverlapWeight(
+  committee: string | undefined,
+  sector: string
+): number {
+  return committeeOverlapsSector(committee, sector) ? 10 : 0;
+}
+
 function getTier(score: number): SignificanceTier {
   if (score >= 55) return "high";
   if (score >= 30) return "medium";
@@ -159,59 +197,131 @@ function buildHeadline(input: {
   type: UnifiedCongressTrade["type"];
   amountTier: ScoredTrade["amountTier"];
   clusterPoliticianCount: number;
+  clusterNetFlow: ScoredTrade["clusterNetFlow"];
   excessReturn: number | null;
   disclosureLag: number | null;
-  netFlowLabel?: string;
+  hasCommitteeOverlap: boolean;
 }): string {
   const lastName = input.politicianName.split(" ").pop() ?? input.politicianName;
-  const sizeLabel =
-    input.amountTier === "mega"
-      ? "Mega-sized"
-      : input.amountTier === "large"
-        ? "Large"
-        : input.amountTier === "medium"
-          ? "Notable"
-          : "";
 
-  const action =
+  if (
+    input.clusterPoliticianCount >= 3 &&
+    input.clusterNetFlow === "buying" &&
     input.type === "Purchase"
-      ? sizeLabel
-        ? `${sizeLabel.toLowerCase()} buy`
-        : "purchase"
-      : sizeLabel
-        ? `${sizeLabel.toLowerCase()} sale`
-        : "sale";
+  ) {
+    return `${input.clusterPoliticianCount} lawmakers buying ${input.ticker} — convergence signal`;
+  }
+
+  if (input.hasCommitteeOverlap && input.type === "Purchase") {
+    return `${lastName} bought ${input.ticker} in a sector their committee oversees`;
+  }
 
   if (
     input.clusterPoliticianCount >= 3 &&
     input.excessReturn != null &&
     input.excessReturn >= 8
   ) {
-    return `${lastName}'s ${input.ticker} ${action} — ${input.clusterPoliticianCount} members converged, up ${Math.abs(input.excessReturn).toFixed(0)}% vs S&P`;
+    return `${input.ticker} cluster +${Math.abs(input.excessReturn).toFixed(0)}% vs S&P since filings`;
   }
 
   if (input.clusterPoliticianCount >= 2) {
-    return `${lastName} ${action} in ${input.ticker} while ${input.clusterPoliticianCount - 1} other member${input.clusterPoliticianCount > 2 ? "s" : ""} traded the same name`;
+    return `${input.ticker}: ${input.clusterPoliticianCount} members active — ${lastName} ${input.type === "Purchase" ? "buying" : "selling"}`;
   }
 
   if (input.excessReturn != null && Math.abs(input.excessReturn) >= 15) {
-    const direction = input.excessReturn >= 0 ? "outperforming" : "underperforming";
-    return `${input.ticker} move since filing: ${direction} S&P by ${Math.abs(input.excessReturn).toFixed(0)}% after ${lastName}'s ${input.type.toLowerCase()}`;
+    return `${input.ticker} ${input.excessReturn >= 0 ? "outperforming" : "lagging"} S&P by ${Math.abs(input.excessReturn).toFixed(0)}% since ${lastName}'s trade`;
   }
 
   if (input.disclosureLag != null && input.disclosureLag > 45) {
-    return `Late-disclosed ${input.ticker} ${input.type.toLowerCase()} from ${lastName} (${input.disclosureLag}d lag)`;
+    return `Late ${input.ticker} disclosure from ${lastName} (${input.disclosureLag}-day lag)`;
   }
 
   if (input.amountTier === "mega" || input.amountTier === "large") {
-    return `${lastName} disclosed a ${input.amountTier === "mega" ? "multi-million" : "six-figure+"} ${input.ticker} ${input.type.toLowerCase()}`;
+    return `${lastName}: ${input.amountTier === "mega" ? "multi-million" : "six-figure+"} ${input.ticker} ${input.type.toLowerCase()}`;
   }
 
-  if (input.excessReturn != null && input.excessReturn >= 5) {
-    return `Early mover: ${lastName}'s ${input.ticker} ${input.type.toLowerCase()} is already beating the market`;
+  return `${lastName} ${input.type.toLowerCase()} in ${input.ticker}`;
+}
+
+function buildInvestorTake(input: {
+  politicianName: string;
+  ticker: string;
+  type: UnifiedCongressTrade["type"];
+  amount: string;
+  sector: string;
+  significanceScore: number;
+  clusterPoliticianCount: number;
+  clusterNetFlow: ScoredTrade["clusterNetFlow"];
+  clusterMemberNames: string[];
+  excessReturn: number | null;
+  politicianReturnVsSpy: number | null;
+  hasCommitteeOverlap: boolean;
+  politicianCommittee?: string;
+  amountTier: ScoredTrade["amountTier"];
+}): string {
+  const lastName = input.politicianName.split(" ").pop() ?? input.politicianName;
+  const others = input.clusterMemberNames
+    .filter((name) => name !== input.politicianName)
+    .slice(0, 2)
+    .map((name) => name.split(" ").pop())
+    .filter(Boolean);
+
+  if (input.clusterPoliticianCount >= 3 && input.clusterNetFlow === "buying") {
+    const also =
+      others.length > 0 ? ` (${others.join(", ")} also bought recently)` : "";
+    return `Multiple lawmakers are net buying ${input.ticker}${also}. Overlapping disclosures are one of the strongest crowd signals on congressional trackers.`;
   }
 
-  return `${lastName} ${action} in ${input.ticker} — ranked above routine disclosure noise`;
+  if (input.hasCommitteeOverlap && input.politicianCommittee) {
+    return `${lastName} serves on ${input.politicianCommittee} and added ${input.sector || "sector"} exposure via ${input.ticker}. Flag for potential committee–sector overlap.`;
+  }
+
+  if (
+    input.politicianReturnVsSpy != null &&
+    input.politicianReturnVsSpy >= 8 &&
+    input.type === "Purchase"
+  ) {
+    return `${lastName}'s recent trades beat the S&P by ${input.politicianReturnVsSpy.toFixed(1)}% on average. This ${input.amount} ${input.ticker} buy fits that track record.`;
+  }
+
+  if (input.excessReturn != null && input.excessReturn >= 10) {
+    return `${input.ticker} is already ${input.excessReturn >= 0 ? "beating" : "trailing"} the benchmark by ${Math.abs(input.excessReturn).toFixed(1)}% since this filing — the move looks ${input.excessReturn >= 0 ? "well-timed" : "risky in hindsight"}.`;
+  }
+
+  if (input.amountTier === "mega") {
+    return `Among the largest disclosures in the current window. Whale-sized congressional trades tend to draw the most copycat attention from retail followers.`;
+  }
+
+  if (input.clusterPoliticianCount >= 2) {
+    return `${input.clusterPoliticianCount} members touched ${input.ticker} recently. Watch for follow-on filings that confirm whether this is a one-off or a theme.`;
+  }
+
+  return `Scored ${input.significanceScore}/100 on size, timing, trader track record, and overlap with other Capitol activity in ${input.ticker}.`;
+}
+
+function buildSignalTag(input: {
+  clusterPoliticianCount: number;
+  clusterNetFlow: ScoredTrade["clusterNetFlow"];
+  amountTier: ScoredTrade["amountTier"];
+  excessReturn: number | null;
+  hasCommitteeOverlap: boolean;
+  politicianReturnVsSpy: number | null;
+  recencyWeight: number;
+  type: UnifiedCongressTrade["type"];
+}): string {
+  if (input.clusterPoliticianCount >= 3 && input.clusterNetFlow === "buying") {
+    return "Congress cluster";
+  }
+  if (input.amountTier === "mega") return "Whale disclosure";
+  if (input.hasCommitteeOverlap) return "Committee overlap";
+  if (input.excessReturn != null && input.excessReturn >= 10) return "Beating market";
+  if (input.politicianReturnVsSpy != null && input.politicianReturnVsSpy >= 8) {
+    return "Top trader";
+  }
+  if (input.recencyWeight >= 12) return "Fresh filing";
+  if (input.amountTier === "large") return "Large size";
+  if (input.clusterPoliticianCount >= 2) return "Multi-member";
+  return input.type === "Purchase" ? "Conviction buy" : "Notable sale";
 }
 
 function buildFactor(
@@ -229,6 +339,21 @@ function buildFactor(
   };
 }
 
+function mergeContext(
+  trade: UnifiedCongressTrade,
+  clusterIndex?: Map<string, ScoreTradeContext>,
+  politicianIndex?: Map<string, PoliticianScoreContext>
+): ScoreTradeContext {
+  const cluster = clusterIndex?.get(trade.ticker.toUpperCase());
+  const politician = politicianIndex?.get(trade.politicianId);
+
+  return {
+    ...cluster,
+    politicianReturnVsSpy: politician?.returnVsSpy,
+    politicianCommittee: politician?.committee,
+  };
+}
+
 export function scoreTrade(
   trade: UnifiedCongressTrade,
   context?: ScoreTradeContext
@@ -238,10 +363,18 @@ export function scoreTrade(
   let score = 0;
 
   const clusterPoliticianCount = context?.clusterPoliticianCount ?? 0;
+  const clusterNetFlow = context?.clusterNetFlow ?? null;
+  const clusterMemberNames = context?.clusterMemberNames ?? [];
+  const politicianReturnVsSpy = context?.politicianReturnVsSpy ?? null;
+  const politicianCommittee = context?.politicianCommittee;
   const disclosureLag =
     trade.disclosureLagDays ??
     getDisclosureLagDays(trade.tradeDate, trade.filingDate);
   const amountTier = getAmountTier(trade.amount);
+  const hasCommitteeOverlap = committeeOverlapsSector(
+    politicianCommittee,
+    trade.sector
+  );
 
   const sizeWeight = parseAmountWeight(trade.amount);
   if (sizeWeight >= 14) {
@@ -303,13 +436,34 @@ export function scoreTrade(
   const clusterFactor = buildFactor("cluster", "Cluster", clusterWeight);
   if (clusterFactor) factors.push(clusterFactor);
 
-  let convictionWeight = 0;
+  const trackRecordWeight = getTraderTrackRecordWeight(
+    politicianReturnVsSpy ?? undefined
+  );
+  if (trackRecordWeight >= 8) {
+    reasons.push("Historically strong trader");
+  }
+  score += trackRecordWeight;
+  const trackRecordFactor = buildFactor(
+    "trackrecord",
+    "Track record",
+    trackRecordWeight
+  );
+  if (trackRecordFactor) factors.push(trackRecordFactor);
+
+  const committeeWeight = getCommitteeOverlapWeight(
+    politicianCommittee,
+    trade.sector
+  );
+  if (committeeWeight > 0) {
+    reasons.push("Committee-sector overlap");
+  }
+  score += committeeWeight;
+  const committeeFactor = buildFactor("committee", "Committee", committeeWeight);
+  if (committeeFactor) factors.push(committeeFactor);
+
   if (trade.type === "Purchase" && sizeWeight >= 14) {
-    convictionWeight = 4;
+    const convictionWeight = 4;
     score += convictionWeight;
-    if (!reasons.some((reason) => reason.includes("size") || reason.includes("Large"))) {
-      reasons.push("High-conviction purchase");
-    }
     const convictionFactor = buildFactor(
       "conviction",
       "Buy conviction",
@@ -326,30 +480,69 @@ export function scoreTrade(
     type: trade.type,
     amountTier,
     clusterPoliticianCount,
+    clusterNetFlow,
     excessReturn: trade.excessReturn,
     disclosureLag,
+    hasCommitteeOverlap,
+  });
+
+  const investorTake = buildInvestorTake({
+    politicianName: trade.politicianName,
+    ticker: trade.ticker,
+    type: trade.type,
+    amount: trade.amount,
+    sector: trade.sector,
+    significanceScore: score,
+    clusterPoliticianCount,
+    clusterNetFlow,
+    clusterMemberNames,
+    excessReturn: trade.excessReturn,
+    politicianReturnVsSpy,
+    hasCommitteeOverlap,
+    politicianCommittee,
+    amountTier,
+  });
+
+  const signalTag = buildSignalTag({
+    clusterPoliticianCount,
+    clusterNetFlow,
+    amountTier,
+    excessReturn: trade.excessReturn,
+    hasCommitteeOverlap,
+    politicianReturnVsSpy,
+    recencyWeight,
+    type: trade.type,
   });
 
   return {
     ...trade,
     significanceScore: score,
     significanceTier: getTier(score),
-    significanceReasons: reasons.slice(0, 4),
+    significanceReasons: reasons.slice(0, 3),
     headline,
+    investorTake,
+    signalTag,
     signalFactors: factors.sort((a, b) => b.points - a.points),
     clusterPoliticianCount,
+    clusterNetFlow,
     disclosureLag,
     amountTier,
+    politicianReturnVsSpy,
+    hasCommitteeOverlap,
   };
 }
 
 export function scoreTrades(
   trades: UnifiedCongressTrade[],
-  clusterIndex?: Map<string, ScoreTradeContext>
+  clusterIndex?: Map<string, ScoreTradeContext>,
+  politicianIndex?: Map<string, PoliticianScoreContext>
 ): ScoredTrade[] {
   return trades
     .map((trade) =>
-      scoreTrade(trade, clusterIndex?.get(trade.ticker.toUpperCase()))
+      scoreTrade(
+        trade,
+        mergeContext(trade, clusterIndex, politicianIndex)
+      )
     )
     .sort(
       (a, b) =>
@@ -357,6 +550,28 @@ export function scoreTrades(
         new Date(b.filingDate ?? b.tradeDate).getTime() -
           new Date(a.filingDate ?? a.tradeDate).getTime()
     );
+}
+
+function diversifyTrades(trades: ScoredTrade[], limit: number): ScoredTrade[] {
+  const picked: ScoredTrade[] = [];
+  const seenTickers = new Set<string>();
+
+  for (const trade of trades) {
+    const ticker = trade.ticker.toUpperCase();
+    if (seenTickers.has(ticker)) continue;
+    picked.push(trade);
+    seenTickers.add(ticker);
+    if (picked.length >= limit) return picked;
+  }
+
+  for (const trade of trades) {
+    if (picked.length >= limit) break;
+    if (!picked.some((entry) => entry.id === trade.id)) {
+      picked.push(trade);
+    }
+  }
+
+  return picked;
 }
 
 export function summarizeHighConviction(
@@ -370,6 +585,8 @@ export function summarizeHighConviction(
       avgScore: 0,
       purchaseCount: 0,
       saleCount: 0,
+      topScore: 0,
+      avgReturn: null,
     };
   }
 
@@ -377,6 +594,9 @@ export function summarizeHighConviction(
   const mediumCount = trades.filter(
     (trade) => trade.significanceTier === "medium"
   ).length;
+  const returns = trades
+    .map((trade) => trade.excessReturn)
+    .filter((value): value is number => value != null && Number.isFinite(value));
 
   return {
     total: trades.length,
@@ -388,6 +608,11 @@ export function summarizeHighConviction(
     ),
     purchaseCount: trades.filter((trade) => trade.type === "Purchase").length,
     saleCount: trades.filter((trade) => trade.type === "Sale").length,
+    topScore: trades[0]?.significanceScore ?? 0,
+    avgReturn:
+      returns.length > 0
+        ? returns.reduce((sum, value) => sum + value, 0) / returns.length
+        : null,
   };
 }
 
@@ -395,18 +620,43 @@ export function getHighConvictionTrades(
   trades: UnifiedCongressTrade[],
   limit = 8,
   clusterIndex?: Map<string, ScoreTradeContext>,
-  options: { days?: number; minScore?: number } = {}
+  options: {
+    days?: number;
+    minScore?: number;
+    politicianIndex?: Map<string, PoliticianScoreContext>;
+    diversify?: boolean;
+  } = {}
 ): ScoredTrade[] {
   const days = options.days ?? 90;
   const minScore = options.minScore ?? 30;
+  const diversify = options.diversify ?? true;
   const cutoff = Date.now() - days * 24 * 60 * 60 * 1000;
 
-  return scoreTrades(
+  const ranked = scoreTrades(
     trades.filter(
       (trade) => new Date(trade.tradeDate).getTime() >= cutoff
     ),
-    clusterIndex
-  )
-    .filter((trade) => trade.significanceScore >= minScore)
-    .slice(0, limit);
+    clusterIndex,
+    options.politicianIndex
+  ).filter((trade) => trade.significanceScore >= minScore);
+
+  return diversify ? diversifyTrades(ranked, limit) : ranked.slice(0, limit);
+}
+
+export function buildPoliticianScoreIndex(
+  politicians: Array<{
+    id: string;
+    returnVsSpy: number;
+    committee?: string;
+  }>
+): Map<string, PoliticianScoreContext> {
+  return new Map(
+    politicians.map((politician) => [
+      politician.id,
+      {
+        returnVsSpy: politician.returnVsSpy,
+        committee: politician.committee,
+      },
+    ])
+  );
 }
