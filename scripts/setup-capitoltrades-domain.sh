@@ -85,14 +85,7 @@ set_env() {
     "https://api.vercel.com/v10/projects/${PROJECT_ID}/env?upsert=true${TEAM_QUERY}" \
     -H "Authorization: Bearer ${VERCEL_TOKEN}" \
     -H "Content-Type: application/json" \
-    -d "$( "$NODE" -e "
-      console.log(JSON.stringify({
-        key: process.argv[1],
-        value: process.argv[2],
-        type: 'plain',
-        target: ['production', 'preview', 'development']
-      }))
-    " "$key" "$value")" > /dev/null
+    -d "{\"key\":\"${key}\",\"value\":\"${value}\",\"type\":\"plain\",\"target\":[\"production\",\"preview\",\"development\"]}" > /dev/null
   echo "  OK"
 }
 
