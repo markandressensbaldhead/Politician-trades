@@ -135,6 +135,9 @@ export function SiteFooter() {
           </div>
 
           <div className="flex flex-wrap justify-center gap-6 text-sm text-muted-foreground">
+            <Link href="/#x-news" className="hover:text-foreground">
+              X pulse
+            </Link>
             <Link href="/feed" className="hover:text-foreground">
               All trades
             </Link>

@@ -29,7 +29,7 @@ Also confirm these exist (you may have added them already):
 
 | Key | Value |
 |-----|--------|
-| `NEXT_PUBLIC_APP_URL` | `https://politician-trades.vercel.app` |
+| `NEXT_PUBLIC_APP_URL` | `https://capitoltrades.com` |
 | `QUIVERQUANT_API_KEY` | your QuiverQuant key |
 | `CRON_SECRET` | any random string |
 
@@ -55,7 +55,7 @@ Deployments → top **Ready** row → **⋯** → **Redeploy**
 
 ## Test
 
-https://politician-trades.vercel.app/politician/nancy-pelosi
+https://capitoltrades.com/politician/nancy-pelosi
 
 Wait ~20 seconds on **AI Insights**.
 
@@ -73,3 +73,25 @@ bash scripts/push-vercel-env.sh
 ```
 
 Then redeploy on Vercel.
+
+---
+
+## Custom domain: capitoltrades.com
+
+Code defaults and share links use `https://capitoltrades.com`. To attach the domain on Vercel:
+
+```bash
+export VERCEL_TOKEN=...   # https://vercel.com/account/tokens
+bash scripts/setup-capitoltrades-domain.sh
+```
+
+Or manually: Vercel → **Settings** → **Domains** → add `capitoltrades.com` and `www.capitoltrades.com`, set `NEXT_PUBLIC_APP_URL=https://capitoltrades.com`, then redeploy.
+
+**DNS at your registrar:**
+
+| Host | Type | Value |
+|------|------|--------|
+| `@` | A | `76.76.21.21` |
+| `www` | CNAME | `cname.vercel-dns.com` |
+
+Redirect `www` → apex in Vercel Domains. SSL is automatic once DNS validates.

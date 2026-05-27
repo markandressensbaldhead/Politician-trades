@@ -4,7 +4,9 @@ import { LiveTradeFeed } from "@/components/dashboard/live-trade-feed";
 import { ExportCsvLink } from "@/components/shared/export-csv-button";
 import { FollowTickerButton } from "@/components/shared/follow-ticker-button";
 import { DisclosureLagBadge } from "@/components/shared/disclosure-lag-badge";
+import { TradeSignificanceBadge } from "@/components/shared/trade-significance-badge";
 import { PartyBadge } from "@/components/leaderboard/party-badge";
+import { TickerIntelligencePanel } from "@/components/ticker/ticker-intelligence-panel";
 import { Badge } from "@/components/ui/badge";
 import {
   Card,
@@ -21,9 +23,12 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { getMarketPulse } from "@/lib/trade-analytics";
-import { getTradesByTicker, toLegacyRecentTrade } from "@/lib/unified-trades";
-import { formatDate } from "@/lib/utils";
+import { buildPoliticianMetadataIndex } from "@/lib/politician-metadata";
+import { buildClusterIndex, getTradeClusters } from "@/lib/trade-clusters";
+import { scoreTrades } from "@/lib/trade-significance";
+import { buildTickerIntelligence } from "@/lib/ticker-intelligence";
+import { loadUnifiedTrades, toLegacyRecentTrade } from "@/lib/unified-trades";
+import { cn, formatDate, formatPercent } from "@/lib/utils";
 
 interface TickerPageProps {
   symbol: string;
@@ -31,12 +36,28 @@ interface TickerPageProps {
 
 export async function TickerPageContent({ symbol }: TickerPageProps) {
   const ticker = symbol.toUpperCase();
-  const { trades, source } = await getTradesByTicker(ticker);
+  const { trades: allTrades, source } = await loadUnifiedTrades();
+  const trades = allTrades
+    .filter((trade) => trade.ticker === ticker)
+    .sort(
+      (a, b) =>
+        new Date(b.tradeDate).getTime() - new Date(a.tradeDate).getTime()
+    );
 
-  const purchases = trades.filter((trade) => trade.type === "Purchase").length;
-  const sales = trades.length - purchases;
-  const politicians = new Set(trades.map((trade) => trade.politicianId)).size;
-  const pulse = getMarketPulse(trades);
+  const intelligence = buildTickerIntelligence(ticker, trades, allTrades);
+  const clusters = getTradeClusters(allTrades, {
+    days: 90,
+    minPoliticians: 2,
+    limit: 20,
+  });
+  const clusterIndex = buildClusterIndex(clusters);
+  const politicianIndex = buildPoliticianMetadataIndex(allTrades);
+  const scoredById = new Map(
+    scoreTrades(trades, clusterIndex, politicianIndex).map((trade) => [
+      trade.id,
+      trade,
+    ])
+  );
   const recentLegacy = trades.slice(0, 100).map(toLegacyRecentTrade);
 
   return (
@@ -48,9 +69,9 @@ export async function TickerPageContent({ symbol }: TickerPageProps) {
           <span className="ticker-symbol text-primary">{ticker}</span>?
         </h1>
         <p className="max-w-3xl text-muted-foreground">
-          Every disclosed buy and sell for this ticker — with disclosure lag,
-          party breakdown, and links to member profiles. This is the view
-          QuiverQuant and Capitol Trades users search for daily.
+          Intelligence brief, vs-S&P performance, crowd clusters, and every
+          disclosed buy and sell — the view power users search for on QuiverQuant
+          and Capitol Trades.
         </p>
         {source === "mock" && (
           <p className="rounded-lg border border-primary/20 bg-primary/[0.04] px-3 py-2 text-sm text-muted-foreground">
@@ -74,109 +95,107 @@ export async function TickerPageContent({ symbol }: TickerPageProps) {
         </Card>
       ) : (
         <>
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <SummaryStat label="Total Trades" value={String(trades.length)} />
-        <SummaryStat label="Politicians" value={String(politicians)} />
-        <SummaryStat label="Purchases" value={String(purchases)} highlight="gain" />
-        <SummaryStat label="Sales" value={String(sales)} highlight="loss" />
-      </div>
+          {intelligence && <TickerIntelligencePanel intelligence={intelligence} />}
 
-      <Card className="border-border/60 bg-card/40">
-        <CardHeader>
-          <CardTitle>Congressional Activity</CardTitle>
-          <CardDescription>
-            {purchases > sales
-              ? `Net buying pressure — ${Math.round((purchases / Math.max(trades.length, 1)) * 100)}% purchases`
-              : sales > purchases
-                ? `Net selling pressure — ${Math.round((sales / Math.max(trades.length, 1)) * 100)}% sales`
-                : "Mixed buy/sell activity"}
-            {pulse.avgDisclosureLagDays != null &&
-              ` · avg ${pulse.avgDisclosureLagDays} day disclosure lag`}
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="hidden md:block">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Politician</TableHead>
-                <TableHead>Type</TableHead>
-                <TableHead>Amount</TableHead>
-                <TableHead>Trade Date</TableHead>
-                <TableHead>Disclosure</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {trades.slice(0, 50).map((trade) => (
-                <TableRow key={trade.id}>
-                  <TableCell>
-                    <Link
-                      href={`/politician/${trade.politicianId}`}
-                      className="font-medium hover:text-primary"
-                    >
-                      {trade.politicianName}
-                    </Link>
-                    <div className="mt-1 flex gap-1">
-                      <PartyBadge party={trade.party} />
-                      <Badge variant="outline" className="text-[10px]">
-                        {trade.chamber}
-                      </Badge>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant={trade.type === "Purchase" ? "gain" : "loss"}>
-                      {trade.type}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-sm tabular-nums">
-                    {trade.amount}
-                  </TableCell>
-                  <TableCell className="text-xs text-muted-foreground">
-                    {formatDate(trade.tradeDate)}
-                  </TableCell>
-                  <TableCell>
-                    <DisclosureLagBadge days={trade.disclosureLagDays} />
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
+          <Card className="border-border/60 bg-card/40">
+            <CardHeader>
+              <CardTitle>All {ticker} trades</CardTitle>
+              <CardDescription>
+                Significance scoring, disclosure lag, and post-filing vs-S&P
+                where available.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="hidden md:block">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Politician</TableHead>
+                    <TableHead>Type</TableHead>
+                    <TableHead>Signal</TableHead>
+                    <TableHead>Amount</TableHead>
+                    <TableHead>vs S&P</TableHead>
+                    <TableHead>Trade Date</TableHead>
+                    <TableHead>Disclosure</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {trades.slice(0, 50).map((trade) => {
+                    const scored = scoredById.get(trade.id);
 
-      <LiveTradeFeed
-        trades={recentLegacy}
-        title={`${ticker} Feed`}
-        description={`Filter all ${ticker} congressional trades.`}
-      />
+                    return (
+                      <TableRow key={trade.id}>
+                        <TableCell>
+                          <Link
+                            href={`/politician/${trade.politicianId}`}
+                            className="font-medium hover:text-primary"
+                          >
+                            {trade.politicianName}
+                          </Link>
+                          <div className="mt-1 flex gap-1">
+                            <PartyBadge party={trade.party} />
+                            <Badge variant="outline" className="text-[10px]">
+                              {trade.chamber}
+                            </Badge>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <Badge
+                            variant={
+                              trade.type === "Purchase" ? "gain" : "loss"
+                            }
+                          >
+                            {trade.type}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          {scored ? (
+                            <TradeSignificanceBadge
+                              tier={scored.significanceTier}
+                              score={scored.significanceScore}
+                            />
+                          ) : (
+                            <span className="text-xs text-muted-foreground">
+                              —
+                            </span>
+                          )}
+                        </TableCell>
+                        <TableCell className="text-sm tabular-nums">
+                          {trade.amount}
+                        </TableCell>
+                        <TableCell
+                          className={cn(
+                            "text-sm tabular-nums",
+                            trade.excessReturn != null &&
+                              (trade.excessReturn >= 0
+                                ? "text-gain"
+                                : "text-loss")
+                          )}
+                        >
+                          {trade.excessReturn != null
+                            ? formatPercent(trade.excessReturn)
+                            : "—"}
+                        </TableCell>
+                        <TableCell className="text-xs text-muted-foreground">
+                          {formatDate(trade.tradeDate)}
+                        </TableCell>
+                        <TableCell>
+                          <DisclosureLagBadge days={trade.disclosureLagDays} />
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+
+          <LiveTradeFeed
+            trades={recentLegacy}
+            title={`${ticker} Feed`}
+            description={`Filter all ${ticker} congressional trades.`}
+          />
         </>
       )}
-    </div>
-  );
-}
-
-function SummaryStat({
-  label,
-  value,
-  highlight,
-}: {
-  label: string;
-  value: string;
-  highlight?: "gain" | "loss";
-}) {
-  return (
-    <div className="rounded-md border border-border/60 bg-background/40 p-4">
-      <p className="field-label">{label}</p>
-      <p
-        className={`mt-2 text-2xl font-semibold tabular-nums ${
-          highlight === "gain"
-            ? "text-gain"
-            : highlight === "loss"
-              ? "text-loss"
-              : ""
-        }`}
-      >
-        {value}
-      </p>
     </div>
   );
 }

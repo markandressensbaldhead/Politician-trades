@@ -1,3 +1,4 @@
+import { buildAlphaContextBlock } from "@/lib/alpha-brief-analytics";
 import { generateTradeAnalysis } from "@/lib/claude";
 import { getPoliticianProfile } from "@/lib/politician";
 import {
@@ -95,13 +96,24 @@ export async function getOrGenerateInsight(
     throw new Error("No trades available for analysis");
   }
 
-  const tradeHistoryText = formatTradesForAnalysis(
-    profile.name,
-    profile.party,
-    profile.chamber,
+  const analyticsContext = buildAlphaContextBlock(
+    trades,
     profile.committee,
-    trades
+    30
   );
+  const tradeHistoryText = [
+    "=== ANALYTICS CONTEXT (pre-computed — use this for sector flow, net direction, and top excess-return names) ===",
+    analyticsContext,
+    "",
+    "=== RAW TRADE HISTORY ===",
+    formatTradesForAnalysis(
+      profile.name,
+      profile.party,
+      profile.chamber,
+      profile.committee,
+      trades
+    ),
+  ].join("\n");
 
   const analysis = await generateTradeAnalysis(tradeHistoryText, profile.name);
 

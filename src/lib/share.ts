@@ -2,7 +2,7 @@ import { TradeOfTheDay } from "@/lib/trade-of-the-day";
 import { formatPercent } from "@/lib/utils";
 
 export const SITE_URL =
-  process.env.NEXT_PUBLIC_APP_URL ?? "https://politician-trades.vercel.app";
+  process.env.NEXT_PUBLIC_APP_URL ?? "https://capitoltrades.com";
 
 export function buildXIntentUrl(text: string, url?: string): string {
   const params = new URLSearchParams({ text });

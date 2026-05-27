@@ -17,7 +17,7 @@ const jetbrainsMono = JetBrains_Mono({
 
 export const metadata: Metadata = {
   metadataBase: new URL(
-    process.env.NEXT_PUBLIC_APP_URL ?? "https://politician-trades.vercel.app"
+    process.env.NEXT_PUBLIC_APP_URL ?? "https://capitoltrades.com"
   ),
   title: {
     default: "Capitol Trades — See What Congress Buys",

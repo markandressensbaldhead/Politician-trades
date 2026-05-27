@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 
 import { PortfolioAdvisor } from "@/components/portfolio/portfolio-advisor";
 import { PortfolioConnect } from "@/components/portfolio/portfolio-connect";
+import { PortfolioSignalsPanel } from "@/components/portfolio/portfolio-signals-panel";
 import { useSnapTradeCallbackSync } from "@/components/portfolio/snaptrade-connect";
 import { loadPortfolio } from "@/lib/portfolio-storage";
 import { SavedPortfolio } from "@/types/portfolio";
@@ -41,6 +42,8 @@ export function PortfolioPageContent() {
         />
         <PortfolioAdvisor portfolio={portfolio} />
       </div>
+
+      <PortfolioSignalsPanel portfolio={portfolio} />
     </div>
   );
 }

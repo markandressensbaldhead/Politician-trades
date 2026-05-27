@@ -20,11 +20,8 @@ import {
   getSectorClusters,
   getTradeClusters,
 } from "@/lib/trade-clusters";
-import {
-  buildPoliticianScoreIndex,
-  getHighConvictionTrades,
-} from "@/lib/trade-significance";
-import { politicians } from "@/lib/data";
+import { getHighConvictionTrades } from "@/lib/trade-significance";
+import { buildPoliticianMetadataIndex } from "@/lib/politician-metadata";
 import { getMarketPulse, getTrendingTickers } from "@/lib/trade-analytics";
 import { getTradeOfTheDay } from "@/lib/trade-of-the-day";
 import { buildTopicalXNews } from "@/lib/x-news";
@@ -53,17 +50,13 @@ export default async function HomePage() {
     limit: 4,
   });
   const clusterIndex = buildClusterIndex(clusters);
-  const politicianIndex = buildPoliticianScoreIndex([
-    ...politicians.map((politician) => ({
-      id: politician.id,
-      returnVsSpy: politician.returnVsSpy,
-      committee: politician.committee,
-    })),
-    ...entries.map((entry) => ({
+  const politicianIndex = buildPoliticianMetadataIndex(
+    allTrades,
+    entries.map((entry) => ({
       id: entry.id,
       returnVsSpy: entry.returnVsSpy,
-    })),
-  ]);
+    }))
+  );
   const highConviction = getHighConvictionTrades(allTrades, 6, clusterIndex, {
     days: 90,
     politicianIndex,
