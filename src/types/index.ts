@@ -95,3 +95,33 @@ export interface PoliticianProfileData {
   portfolioValue?: number;
   trades: ProfileTrade[];
 }
+
+export interface MarketQuote {
+  ticker: string;
+  price: number | null;
+  changePercent: number | null;
+  marketCap: number | null;
+  currency: string;
+  shortName: string | null;
+}
+
+export interface EdgarFiling {
+  id: string;
+  form: string;
+  filedAt: string;
+  title: string;
+  entityName: string;
+  ticker?: string;
+  source: "politician-search" | "company-filing";
+  documentUrl: string;
+  excerpt?: string;
+}
+
+export interface FilingInsight {
+  politicianId: string;
+  politicianName: string;
+  analysis: string;
+  generatedAt: string;
+  cached: boolean;
+  filingsReviewed: number;
+}

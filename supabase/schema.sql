@@ -80,3 +80,25 @@ create policy "Allow service writes on subscriptions"
   on public.subscriptions for all
   using (true)
   with check (true);
+
+create table if not exists public.politician_filing_insights (
+  politician_id text primary key,
+  politician_name text,
+  analysis text not null,
+  filings_reviewed integer not null default 0,
+  generated_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+alter table public.politician_filing_insights enable row level security;
+
+drop policy if exists "Allow public read on politician_filing_insights" on public.politician_filing_insights;
+create policy "Allow public read on politician_filing_insights"
+  on public.politician_filing_insights for select
+  using (true);
+
+drop policy if exists "Allow service writes on politician_filing_insights" on public.politician_filing_insights;
+create policy "Allow service writes on politician_filing_insights"
+  on public.politician_filing_insights for all
+  using (true)
+  with check (true);

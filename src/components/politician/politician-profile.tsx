@@ -2,7 +2,9 @@ import Link from "next/link";
 import { ArrowLeft, TrendingDown, TrendingUp } from "lucide-react";
 
 import { AiInsightsCard } from "@/components/politician/ai-insights-card";
+import { EdgarFilingsCard } from "@/components/politician/edgar-filings-card";
 import { FollowPoliticianButton } from "@/components/politician/follow-politician-button";
+import { TradeHistoryTable } from "@/components/politician/trade-history-table";
 import { PartyBadge } from "@/components/leaderboard/party-badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -12,18 +14,9 @@ import {
   CardContent,
   CardDescription,
   CardHeader,
-  CardTitle,
 } from "@/components/ui/card";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { PoliticianProfileData } from "@/types";
-import { cn, formatCurrency, formatDate, formatPercent } from "@/lib/utils";
+import { cn, formatCurrency, formatPercent } from "@/lib/utils";
 
 interface PoliticianProfileProps {
   politician: PoliticianProfileData;
@@ -172,118 +165,15 @@ export function PoliticianProfile({ politician }: PoliticianProfileProps) {
         politicianName={politician.name}
       />
 
-      <Card className="terminal-panel overflow-hidden border-border/60 bg-card/40">
-        <CardHeader className="terminal-header border-b border-border/60">
-          <CardTitle className="font-mono text-sm uppercase tracking-[0.2em] text-terminal-amber">
-            Trade History
-          </CardTitle>
-          <CardDescription>
-            Reported stock transactions from financial disclosures
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="p-0">
-          <Table>
-            <TableHeader>
-              <TableRow className="border-border/60 hover:bg-transparent">
-                <TableHead className="font-mono text-[10px] uppercase tracking-wider text-terminal-amber">
-                  Trade Date
-                </TableHead>
-                <TableHead className="font-mono text-[10px] uppercase tracking-wider text-terminal-amber">
-                  Filed
-                </TableHead>
-                <TableHead className="font-mono text-[10px] uppercase tracking-wider text-terminal-amber">
-                  Ticker
-                </TableHead>
-                <TableHead className="font-mono text-[10px] uppercase tracking-wider text-terminal-amber">
-                  Asset
-                </TableHead>
-                <TableHead className="font-mono text-[10px] uppercase tracking-wider text-terminal-amber">
-                  Type
-                </TableHead>
-                <TableHead className="text-right font-mono text-[10px] uppercase tracking-wider text-terminal-amber">
-                  Amount
-                </TableHead>
-                {politician.source === "live" && (
-                  <TableHead className="text-right font-mono text-[10px] uppercase tracking-wider text-terminal-amber">
-                    vs. SPY
-                  </TableHead>
-                )}
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {politician.trades.length === 0 ? (
-                <TableRow>
-                  <TableCell
-                    colSpan={politician.source === "live" ? 7 : 6}
-                    className="py-12 text-center text-muted-foreground"
-                  >
-                    No trades on record.
-                  </TableCell>
-                </TableRow>
-              ) : (
-                politician.trades.map((trade) => {
-                  const isPositive = (trade.excessReturn ?? 0) >= 0;
+      <EdgarFilingsCard
+        politicianId={politician.id}
+        politicianName={politician.name}
+      />
 
-                  return (
-                    <TableRow
-                      key={trade.id}
-                      className="border-border/40 hover:bg-gain/5"
-                    >
-                      <TableCell className="font-mono text-xs text-muted-foreground">
-                        {formatDate(trade.tradeDate)}
-                      </TableCell>
-                      <TableCell className="font-mono text-xs text-muted-foreground">
-                        {formatDate(trade.filingDate)}
-                      </TableCell>
-                      <TableCell className="font-mono font-semibold">
-                        {trade.ticker}
-                      </TableCell>
-                      <TableCell>
-                        <div>
-                          <p>{trade.company}</p>
-                          {trade.sector && (
-                            <p className="text-xs text-muted-foreground">
-                              {trade.sector}
-                            </p>
-                          )}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <Badge
-                          variant={
-                            trade.type === "Purchase" ? "gain" : "loss"
-                          }
-                        >
-                          {trade.type}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="text-right font-mono tabular-nums">
-                        {trade.amount}
-                      </TableCell>
-                      {politician.source === "live" && (
-                        <TableCell className="text-right">
-                          {trade.excessReturn !== undefined ? (
-                            <span
-                              className={cn(
-                                "font-mono tabular-nums font-medium",
-                                isPositive ? "text-gain" : "text-loss"
-                              )}
-                            >
-                              {formatPercent(trade.excessReturn)}
-                            </span>
-                          ) : (
-                            <span className="text-muted-foreground">—</span>
-                          )}
-                        </TableCell>
-                      )}
-                    </TableRow>
-                  );
-                })
-              )}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
+      <TradeHistoryTable
+        trades={politician.trades}
+        showExcessReturn={politician.source === "live"}
+      />
     </div>
   );
 }
