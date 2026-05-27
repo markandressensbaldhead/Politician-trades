@@ -58,7 +58,7 @@ export function PerformanceChart({
     return (
       <Card className="border-border/60 bg-card/40">
         <CardHeader>
-          <CardTitle className="font-mono text-sm uppercase tracking-[0.18em] text-terminal-amber">
+          <CardTitle className="text-sm font-semibold tracking-tight text-foreground">
             Performance vs S&amp;P 500
           </CardTitle>
           <CardDescription>
@@ -104,7 +104,7 @@ export function PerformanceChart({
               />
             )}
             <LegendItem
-              color="hsl(var(--terminal-amber))"
+              color="hsl(var(--primary))"
               label="Edge vs SPY"
               value={formatPercent(summary.totalExcessVsSpy)}
             />

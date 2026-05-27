@@ -55,9 +55,9 @@ export function StatsCards({ stats }: StatsCardsProps) {
               className={
                 card.highlight !== undefined
                   ? card.highlight
-                    ? "text-2xl font-bold font-mono tabular-nums text-gain"
-                    : "text-2xl font-bold font-mono tabular-nums text-loss"
-                  : "text-2xl font-bold font-mono tabular-nums"
+                    ? "text-2xl font-bold tabular-nums text-gain"
+                    : "text-2xl font-bold tabular-nums text-loss"
+                  : "text-2xl font-bold tabular-nums"
               }
             >
               {card.value}

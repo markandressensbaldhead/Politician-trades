@@ -39,9 +39,7 @@ function TradeMeta({
 }) {
   return (
     <div className="rounded-md border border-border/40 bg-background/30 px-3 py-2.5">
-      <p className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
-        {label}
-      </p>
+      <p className="field-label">{label}</p>
       <div
         className={cn(
           "mt-1 text-sm font-medium tabular-nums text-foreground",
@@ -130,8 +128,8 @@ export function TradeHistoryTable({
   }, [tickers]);
 
   return (
-    <Card className="terminal-panel overflow-hidden border-border/60 bg-card/40">
-      <CardHeader className="terminal-header border-b border-border/60 px-6 py-5">
+    <Card className="surface-card overflow-hidden">
+      <CardHeader className="surface-header border-b border-border px-6 py-5">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div className="space-y-1.5">
             <CardTitle className="text-base font-semibold tracking-tight text-foreground">
@@ -180,7 +178,7 @@ export function TradeHistoryTable({
                       <div className="flex flex-wrap items-center gap-2">
                         <Link
                           href={`/ticker/${trade.ticker}`}
-                          className="font-mono text-xl font-bold tracking-tight hover:text-terminal-amber"
+                          className="ticker-symbol text-xl hover:text-primary"
                         >
                           {trade.ticker}
                         </Link>
@@ -209,7 +207,7 @@ export function TradeHistoryTable({
                       </p>
 
                       {trade.disclosureType && (
-                        <p className="text-xs uppercase tracking-wide text-muted-foreground">
+                        <p className="text-xs text-muted-foreground">
                           {trade.disclosureType.replace(/-/g, " ")}
                         </p>
                       )}
@@ -222,7 +220,7 @@ export function TradeHistoryTable({
                     </div>
 
                     <div className="shrink-0 text-left sm:text-right">
-                      <p className="font-mono text-lg font-semibold tabular-nums">
+                      <p className="text-lg font-semibold tabular-nums">
                         {trade.amount}
                       </p>
                     </div>
@@ -282,9 +280,7 @@ export function TradeHistoryTable({
                   </div>
 
                   <div className="rounded-lg border border-border/50 bg-background/40 p-4">
-                    <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-terminal-amber">
-                      Plain English
-                    </p>
+                    <p className="mb-2 field-label">Plain English</p>
                     <p className="text-sm leading-7 text-foreground/95">
                       {investment.plainSummary}
                     </p>
@@ -298,12 +294,10 @@ export function TradeHistoryTable({
                           href={filing.documentUrl}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="group inline-flex items-center gap-1.5 rounded-md border border-border/50 bg-background/30 px-3 py-1.5 text-xs transition-colors hover:border-terminal-amber/40 hover:text-terminal-amber"
+                          className="group inline-flex items-center gap-1.5 rounded-md border border-border/50 bg-background/30 px-3 py-1.5 text-xs transition-colors hover:border-primary/30 hover:text-primary"
                         >
                           <ExternalLink className="h-3 w-3 opacity-60 group-hover:opacity-100" />
-                          <span className="font-mono font-medium">
-                            {filing.form}
-                          </span>
+                          <span className="font-medium">{filing.form}</span>
                           <span className="text-muted-foreground">
                             {formatDate(filing.filedAt)}
                           </span>

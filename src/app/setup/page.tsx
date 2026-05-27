@@ -127,10 +127,10 @@ export default function SetupPage() {
         </p>
       </div>
 
-      <Card className="terminal-panel border-border/60">
+      <Card className="surface-card">
         <CardHeader>
-          <CardTitle className="font-mono text-sm uppercase tracking-[0.2em] text-terminal-amber">
-            Environment Status
+          <CardTitle className="text-base font-semibold">
+            Environment status
           </CardTitle>
           <CardDescription>
             These must be set in Vercel → Settings → Environment Variables
@@ -162,11 +162,9 @@ export default function SetupPage() {
         </CardContent>
       </Card>
 
-      <Card className="terminal-panel border-border/60">
+      <Card className="surface-card">
         <CardHeader>
-          <CardTitle className="font-mono text-sm uppercase tracking-[0.2em] text-terminal-amber">
-            Run Setup
-          </CardTitle>
+          <CardTitle className="text-base font-semibold">Run setup</CardTitle>
           <CardDescription>
             Creates Supabase tables automatically when DATABASE_URL is configured.
           </CardDescription>
@@ -185,7 +183,7 @@ export default function SetupPage() {
           <Button
             onClick={() => runSetup("schema")}
             disabled={running || !cronSecret}
-            className="w-full font-mono text-xs uppercase tracking-wider"
+            className="w-full"
           >
             {running ? (
               <>
@@ -193,7 +191,7 @@ export default function SetupPage() {
                 Creating tables...
               </>
             ) : (
-              "Create Database Tables"
+              "Create database tables"
             )}
           </Button>
 
@@ -201,7 +199,7 @@ export default function SetupPage() {
             onClick={() => runSetup("full")}
             disabled={running || !cronSecret}
             variant="outline"
-            className="w-full font-mono text-xs uppercase tracking-wider"
+            className="w-full"
           >
             Initialize Database & Verify AI Insights
           </Button>

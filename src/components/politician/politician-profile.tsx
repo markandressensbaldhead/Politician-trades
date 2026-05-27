@@ -198,9 +198,7 @@ export function PoliticianProfile({
               key={stat.label}
               className="bg-card/80 px-4 py-4 sm:px-5"
             >
-              <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
-                {stat.label}
-              </p>
+              <p className="field-label">{stat.label}</p>
               <p
                 className={cn(
                   "mt-1.5 flex items-center gap-1 text-xl font-semibold tabular-nums sm:text-2xl",

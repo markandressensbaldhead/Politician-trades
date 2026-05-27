@@ -77,7 +77,15 @@
   }
 
   .page-eyebrow {
-    @apply text-sm font-medium text-primary;
+    @apply text-sm font-medium text-muted-foreground;
+  }
+
+  .field-label {
+    @apply text-xs font-medium text-muted-foreground;
+  }
+
+  .ticker-symbol {
+    @apply font-semibold tabular-nums tracking-tight;
   }
 
   .section-title {

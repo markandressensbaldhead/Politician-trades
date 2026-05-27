@@ -34,23 +34,21 @@ export function TrendingTickers({
           <Link
             key={entry.ticker}
             href={`/ticker/${entry.ticker}`}
-            className="group rounded-md border border-border/60 bg-background/30 p-3 transition-colors hover:border-terminal-amber/40 hover:bg-terminal-amber/5"
+            className="group rounded-lg border border-border bg-background/30 p-3 transition-colors hover:border-primary/30 hover:bg-primary/[0.03]"
           >
             <div className="flex items-start justify-between gap-2">
               <div>
                 <div className="flex items-center gap-2">
-                  <span className="font-mono text-[10px] text-muted-foreground">
+                  <span className="text-xs text-muted-foreground">
                     #{index + 1}
                   </span>
-                  <span className="font-mono text-lg font-bold">
-                    {entry.ticker}
-                  </span>
+                  <span className="ticker-symbol text-lg">{entry.ticker}</span>
                 </div>
                 <p className="mt-1 text-xs text-muted-foreground">
                   {entry.tradeCount} trades · {entry.politicianCount} members
                 </p>
               </div>
-              <ArrowUpRight className="h-4 w-4 text-muted-foreground transition-colors group-hover:text-terminal-amber" />
+              <ArrowUpRight className="h-4 w-4 text-muted-foreground transition-colors group-hover:text-primary" />
             </div>
             <div className="mt-3 flex flex-wrap items-center gap-2">
               <Badge
@@ -61,7 +59,7 @@ export function TrendingTickers({
                       ? "loss"
                       : "secondary"
                 }
-                className="font-mono text-[10px]"
+                className="text-[10px]"
               >
                 {entry.netFlow === "buying" && (
                   <TrendingUp className="mr-1 h-3 w-3" />
@@ -71,7 +69,7 @@ export function TrendingTickers({
                 )}
                 {entry.netFlow}
               </Badge>
-              <span className="font-mono text-[10px] text-muted-foreground">
+              <span className="text-[10px] text-muted-foreground">
                 Last {formatDate(entry.lastTradeDate)}
               </span>
             </div>
@@ -90,13 +88,13 @@ export function TrendingTickerStrip({ tickers }: { tickers: TrendingTicker[] }) 
           key={entry.ticker}
           href={`/ticker/${entry.ticker}`}
           className={cn(
-            "shrink-0 rounded-md border border-border/60 bg-background/50 px-3 py-2 transition-colors hover:border-terminal-amber/40",
+            "shrink-0 rounded-lg border border-border bg-background/50 px-3 py-2 transition-colors hover:border-primary/30",
             entry.netFlow === "buying" && "border-gain/20",
             entry.netFlow === "selling" && "border-loss/20"
           )}
         >
-          <span className="font-mono text-sm font-bold">{entry.ticker}</span>
-          <span className="ml-2 font-mono text-[10px] text-muted-foreground">
+          <span className="ticker-symbol text-sm">{entry.ticker}</span>
+          <span className="ml-2 text-[10px] text-muted-foreground">
             {entry.tradeCount} trades
           </span>
         </Link>

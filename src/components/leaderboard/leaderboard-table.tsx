@@ -58,7 +58,7 @@ export function LeaderboardTable({ politicians }: LeaderboardTableProps) {
         <TableBody>
           {politicians.map((politician, index) => (
             <TableRow key={politician.id}>
-              <TableCell className="font-mono text-muted-foreground">
+              <TableCell className="tabular-nums text-muted-foreground">
                 {index + 1}
               </TableCell>
               <TableCell>
@@ -95,7 +95,7 @@ export function LeaderboardTable({ politicians }: LeaderboardTableProps) {
               <TableCell className="text-right">
                 <span
                   className={cn(
-                    "inline-flex items-center gap-1 font-mono tabular-nums font-medium",
+                    "inline-flex items-center gap-1 tabular-nums font-medium",
                     politician.ytdReturn >= 0 ? "text-gain" : "text-loss"
                   )}
                 >
@@ -107,13 +107,13 @@ export function LeaderboardTable({ politicians }: LeaderboardTableProps) {
                   {formatPercent(politician.ytdReturn)}
                 </span>
               </TableCell>
-              <TableCell className="text-right font-mono tabular-nums">
+              <TableCell className="text-right tabular-nums">
                 {formatCurrency(politician.portfolioValue)}
               </TableCell>
-              <TableCell className="text-right font-mono tabular-nums">
+              <TableCell className="text-right tabular-nums">
                 {politician.totalTrades}
               </TableCell>
-              <TableCell className="text-right font-mono tabular-nums text-muted-foreground">
+              <TableCell className="text-right tabular-nums text-muted-foreground">
                 {politician.winRate.toFixed(1)}%
               </TableCell>
               <TableCell>

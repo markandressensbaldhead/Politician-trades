@@ -41,12 +41,10 @@ export async function TickerPageContent({ symbol }: TickerPageProps) {
   return (
     <div className="space-y-8">
       <div className="space-y-3">
-        <p className="font-mono text-[11px] uppercase tracking-[0.3em] text-terminal-amber">
-          Stock-Centric View
-        </p>
+        <p className="page-eyebrow">Stock view</p>
         <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">
           Who in Congress traded{" "}
-          <span className="font-mono text-terminal-amber">{ticker}</span>?
+          <span className="ticker-symbol text-primary">{ticker}</span>?
         </h1>
         <p className="max-w-3xl text-muted-foreground">
           Every disclosed buy and sell for this ticker — with disclosure lag,
@@ -54,7 +52,7 @@ export async function TickerPageContent({ symbol }: TickerPageProps) {
           QuiverQuant and Capitol Trades users search for daily.
         </p>
         {source === "mock" && (
-          <p className="rounded-md border border-terminal-amber/30 bg-terminal-amber/5 px-3 py-2 text-sm text-terminal-amber">
+          <p className="rounded-lg border border-primary/20 bg-primary/[0.04] px-3 py-2 text-sm text-muted-foreground">
             Demo data — add QUIVERQUANT_API_KEY for live congressional trades.
           </p>
         )}
@@ -109,7 +107,7 @@ export async function TickerPageContent({ symbol }: TickerPageProps) {
                   <TableCell>
                     <Link
                       href={`/politician/${trade.politicianId}`}
-                      className="font-medium hover:text-terminal-amber"
+                      className="font-medium hover:text-primary"
                     >
                       {trade.politicianName}
                     </Link>
@@ -125,10 +123,10 @@ export async function TickerPageContent({ symbol }: TickerPageProps) {
                       {trade.type}
                     </Badge>
                   </TableCell>
-                  <TableCell className="font-mono text-sm tabular-nums">
+                  <TableCell className="text-sm tabular-nums">
                     {trade.amount}
                   </TableCell>
-                  <TableCell className="font-mono text-xs text-muted-foreground">
+                  <TableCell className="text-xs text-muted-foreground">
                     {formatDate(trade.tradeDate)}
                   </TableCell>
                   <TableCell>
@@ -163,11 +161,9 @@ function SummaryStat({
 }) {
   return (
     <div className="rounded-md border border-border/60 bg-background/40 p-4">
-      <p className="font-mono text-[10px] uppercase tracking-wider text-terminal-amber">
-        {label}
-      </p>
+      <p className="field-label">{label}</p>
       <p
-        className={`mt-2 font-mono text-2xl font-semibold tabular-nums ${
+        className={`mt-2 text-2xl font-semibold tabular-nums ${
           highlight === "gain"
             ? "text-gain"
             : highlight === "loss"

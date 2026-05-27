@@ -44,12 +44,12 @@ export function InvestmentActivityList({
               <div className="flex flex-wrap items-center gap-2">
                 <Badge
                   variant={actionBadgeVariant(investment.action)}
-                  className="font-mono text-[10px]"
+                  className="text-[10px]"
                 >
                   {investment.actionLabel}
                 </Badge>
                 {investment.ticker !== "—" && (
-                  <Badge variant="outline" className="font-mono text-[10px]">
+                  <Badge variant="outline" className="ticker-symbol text-[10px]">
                     {investment.ticker}
                   </Badge>
                 )}
@@ -113,14 +113,10 @@ function InvestmentStat({
 }) {
   return (
     <div className="rounded border border-border/50 bg-background/40 px-3 py-2">
-      <p className="font-mono text-[10px] uppercase tracking-wider text-terminal-amber">
-        {label}
-      </p>
+      <p className="field-label">{label}</p>
       <p className="mt-1 text-sm font-medium leading-snug">{value}</p>
       {sub && (
-        <p className="mt-0.5 font-mono text-[10px] text-muted-foreground">
-          {sub}
-        </p>
+        <p className="mt-0.5 text-xs text-muted-foreground">{sub}</p>
       )}
     </div>
   );

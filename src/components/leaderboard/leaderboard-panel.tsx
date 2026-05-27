@@ -109,7 +109,7 @@ export function LeaderboardPanel({ entries, source }: LeaderboardPanelProps) {
               <TableRow>
                 <TableCell
                   colSpan={6}
-                  className="py-16 text-center font-mono text-sm text-muted-foreground"
+                  className="py-16 text-center text-sm text-muted-foreground"
                 >
                   No politicians match this filter.
                 </TableCell>

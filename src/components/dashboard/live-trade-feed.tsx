@@ -135,12 +135,12 @@ export function LiveTradeFeed({
                 <div className="flex flex-wrap items-center gap-2">
                   <Link
                     href={`/politician/${trade.politicianId}`}
-                    className="font-semibold hover:text-terminal-amber"
+                    className="font-semibold hover:text-primary"
                   >
                     {trade.politicianName}
                   </Link>
                   <PartyBadge party={trade.party} />
-                  <Badge variant="outline" className="font-mono text-[10px]">
+                  <Badge variant="outline" className="text-[10px]">
                     {trade.chamber}
                   </Badge>
                   <DisclosureLagBadge days={trade.disclosureLagDays} />
@@ -154,17 +154,17 @@ export function LiveTradeFeed({
                   </Badge>
                   <Link
                     href={`/ticker/${trade.ticker}`}
-                    className="font-mono font-bold hover:text-terminal-amber"
+                    className="ticker-symbol hover:text-primary"
                   >
                     {trade.ticker}
                   </Link>{" "}
                   · {trade.company}
                 </p>
-                <p className="font-mono text-sm tabular-nums text-foreground/90">
+                <p className="text-sm tabular-nums text-foreground/90">
                   {trade.amount}
                 </p>
               </div>
-              <div className="shrink-0 text-right font-mono text-xs text-muted-foreground">
+              <div className="shrink-0 text-right text-xs text-muted-foreground">
                 <p>Trade {formatDate(trade.tradeDate)}</p>
                 {trade.filingDate && (
                   <p>Filed {formatDate(trade.filingDate)}</p>
@@ -211,12 +211,12 @@ export function TradeFeedCards({
               </Badge>
               <Link
                 href={`/ticker/${trade.ticker}`}
-                className="font-mono font-bold"
+                className="ticker-symbol"
               >
                 {trade.ticker}
               </Link>
             </div>
-            <p className="font-mono text-sm">{trade.amount}</p>
+            <p className="text-sm tabular-nums">{trade.amount}</p>
             <p className="text-xs text-muted-foreground">
               {formatDate(trade.date)}
             </p>

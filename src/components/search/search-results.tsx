@@ -73,7 +73,7 @@ export function SearchResults({
           size="sm"
           variant={mode === "politicians" ? "default" : "outline"}
           onClick={() => setMode("politicians")}
-          className="font-mono text-[10px] uppercase"
+          className="text-xs"
         >
           Politicians
         </Button>
@@ -81,7 +81,7 @@ export function SearchResults({
           size="sm"
           variant={mode === "tickers" ? "default" : "outline"}
           onClick={() => setMode("tickers")}
-          className="font-mono text-[10px] uppercase"
+          className="text-xs"
         >
           Tickers
         </Button>
@@ -115,12 +115,10 @@ export function SearchResults({
       {directTickerMatch && mode === "politicians" && (
         <Link
           href={`/ticker/${query.trim().toUpperCase()}`}
-          className="block rounded-md border border-terminal-amber/30 bg-terminal-amber/5 px-4 py-3 text-sm hover:bg-terminal-amber/10"
+          className="block rounded-lg border border-primary/20 bg-primary/[0.04] px-4 py-3 text-sm transition-colors hover:bg-primary/[0.08]"
         >
           Jump to{" "}
-          <span className="font-mono font-bold">
-            {query.trim().toUpperCase()}
-          </span>{" "}
+          <span className="ticker-symbol">{query.trim().toUpperCase()}</span>{" "}
           congressional trades →
         </Link>
       )}
@@ -131,8 +129,8 @@ export function SearchResults({
             ? `${politicianResults.length} politician${politicianResults.length !== 1 ? "s" : ""} found`
             : `${tickerResults.length} ticker${tickerResults.length !== 1 ? "s" : ""} found`}
         </p>
-        <span className="rounded border border-border/60 bg-background/50 px-2 py-1 font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
-          {source === "live" ? "Live Feed" : "Demo Data"}
+        <span className="status-pill">
+          {source === "live" ? "Live data" : "Demo data"}
         </span>
       </div>
 
@@ -170,13 +168,13 @@ export function SearchResults({
                   <div className="hidden shrink-0 text-right sm:block">
                     <p
                       className={cn(
-                        "font-mono font-medium tabular-nums",
+                        "font-semibold tabular-nums",
                         politician.returnVsSpy >= 0 ? "text-gain" : "text-loss"
                       )}
                     >
                       {formatPercent(politician.returnVsSpy)}
                     </p>
-                    <p className="font-mono text-xs tabular-nums text-muted-foreground">
+                    <p className="text-xs tabular-nums text-muted-foreground">
                       {source === "mock" && politician.portfolioValue
                         ? formatCurrency(politician.portfolioValue)
                         : `${politician.tradesLast90Days} trades (90d)`}

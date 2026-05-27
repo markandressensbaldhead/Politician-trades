@@ -46,14 +46,14 @@ function FilingRow({
       className={cn(
         "flex flex-col gap-4 rounded-lg border p-4 sm:flex-row sm:items-start sm:justify-between sm:p-5",
         featured
-          ? "border-terminal-amber/40 bg-terminal-amber/[0.07]"
+          ? "border-primary/25 bg-primary/[0.04]"
           : "border-border/60 bg-background/30"
       )}
     >
       <div className="min-w-0 space-y-2.5">
         <div className="flex flex-wrap items-center gap-2">
           {featured && (
-            <Badge className="bg-terminal-amber/20 text-[10px] text-terminal-amber hover:bg-terminal-amber/20">
+            <Badge className="bg-primary/15 text-[10px] text-primary hover:bg-primary/15">
               Latest
             </Badge>
           )}
@@ -64,7 +64,7 @@ function FilingRow({
             {filing.categoryLabel}
           </Badge>
           {filing.ticker && (
-            <Badge variant="secondary" className="font-mono text-[10px]">
+            <Badge variant="secondary" className="ticker-symbol text-[10px]">
               {filing.ticker}
             </Badge>
           )}
@@ -214,10 +214,10 @@ export function EdgarFilingsCard({
   );
 
   return (
-    <Card className="terminal-panel overflow-hidden border-border/60 bg-card/40">
-      <CardHeader className="terminal-header border-b border-border/60 px-6 py-5">
+    <Card className="surface-card overflow-hidden">
+      <CardHeader className="surface-header border-b border-border px-6 py-5">
         <CardTitle className="flex items-center gap-2 text-base font-semibold tracking-tight text-foreground">
-          <FileText className="h-4 w-4 text-terminal-amber" />
+          <FileText className="h-4 w-4 text-primary" />
           SEC EDGAR Filings
         </CardTitle>
         <CardDescription className="max-w-2xl text-sm leading-relaxed">
@@ -231,8 +231,8 @@ export function EdgarFilingsCard({
       <CardContent className="space-y-8 p-6 sm:p-8">
         {loadingFilings ? (
           <div className="flex items-center gap-3 py-8 text-muted-foreground">
-            <Loader2 className="h-4 w-4 animate-spin text-terminal-amber" />
-            <span className="font-mono text-sm">Searching SEC EDGAR...</span>
+            <Loader2 className="h-4 w-4 animate-spin text-primary" />
+            <span className="text-sm">Searching SEC EDGAR...</span>
           </div>
         ) : error ? (
           <p className="text-sm text-loss">{error}</p>
@@ -243,7 +243,7 @@ export function EdgarFilingsCard({
         ) : (
           <>
             {investments.length > 0 && (
-              <section className="space-y-4 rounded-lg border border-terminal-amber/30 bg-terminal-amber/[0.06] p-5">
+              <section className="space-y-4 rounded-lg border border-border bg-secondary/30 p-5">
                 <div className="space-y-1">
                   <h3 className="text-sm font-semibold text-foreground">
                     What They Invested In
@@ -308,7 +308,7 @@ export function EdgarFilingsCard({
           <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
             <div className="space-y-1">
               <div className="flex items-center gap-2">
-                <Sparkles className="h-4 w-4 text-terminal-amber" />
+                <Sparkles className="h-4 w-4 text-primary" />
                 <p className="text-sm font-semibold text-foreground">
                   EDGAR Linkage Memo
                 </p>
@@ -329,7 +329,7 @@ export function EdgarFilingsCard({
 
           {loadingInsight ? (
             <div className="flex items-center gap-3 py-8 text-muted-foreground">
-              <Loader2 className="h-4 w-4 animate-spin text-terminal-amber" />
+              <Loader2 className="h-4 w-4 animate-spin text-primary" />
               <span className="text-sm">Running event-driven review...</span>
             </div>
           ) : insight ? (

@@ -22,8 +22,8 @@ export function ChamberFilterBar({
 }: ChamberFilterBarProps) {
   return (
     <div className="flex flex-wrap items-center gap-2">
-      <span className="mr-1 font-mono text-[10px] uppercase tracking-[0.2em] text-terminal-amber">
-        Filter
+      <span className="mr-1 text-xs font-medium text-muted-foreground">
+        Chamber
       </span>
       {filters.map((filter) => (
         <button
@@ -31,10 +31,10 @@ export function ChamberFilterBar({
           type="button"
           onClick={() => onChange(filter.value)}
           className={cn(
-            "rounded border px-3 py-1.5 font-mono text-xs uppercase tracking-wider transition-all",
+            "rounded-full border px-3.5 py-1.5 text-sm font-medium transition-colors",
             value === filter.value
-              ? "border-primary/50 bg-primary/10 text-primary shadow-[0_0_16px_rgba(34,197,94,0.12)]"
-              : "border-border/60 bg-background/40 text-muted-foreground hover:border-border hover:text-foreground"
+              ? "border-primary/40 bg-primary/10 text-primary"
+              : "border-border bg-background text-muted-foreground hover:border-border hover:text-foreground"
           )}
         >
           {filter.label}

@@ -58,7 +58,7 @@ export function RecentTrades({ trades }: RecentTradesProps) {
           <TableBody>
             {trades.map((trade) => (
               <TableRow key={trade.id}>
-                <TableCell className="font-mono text-xs text-muted-foreground">
+                <TableCell className="text-xs text-muted-foreground">
                   {formatDate(trade.date)}
                 </TableCell>
                 <TableCell>
@@ -71,7 +71,7 @@ export function RecentTrades({ trades }: RecentTradesProps) {
                 </TableCell>
                 <TableCell>
                   <div>
-                    <span className="font-mono font-medium">{trade.ticker}</span>
+                    <span className="ticker-symbol">{trade.ticker}</span>
                     <p className="text-xs text-muted-foreground truncate max-w-[140px]">
                       {trade.company}
                     </p>
@@ -84,7 +84,7 @@ export function RecentTrades({ trades }: RecentTradesProps) {
                     {trade.type}
                   </Badge>
                 </TableCell>
-                <TableCell className="text-right font-mono text-sm tabular-nums">
+                <TableCell className="text-right text-sm tabular-nums">
                   {trade.amount}
                 </TableCell>
               </TableRow>

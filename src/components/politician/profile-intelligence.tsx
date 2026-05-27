@@ -91,7 +91,7 @@ export function ProfileIntelligence({
               </div>
               <div className="h-2 overflow-hidden rounded-full bg-secondary">
                 <div
-                  className="h-full rounded-full bg-terminal-amber/80"
+                  className="h-full rounded-full bg-primary/70"
                   style={{ width: `${(sector.count / maxSector) * 100}%` }}
                 />
               </div>
@@ -104,7 +104,7 @@ export function ProfileIntelligence({
       </Card>
 
       {overlapFlags.length > 0 && (
-        <Card className="border-terminal-amber/30 bg-terminal-amber/5">
+        <Card className="border-primary/20 bg-primary/[0.03]">
           <CardHeader className="pb-3">
             <CardTitle className="text-sm font-semibold tracking-tight text-foreground">
               Oversight Overlap Flags
@@ -117,9 +117,9 @@ export function ProfileIntelligence({
             {overlapFlags.map((flag) => (
               <div
                 key={`${flag.sector}-${flag.message}`}
-                className="rounded-lg border border-terminal-amber/20 bg-background/40 p-3.5 text-sm leading-7"
+                className="rounded-lg border border-border bg-background/40 p-3.5 text-sm leading-7"
               >
-                <span className="mb-1 mr-2 inline-flex rounded border border-terminal-amber/30 bg-terminal-amber/10 px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-terminal-amber">
+                <span className="mb-1 mr-2 inline-flex rounded-full border border-border bg-secondary px-2 py-0.5 text-xs font-medium text-muted-foreground">
                   {flag.severity}
                 </span>
                 {flag.message}
@@ -135,9 +135,7 @@ export function ProfileIntelligence({
 function StatBlock({ label, value }: { label: string; value: string }) {
   return (
     <div className="rounded-lg border border-border/60 bg-background/30 px-3 py-3">
-      <p className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
-        {label}
-      </p>
+      <p className="field-label">{label}</p>
       <p className="mt-1 text-lg font-semibold tabular-nums">{value}</p>
     </div>
   );
