@@ -159,7 +159,9 @@ export async function runSupabaseSchema(): Promise<{ executed: number }> {
           error instanceof Error ? error.message : "Unknown SQL error";
 
         if (!isIgnorableSqlError(message)) {
-          throw new Error(`Schema statement failed: ${message}`);
+          throw new Error(
+            `Schema statement failed (${executed + 1}/${statements.length}): ${message}`
+          );
         }
       }
     }
