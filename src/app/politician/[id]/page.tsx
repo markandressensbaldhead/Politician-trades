@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
 import { PoliticianProfile } from "@/components/politician/politician-profile";
+import { SiteContainer } from "@/components/layout/site-container";
 import { getOrGenerateAlphaBrief } from "@/lib/alpha-brief";
 import {
   getPoliticianProfile,
@@ -64,11 +65,11 @@ export default async function PoliticianPage({ params }: PoliticianPageProps) {
   );
 
   return (
-    <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
+    <SiteContainer>
       <PoliticianProfile
         politician={politician}
         initialAlphaBrief={initialAlphaBrief}
       />
-    </div>
+    </SiteContainer>
   );
 }

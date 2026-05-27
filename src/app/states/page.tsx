@@ -1,13 +1,14 @@
 import { getAllTrades } from "@/lib/congress-data";
 import { getStateStats } from "@/lib/state-analytics";
 import { StateExplorer } from "@/components/dashboard/state-explorer";
+import { SiteContainer } from "@/components/layout/site-container";
 
 export default async function StatesPage() {
   const { trades, source } = await getAllTrades();
   const states = getStateStats(trades);
 
   return (
-    <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
+    <SiteContainer>
       <div className="mb-8 space-y-3">
         <p className="page-eyebrow">Geographic view</p>
         <h1 className="text-3xl font-semibold sm:text-4xl">
@@ -33,6 +34,6 @@ export default async function StatesPage() {
       ) : (
         <StateExplorer states={states} />
       )}
-    </div>
+    </SiteContainer>
   );
 }

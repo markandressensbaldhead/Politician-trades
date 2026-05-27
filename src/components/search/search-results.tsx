@@ -135,7 +135,7 @@ export function SearchResults({
       </div>
 
       {mode === "politicians" ? (
-        <div className="grid gap-3">
+        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
           {politicianResults.map((politician) => (
             <Link key={politician.id} href={`/politician/${politician.id}`}>
               <Card className="border-border/60 bg-card/50 transition-colors hover:border-primary/30 hover:bg-card/80">

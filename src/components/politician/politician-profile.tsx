@@ -234,7 +234,7 @@ export function PoliticianProfile({
       <div
         className={cn(
           "mt-8 grid gap-8",
-          hasTrades ? "xl:grid-cols-12" : "max-w-4xl"
+          hasTrades ? "xl:grid-cols-12" : "w-full"
         )}
       >
         <aside className="order-1 space-y-6 xl:order-2 xl:col-span-4 xl:sticky xl:top-28 xl:self-start">

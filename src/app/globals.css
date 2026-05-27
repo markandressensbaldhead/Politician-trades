@@ -37,8 +37,12 @@
     @apply border-border;
   }
 
+  html {
+    @apply h-full w-full;
+  }
+
   body {
-    @apply bg-background text-foreground antialiased;
+    @apply min-h-full w-full bg-background text-foreground antialiased;
     background-image:
       radial-gradient(
         ellipse 100% 80% at 50% -30%,

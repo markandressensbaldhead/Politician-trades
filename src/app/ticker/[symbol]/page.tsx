@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 
 import { TickerPageContent } from "@/components/ticker/ticker-page-content";
+import { SiteContainer } from "@/components/layout/site-container";
 
 interface PageProps {
   params: { symbol: string };
@@ -17,8 +18,8 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
 export default function TickerPage({ params }: PageProps) {
   return (
-    <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+    <SiteContainer className="py-6">
       <TickerPageContent symbol={params.symbol} />
-    </div>
+    </SiteContainer>
   );
 }

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 
 import { SearchResults } from "@/components/search/search-results";
+import { SiteContainer } from "@/components/layout/site-container";
 import { getSearchIndex, getAllTrades } from "@/lib/congress-data";
 import { getTrendingTickers } from "@/lib/trade-analytics";
 
@@ -19,7 +20,7 @@ export default async function SearchPage() {
   const tickers = getTrendingTickers(trades, 50, 365);
 
   return (
-    <div className="mx-auto max-w-3xl px-4 py-8 sm:px-6 lg:px-8">
+    <SiteContainer>
       <div className="mb-8 space-y-2">
         <h1 className="text-3xl font-bold tracking-tight">Search</h1>
         <p className="text-muted-foreground">
@@ -32,6 +33,6 @@ export default async function SearchPage() {
       </div>
 
       <SearchResults politicians={politicians} tickers={tickers} source={source} />
-    </div>
+    </SiteContainer>
   );
 }

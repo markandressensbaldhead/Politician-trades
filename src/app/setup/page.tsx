@@ -13,6 +13,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { SiteContainer } from "@/components/layout/site-container";
 
 interface SetupResponse {
   status: {
@@ -117,7 +118,8 @@ export default function SetupPage() {
   }
 
   return (
-    <div className="mx-auto max-w-2xl px-4 py-10 space-y-6">
+    <SiteContainer className="py-10">
+      <div className="mx-auto max-w-2xl space-y-6">
       <div>
         <Link href="/" className="text-sm text-muted-foreground hover:text-primary">
           ← Back to dashboard
@@ -232,6 +234,7 @@ export default function SetupPage() {
           </p>
         </CardContent>
       </Card>
-    </div>
+      </div>
+    </SiteContainer>
   );
 }

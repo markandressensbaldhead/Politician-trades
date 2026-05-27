@@ -32,13 +32,15 @@ export function PortfolioPageContent() {
         </p>
       )}
 
-      <PortfolioConnect
-        portfolio={portfolio}
-        onPortfolioChange={setPortfolio}
-        onStatusMessage={setStatusMessage}
-        onError={setError}
-      />
-      <PortfolioAdvisor portfolio={portfolio} />
+      <div className="grid gap-8 2xl:grid-cols-2">
+        <PortfolioConnect
+          portfolio={portfolio}
+          onPortfolioChange={setPortfolio}
+          onStatusMessage={setStatusMessage}
+          onError={setError}
+        />
+        <PortfolioAdvisor portfolio={portfolio} />
+      </div>
     </div>
   );
 }

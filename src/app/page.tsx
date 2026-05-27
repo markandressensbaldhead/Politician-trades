@@ -5,6 +5,7 @@ import { MarketPulse } from "@/components/dashboard/market-pulse";
 import { TradeClustersPanel } from "@/components/dashboard/trade-clusters-panel";
 import { TrendingTickerStrip, TrendingTickers } from "@/components/dashboard/trending-tickers";
 import { TrumpSpotlight } from "@/components/dashboard/trump-spotlight";
+import { SiteContainer } from "@/components/layout/site-container";
 import {
   getAllTrades,
   getLeaderboardData,
@@ -81,10 +82,10 @@ export default async function HomePage() {
         : "Sample";
 
   return (
-    <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
+    <SiteContainer>
       <div className="mb-10 space-y-6">
-        <div className="flex flex-col gap-8 lg:flex-row lg:items-end lg:justify-between">
-          <div className="max-w-2xl space-y-3">
+        <div className="flex flex-col gap-8 xl:flex-row xl:items-end xl:justify-between">
+          <div className="space-y-3 xl:max-w-2xl">
             <p className="page-eyebrow">Congressional stock tracker</p>
             <h1 className="text-3xl font-semibold sm:text-4xl">
               See what lawmakers are buying and selling
@@ -101,7 +102,7 @@ export default async function HomePage() {
             )}
           </div>
 
-          <div className="stat-strip grid grid-cols-2 gap-px bg-border sm:grid-cols-3 lg:min-w-[420px]">
+          <div className="stat-strip grid grid-cols-2 gap-px bg-border sm:grid-cols-3 xl:min-w-[420px] xl:max-w-xl xl:flex-1 2xl:max-w-2xl">
             <StatTile label="Data" value={dataLabel} />
             <StatTile label="Members tracked" value={String(entries.length)} />
             <StatTile label="Trades (90 days)" value={String(totalTrades)} />
@@ -132,7 +133,7 @@ export default async function HomePage() {
         <MarketPulse pulse={pulse} />
       </div>
 
-      <div className="mb-8 space-y-8">
+      <div className="mb-8 grid gap-8 2xl:grid-cols-2">
         <HighConvictionFeed trades={highConviction} />
         <TradeClustersPanel
           clusters={clusters}
@@ -146,7 +147,7 @@ export default async function HomePage() {
         <TrendingTickers tickers={trending} />
       </div>
 
-      <div className="grid gap-8 xl:grid-cols-[minmax(0,1.35fr)_minmax(0,1fr)]">
+      <div className="grid gap-8 2xl:grid-cols-[minmax(0,1.35fr)_minmax(0,1fr)]">
         <LeaderboardPanel entries={entries} source={source} />
         <LiveTradeFeed
           trades={recentTrades.slice(0, 80)}
@@ -155,7 +156,7 @@ export default async function HomePage() {
           description="The most recent stock disclosures from Congress."
         />
       </div>
-    </div>
+    </SiteContainer>
   );
 }
 

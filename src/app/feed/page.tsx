@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { LiveTradeFeed } from "@/components/dashboard/live-trade-feed";
 import { MarketPulse } from "@/components/dashboard/market-pulse";
 import { TrendingTickers } from "@/components/dashboard/trending-tickers";
+import { SiteContainer } from "@/components/layout/site-container";
 import { ExportCsvLink } from "@/components/shared/export-csv-button";
 import { getAllTrades, getRecentTrades } from "@/lib/congress-data";
 import { getMarketPulse, getTrendingTickers } from "@/lib/trade-analytics";
@@ -21,7 +22,7 @@ export default async function FeedPage() {
   const trending = getTrendingTickers(allTrades, 12);
 
   return (
-    <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
+    <SiteContainer>
       <div className="mb-8 space-y-3">
         <p className="page-eyebrow">Recent trades</p>
         <h1 className="text-3xl font-semibold sm:text-4xl">
@@ -49,6 +50,6 @@ export default async function FeedPage() {
         <TrendingTickers tickers={trending} />
         <LiveTradeFeed trades={recentTrades} />
       </div>
-    </div>
+    </SiteContainer>
   );
 }

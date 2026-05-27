@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 
 import { PortfolioPageContent } from "@/components/portfolio/portfolio-page-content";
+import { SiteContainer } from "@/components/layout/site-container";
 
 export const metadata: Metadata = {
   title: "Portfolio Advisor",
@@ -10,7 +11,7 @@ export const metadata: Metadata = {
 
 export default function PortfolioPage() {
   return (
-    <div className="mx-auto max-w-4xl px-4 py-8 sm:px-6 lg:px-8">
+    <SiteContainer>
       <div className="mb-8 space-y-3">
         <p className="page-eyebrow">Personalized research</p>
         <h1 className="text-3xl font-semibold sm:text-4xl">
@@ -24,6 +25,6 @@ export default function PortfolioPage() {
       </div>
 
       <PortfolioPageContent />
-    </div>
+    </SiteContainer>
   );
 }

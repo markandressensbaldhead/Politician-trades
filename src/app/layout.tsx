@@ -30,13 +30,13 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="dark">
+    <html lang="en" className="dark h-full">
       <body
-        className={`${inter.variable} ${jetbrainsMono.variable} min-h-screen font-sans antialiased`}
+        className={`${inter.variable} ${jetbrainsMono.variable} h-full min-h-screen font-sans antialiased`}
       >
-        <div className="relative flex min-h-screen flex-col">
+        <div className="relative flex min-h-screen w-full flex-col">
           <SiteHeader />
-          <main className="flex-1">{children}</main>
+          <main className="min-w-0 flex-1 w-full">{children}</main>
           <SiteFooter />
         </div>
       </body>
