@@ -1,4 +1,5 @@
 import { MarketQuote } from "@/types";
+import { BRAND } from "@/lib/brand";
 
 const YAHOO_CHART_URL = "https://query1.finance.yahoo.com/v8/finance/chart";
 
@@ -9,8 +10,7 @@ function normalizeTicker(ticker: string): string {
 function yahooHeaders(): HeadersInit {
   return {
     Accept: "application/json",
-    "User-Agent":
-      "Mozilla/5.0 (compatible; CapitolTrades/1.0; +https://capitoltrades.io)",
+    "User-Agent": `Mozilla/5.0 (compatible; ${BRAND.userAgent}; +${BRAND.url})`,
   };
 }
 

@@ -16,7 +16,7 @@ export default async function StatesPage() {
         </h1>
         <p className="max-w-2xl text-base leading-relaxed text-muted-foreground">
           See which states generate the most disclosed congressional trading
-          activity — a view Capitol Trades highlights for researchers comparing
+          activity — the kind of state-level view research dashboards use when comparing
           regional concentration.
         </p>
         {source === "mock" && (

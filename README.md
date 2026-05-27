@@ -1,4 +1,4 @@
-# Capitol Trades
+# Hill Tape
 
 A dark-themed dashboard for tracking congressional stock trading activity from public financial disclosures.
 
@@ -144,6 +144,6 @@ const supabase = getSupabaseClient();
 
 ## Next Steps
 
-- Connect to a real congressional trading API (e.g. Quiver Quantitative, Capitol Trades)
+- Connect to a real congressional trading API (e.g. Quiver Quantitative)
 - Add filtering/sorting controls on the leaderboard
 - Add charts for portfolio performance over time

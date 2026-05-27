@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
-# Attach capitoltrades.com to the Vercel project and set NEXT_PUBLIC_APP_URL.
+# Attach custom domain to the Vercel project and set NEXT_PUBLIC_APP_URL.
 #
 # Usage:
 #   export VERCEL_TOKEN=...   # https://vercel.com/account/tokens
-#   bash scripts/setup-capitoltrades-domain.sh
+#   APP_DOMAIN=hilltape.com bash scripts/setup-capitoltrades-domain.sh
 #
 # After running, configure DNS at your registrar using the records Vercel prints.
 
@@ -11,7 +11,7 @@ set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 PROJECT_NAME="${VERCEL_PROJECT_NAME:-politician-trades}"
-DOMAIN="${CAPITOLTRADES_DOMAIN:-capitoltrades.io}"
+DOMAIN="${APP_DOMAIN:-hilltape.com}"
 WWW_DOMAIN="www.${DOMAIN}"
 APP_URL="https://${DOMAIN}"
 
@@ -120,23 +120,17 @@ echo "$DEPLOY_RESPONSE" | "$NODE" -e "
 " || true
 
 echo ""
-echo "=== DNS records (Amazon Route 53 — capitoltrades.com uses AWS nameservers) ==="
+echo "=== DNS records (at your domain registrar) ==="
 echo ""
-echo "Route 53 → Hosted zone capitoltrades.com → Edit records:"
+echo "  ${DOMAIN} (apex):"
+echo "    Type: A"
+echo "    Name: @"
+echo "    Value: 76.76.21.21"
 echo ""
-echo "  1. DELETE old A/ALIAS records pointing to CloudFront"
-echo "  2. CREATE apex record:"
-echo "     Type: A"
-echo "     Name: (blank / capitoltrades.com)"
-echo "     Alias: No"
-echo "     Value: 76.76.21.21"
-echo "     TTL: 300"
-echo ""
-echo "  3. CREATE or UPDATE www:"
-echo "     Type: CNAME"
-echo "     Name: www"
-echo "     Value: cname.vercel-dns.com"
-echo "     TTL: 300"
+echo "  ${WWW_DOMAIN}:"
+echo "    Type: CNAME"
+echo "    Name: www"
+echo "    Value: cname.vercel-dns.com"
 echo ""
 echo "In Vercel → Domains, set ${DOMAIN} as primary and redirect ${WWW_DOMAIN} → ${DOMAIN}."
 echo ""

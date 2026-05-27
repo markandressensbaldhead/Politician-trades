@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter, JetBrains_Mono } from "next/font/google";
 
+import { BRAND } from "@/lib/brand";
 import { SiteFooter, SiteHeader } from "@/components/layout/site-header";
 
 import "./globals.css";
@@ -16,12 +17,10 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL(
-    process.env.NEXT_PUBLIC_APP_URL ?? "https://capitoltrades.io"
-  ),
+  metadataBase: new URL(BRAND.url),
   title: {
-    default: "Capitol Trades — See What Congress Buys",
-    template: "%s | Capitol Trades",
+    default: `${BRAND.name} — ${BRAND.tagline}`,
+    template: `%s | ${BRAND.name}`,
   },
   description:
     "Free tracker for every congressional stock trade. See today's pick, who's beating the S&P, and where lawmakers are converging — built for retail.",
@@ -30,7 +29,7 @@ export const metadata: Metadata = {
     description:
       "Free STOCK Act dashboard: today's trade pick, crowd signals, and performance vs the S&P.",
     type: "website",
-    siteName: "Capitol Trades",
+    siteName: BRAND.name,
   },
   twitter: {
     card: "summary_large_image",

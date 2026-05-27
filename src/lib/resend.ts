@@ -1,13 +1,12 @@
 import { NewTradeAlert } from "@/types/supabase";
+import { BRAND } from "@/lib/brand";
 
 function getAppUrl(): string {
-  return process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
+  return process.env.NEXT_PUBLIC_APP_URL ?? BRAND.url;
 }
 
 function getFromAddress(): string {
-  return (
-    process.env.RESEND_FROM_EMAIL ?? "Capitol Trades <onboarding@resend.dev>"
-  );
+  return process.env.RESEND_FROM_EMAIL ?? BRAND.emailFrom;
 }
 
 function formatTradeType(tradeType: "buy" | "sell"): string {

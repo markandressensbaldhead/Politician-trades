@@ -1,12 +1,13 @@
 import { EdgarFiling } from "@/types";
 import { enrichFilingMetadata, rankFilings } from "@/lib/filing-utils";
+import { BRAND } from "@/lib/brand";
 
 const SEC_SEARCH_URL = "https://efts.sec.gov/LATEST/search-index";
 const SEC_COMPANY_TICKERS_URL = "https://www.sec.gov/files/company_tickers.json";
 const SEC_SUBMISSIONS_URL = "https://data.sec.gov/submissions/CIK";
 
 const DEFAULT_USER_AGENT =
-  "CapitolTrades/1.0 (contact@capitoltrades.app; financial research dashboard)";
+  `${BRAND.userAgent} (contact@${BRAND.domain}; financial research dashboard)`;
 
 const TRACKED_FORMS = new Set([
   "8-K",

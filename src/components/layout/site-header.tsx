@@ -15,6 +15,7 @@ import {
 
 import { ShareOnXButton } from "@/components/shared/share-on-x-button";
 import { Button } from "@/components/ui/button";
+import { BRAND } from "@/lib/brand";
 import { buildSiteTweet, SITE_URL } from "@/lib/share";
 import { cn } from "@/lib/utils";
 
@@ -39,10 +40,10 @@ export function SiteHeader() {
           </div>
           <div className="min-w-0">
             <span className="text-base font-semibold tracking-tight">
-              Capitol Trades
+              {BRAND.name}
             </span>
             <p className="truncate text-xs text-muted-foreground sm:block">
-              See what Congress buys · Free
+              {BRAND.tagline} · Free
             </p>
           </div>
         </Link>

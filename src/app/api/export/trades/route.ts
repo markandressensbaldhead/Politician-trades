@@ -65,7 +65,7 @@ export async function GET(request: Request) {
       const limit = scope === "feed" ? 500 : 5000;
       const rows = trades.slice(0, limit).map((trade) => unifiedTradeToCsvRow(trade));
 
-      return csvResponse("capitol-trades-export.csv", buildCsv(rows));
+      return csvResponse("hilltape-export.csv", buildCsv(rows));
     }
 
     return NextResponse.json(

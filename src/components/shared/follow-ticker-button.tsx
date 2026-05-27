@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Bell, CheckCircle2, Loader2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { BRAND } from "@/lib/brand";
 import {
   Dialog,
   DialogContent,
@@ -95,7 +96,7 @@ export function FollowTickerButton({
           <DialogDescription>
             Get an email whenever any member of Congress reports a new{" "}
             {ticker.toUpperCase()} trade — a feature users request over generic
-            newsletters on Capitol Trades and Quiver.
+            email alerts and newsletters on {BRAND.name} and Quiver.
           </DialogDescription>
         </DialogHeader>
 

@@ -71,7 +71,7 @@ export async function TickerPageContent({ symbol }: TickerPageProps) {
         <p className="max-w-3xl text-muted-foreground">
           Intelligence brief, vs-S&P performance, crowd clusters, and every
           disclosed buy and sell — the view power users search for on QuiverQuant
-          and Capitol Trades.
+          QuiverQuant, and other congressional trade trackers.
         </p>
         {source === "mock" && (
           <p className="rounded-lg border border-primary/20 bg-primary/[0.04] px-3 py-2 text-sm text-muted-foreground">
