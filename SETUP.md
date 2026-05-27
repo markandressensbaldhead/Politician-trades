@@ -76,16 +76,16 @@ Then redeploy on Vercel.
 
 ---
 
-## Custom domain: capitoltrades.com
+## Custom domain: capitoltrades.io
 
-Code defaults and share links use `https://capitoltrades.com`. To attach the domain on Vercel:
+Code defaults and share links use `https://capitoltrades.io`. To attach the domain on Vercel:
 
 ```bash
 export VERCEL_TOKEN=...   # https://vercel.com/account/tokens
-bash scripts/setup-capitoltrades-domain.sh
+CAPITOLTRADES_DOMAIN=capitoltrades.io bash scripts/setup-capitoltrades-domain.sh
 ```
 
-Or manually: Vercel → **Settings** → **Domains** → add `capitoltrades.com` and `www.capitoltrades.com`, set `NEXT_PUBLIC_APP_URL=https://capitoltrades.com`, then redeploy.
+Or manually: Vercel → **Settings** → **Domains** → add `capitoltrades.io` and `www.capitoltrades.io`, set `NEXT_PUBLIC_APP_URL=https://capitoltrades.io`, then redeploy.
 
 **DNS at your registrar:**
 
