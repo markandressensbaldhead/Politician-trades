@@ -1,6 +1,5 @@
 export {
-  buildLeaderboardFromMock,
-  buildLeaderboardFromTrades,
+  buildLeaderboardFromUnified,
   filterLeaderboardByChamber,
   getLeaderboardData,
 } from "@/lib/congress-data";

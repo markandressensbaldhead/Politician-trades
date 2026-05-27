@@ -9,7 +9,6 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import type { MarketPulse as MarketPulseStats } from "@/lib/trade-analytics";
-import { MarketPulse as MarketPulseStats } from "@/lib/trade-analytics";
 
 interface MarketPulseProps {
   pulse: MarketPulseStats;
