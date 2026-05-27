@@ -93,7 +93,11 @@ export function PoliticianProfile({ politician }: PoliticianProfileProps) {
               <div className="flex flex-wrap items-center gap-2">
                 <span className="live-dot" />
                 <p className="font-mono text-[10px] uppercase tracking-[0.25em] text-terminal-amber">
-                  {politician.source === "live" ? "Live Profile" : "Demo Profile"}
+                  {politician.source === "live"
+                    ? "Live Profile"
+                    : politician.source === "disclosure"
+                      ? "OGE Disclosure Profile"
+                      : "Demo Profile"}
                 </p>
               </div>
 
@@ -106,6 +110,12 @@ export function PoliticianProfile({ politician }: PoliticianProfileProps) {
                   {politician.chamber}
                 </Badge>
               </div>
+
+              {politician.officeTitle && (
+                <p className="font-mono text-sm text-foreground/90">
+                  {politician.officeTitle}
+                </p>
+              )}
 
               {locationParts.length > 0 && (
                 <p className="font-mono text-sm text-muted-foreground">
@@ -172,7 +182,9 @@ export function PoliticianProfile({ politician }: PoliticianProfileProps) {
 
       <TradeHistoryTable
         trades={politician.trades}
-        showExcessReturn={politician.source === "live"}
+        showExcessReturn={
+          politician.source === "live" || politician.source === "disclosure"
+        }
       />
     </div>
   );

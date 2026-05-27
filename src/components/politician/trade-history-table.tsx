@@ -179,21 +179,9 @@ export function TradeHistoryTable({
                       {loadingQuotes ? (
                         <span className="text-muted-foreground">…</span>
                       ) : quote?.price != null ? (
-                        <div>
-                          <span className="font-mono tabular-nums">
-                            {formatUsd(quote.price)}
-                          </span>
-                          {quote.changePercent != null && (
-                            <p
-                              className={cn(
-                                "font-mono text-[10px] tabular-nums",
-                                changePositive ? "text-gain" : "text-loss"
-                              )}
-                            >
-                              {formatPercent(quote.changePercent)}
-                            </p>
-                          )}
-                        </div>
+                        <span className="font-mono tabular-nums">
+                          {formatUsd(quote.price)}
+                        </span>
                       ) : (
                         <span className="text-muted-foreground">—</span>
                       )}

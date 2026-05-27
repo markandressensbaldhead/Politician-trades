@@ -1,5 +1,5 @@
 export type Party = "Democrat" | "Republican" | "Independent";
-export type Chamber = "Senate" | "House";
+export type Chamber = "Senate" | "House" | "Executive";
 export type TransactionType = "Purchase" | "Sale";
 
 export interface Trade {
@@ -63,7 +63,7 @@ export interface SearchPoliticianEntry {
   returnVsSpy: number;
   ytdReturn?: number;
   portfolioValue?: number;
-  source: "live" | "mock";
+  source: "live" | "mock" | "disclosure";
 }
 
 export interface ProfileTrade {
@@ -87,7 +87,8 @@ export interface PoliticianProfileData {
   state?: string;
   district?: string;
   committee?: string;
-  source: "live" | "mock";
+  officeTitle?: string;
+  source: "live" | "mock" | "disclosure";
   tradesLast90Days: number;
   totalTrades: number;
   returnVsSpy: number;

@@ -1,4 +1,5 @@
 import { LeaderboardEntry, Party, SearchPoliticianEntry } from "@/types";
+import { getTrumpSearchEntry } from "@/lib/trump-data";
 import { politicians } from "@/lib/data";
 import {
   averageExcessReturn,
@@ -256,13 +257,13 @@ export async function getSearchIndex(): Promise<{
 
   if (source === "live") {
     return {
-      politicians: buildSearchIndexFromTrades(trades),
+      politicians: [getTrumpSearchEntry(), ...buildSearchIndexFromTrades(trades)],
       source: "live",
     };
   }
 
   return {
-    politicians: buildSearchIndexFromMock(),
+    politicians: [getTrumpSearchEntry(), ...buildSearchIndexFromMock()],
     source: "mock",
   };
 }

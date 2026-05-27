@@ -1,5 +1,6 @@
 import { LeaderboardPanel } from "@/components/leaderboard/leaderboard-panel";
 import { RecentTrades } from "@/components/dashboard/recent-trades";
+import { TrumpSpotlight } from "@/components/dashboard/trump-spotlight";
 import { getLeaderboardData, getRecentTrades } from "@/lib/congress-data";
 import { formatPercent } from "@/lib/utils";
 
@@ -61,6 +62,8 @@ export default async function HomePage() {
           </div>
         </div>
       </div>
+
+      <TrumpSpotlight />
 
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)]">
         <LeaderboardPanel entries={entries} source={source} />

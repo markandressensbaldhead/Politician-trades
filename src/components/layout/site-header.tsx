@@ -2,12 +2,13 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { BarChart3, Search, TrendingUp } from "lucide-react";
+import { BarChart3, Landmark, Search, TrendingUp } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 
 const navItems = [
   { href: "/", label: "Leaderboard", icon: TrendingUp },
+  { href: "/politician/donald-trump", label: "Trump", icon: Landmark },
   { href: "/search", label: "Search", icon: Search },
 ];
 
@@ -36,7 +37,9 @@ export function SiteHeader() {
             const isActive =
               href === "/"
                 ? pathname === "/"
-                : pathname.startsWith(href);
+                : href.startsWith("/politician/")
+                  ? pathname === href
+                  : pathname.startsWith(href);
 
             return (
               <Link

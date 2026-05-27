@@ -1,6 +1,11 @@
 import { Politician, PoliticianProfileData, ProfileTrade } from "@/types";
 import { getPoliticianById, politicians } from "@/lib/data";
 import {
+  isTrumpProfileId,
+  TRUMP_PROFILE_ID,
+  getTrumpProfile,
+} from "@/lib/trump-data";
+import {
   averageExcessReturn,
   computeWinRate,
   isWithinLast90Days,
@@ -106,6 +111,10 @@ function buildProfileFromTrades(
 export async function getPoliticianProfile(
   id: string
 ): Promise<PoliticianProfileData | null> {
+  if (isTrumpProfileId(id)) {
+    return getTrumpProfile();
+  }
+
   const apiKey = process.env.QUIVERQUANT_API_KEY;
 
   if (apiKey) {
@@ -138,7 +147,7 @@ export async function getPoliticianProfileIds(): Promise<string[]> {
 
   const apiKey = process.env.QUIVERQUANT_API_KEY;
   if (!apiKey) {
-    return mockIds;
+    return [...mockIds, TRUMP_PROFILE_ID];
   }
 
   try {
@@ -148,8 +157,8 @@ export async function getPoliticianProfileIds(): Promise<string[]> {
         trades.map((trade) => trade.BioGuideID || slugify(trade.Representative))
       ),
     ];
-    return [...new Set([...mockIds, ...liveIds])];
+    return [...new Set([...mockIds, TRUMP_PROFILE_ID, ...liveIds])];
   } catch {
-    return mockIds;
+    return [...mockIds, TRUMP_PROFILE_ID];
   }
 }

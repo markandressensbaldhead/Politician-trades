@@ -6,6 +6,10 @@ import {
   getFilingsForPolitician,
 } from "@/lib/sec-edgar";
 import {
+  getTrumpFilings,
+  isTrumpProfileId,
+} from "@/lib/trump-data";
+import {
   getStoredFilingInsight,
   isFilingInsightFresh,
   saveFilingInsight,
@@ -60,10 +64,12 @@ export async function getFilingsBundle(politicianId: string): Promise<{
     throw new Error("Politician not found");
   }
 
-  const filings = await getFilingsForPolitician({
-    politicianName: profile.name,
-    tickers: profile.trades.map((trade) => trade.ticker),
-  });
+  const filings = isTrumpProfileId(politicianId)
+    ? await getTrumpFilings()
+    : await getFilingsForPolitician({
+        politicianName: profile.name,
+        tickers: profile.trades.map((trade) => trade.ticker),
+      });
 
   const enriched = await enrichFilingsWithExcerpts(filings, 4);
 
