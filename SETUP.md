@@ -29,7 +29,7 @@ Also confirm these exist (you may have added them already):
 
 | Key | Value |
 |-----|--------|
-| `NEXT_PUBLIC_APP_URL` | `https://capitoltrades.com` |
+| `NEXT_PUBLIC_APP_URL` | `https://capitoltrades.io` |
 | `QUIVERQUANT_API_KEY` | your QuiverQuant key |
 | `CRON_SECRET` | any random string |
 
@@ -55,7 +55,7 @@ Deployments → top **Ready** row → **⋯** → **Redeploy**
 
 ## Test
 
-https://capitoltrades.com/politician/nancy-pelosi
+https://capitoltrades.io/politician/nancy-pelosi
 
 Wait ~20 seconds on **AI Insights**.
 

@@ -10,7 +10,7 @@ function yahooHeaders(): HeadersInit {
   return {
     Accept: "application/json",
     "User-Agent":
-      "Mozilla/5.0 (compatible; CapitolTrades/1.0; +https://capitoltrades.com)",
+      "Mozilla/5.0 (compatible; CapitolTrades/1.0; +https://capitoltrades.io)",
   };
 }
 

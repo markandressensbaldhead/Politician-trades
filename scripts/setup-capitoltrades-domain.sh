@@ -11,7 +11,7 @@ set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 PROJECT_NAME="${VERCEL_PROJECT_NAME:-politician-trades}"
-DOMAIN="${CAPITOLTRADES_DOMAIN:-capitoltrades.com}"
+DOMAIN="${CAPITOLTRADES_DOMAIN:-capitoltrades.io}"
 WWW_DOMAIN="www.${DOMAIN}"
 APP_URL="https://${DOMAIN}"
 
