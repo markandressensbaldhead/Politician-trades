@@ -1,6 +1,10 @@
-import { EdgarFiling, FilingInsight, ProfileTrade } from "@/types";
+import { EdgarFiling, FilingInsight, InvestmentSummary, ProfileTrade } from "@/types";
 import { generateFilingAnalysis } from "@/lib/claude";
 import { prepareFilingsResponse } from "@/lib/filing-utils";
+import {
+  buildInvestmentSummaries,
+  enrichFilingsWithTranslations,
+} from "@/lib/filing-translator";
 import { getPoliticianProfile } from "@/lib/politician";
 import {
   enrichFilingsWithExcerpts,
@@ -71,6 +75,7 @@ export async function getFilingsBundle(politicianId: string): Promise<{
   filings: EdgarFiling[];
   latest: EdgarFiling[];
   grouped: ReturnType<typeof prepareFilingsResponse>["grouped"];
+  investments: InvestmentSummary[];
 }> {
   const profile = await getPoliticianProfile(politicianId);
 
@@ -91,12 +96,23 @@ export async function getFilingsBundle(politicianId: string): Promise<{
     }
 
     if (stored.length > 0) {
-      const prepared = prepareFilingsResponse(stored);
+      const translated = enrichFilingsWithTranslations(
+        stored,
+        profile.trades,
+        profile.name
+      );
+      const prepared = prepareFilingsResponse(translated);
+      const investments = buildInvestmentSummaries(
+        profile.name,
+        profile.trades,
+        prepared.filings
+      );
 
       return {
         politicianName: profile.name,
         trades: profile.trades,
         ...prepared,
+        investments,
       };
     }
   }
@@ -118,12 +134,23 @@ export async function getFilingsBundle(politicianId: string): Promise<{
     excerpt: excerptById.get(filing.id) ?? filing.excerpt,
   }));
 
-  const prepared = prepareFilingsResponse(filingsWithExcerpts);
+  const translated = enrichFilingsWithTranslations(
+    filingsWithExcerpts,
+    profile.trades,
+    profile.name
+  );
+  const prepared = prepareFilingsResponse(translated);
+  const investments = buildInvestmentSummaries(
+    profile.name,
+    profile.trades,
+    prepared.filings
+  );
 
   return {
     politicianName: profile.name,
     trades: profile.trades,
     ...prepared,
+    investments,
   };
 }
 

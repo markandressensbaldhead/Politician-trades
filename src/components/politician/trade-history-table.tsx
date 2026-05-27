@@ -20,16 +20,19 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { MarketQuote, ProfileTrade } from "@/types";
+import { translateTradeToInvestment } from "@/lib/filing-translator";
 import { cn, formatDate, formatPercent, formatUsd } from "@/lib/utils";
 
 interface TradeHistoryTableProps {
   trades: ProfileTrade[];
   showExcessReturn: boolean;
+  politicianName?: string;
 }
 
 export function TradeHistoryTable({
   trades,
   showExcessReturn,
+  politicianName = "This member",
 }: TradeHistoryTableProps) {
   const [quotes, setQuotes] = useState<Record<string, MarketQuote>>({});
   const [loadingQuotes, setLoadingQuotes] = useState(true);
@@ -126,6 +129,9 @@ export function TradeHistoryTable({
                 </TableHead>
               )}
               <TableHead className="font-mono text-[10px] uppercase tracking-wider text-terminal-amber">
+                Plain English
+              </TableHead>
+              <TableHead className="font-mono text-[10px] uppercase tracking-wider text-terminal-amber">
                 SEC Filings
               </TableHead>
             </TableRow>
@@ -134,7 +140,7 @@ export function TradeHistoryTable({
             {trades.length === 0 ? (
               <TableRow>
                 <TableCell
-                  colSpan={showExcessReturn ? 10 : 9}
+                  colSpan={showExcessReturn ? 11 : 10}
                   className="py-12 text-center text-muted-foreground"
                 >
                   No trades on record.
@@ -145,6 +151,11 @@ export function TradeHistoryTable({
                 const quote = quotes[trade.ticker.toUpperCase()];
                 const isPositive = (trade.excessReturn ?? 0) >= 0;
                 const changePositive = (quote?.changePercent ?? 0) >= 0;
+                const investment = translateTradeToInvestment(
+                  trade,
+                  politicianName,
+                  trade.secFilings ?? []
+                );
 
                 return (
                   <TableRow
@@ -240,6 +251,11 @@ export function TradeHistoryTable({
                         )}
                       </TableCell>
                     )}
+                    <TableCell className="max-w-xs">
+                      <p className="text-xs leading-6 text-foreground/90">
+                        {investment.plainSummary}
+                      </p>
+                    </TableCell>
                     <TableCell>
                       {trade.secFilings && trade.secFilings.length > 0 ? (
                         <div className="flex max-w-xs flex-col gap-1.5">

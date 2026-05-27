@@ -182,6 +182,7 @@ export function PoliticianProfile({ politician }: PoliticianProfileProps) {
 
       <TradeHistoryTable
         trades={politician.trades}
+        politicianName={politician.name}
         showExcessReturn={
           politician.source === "live" || politician.source === "disclosure"
         }

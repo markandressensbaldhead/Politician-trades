@@ -30,6 +30,7 @@ export async function GET(_request: Request, { params }: RouteParams) {
       filings: bundle.filings,
       latest: bundle.latest,
       grouped: bundle.grouped,
+      investments: bundle.investments,
       count: bundle.filings.length,
       locked: storedCount > 0,
       storedCount,

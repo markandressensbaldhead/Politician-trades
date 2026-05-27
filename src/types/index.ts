@@ -139,6 +139,30 @@ export interface EdgarFiling {
   recencyLabel: string;
   priority: number;
   isFeatured?: boolean;
+  investmentSummary?: InvestmentSummary;
+}
+
+export interface InvestmentSummary {
+  id: string;
+  ticker: string;
+  asset: string;
+  action:
+    | "purchase"
+    | "sale"
+    | "holding"
+    | "corporate-event"
+    | "income"
+    | "other";
+  actionLabel: string;
+  amount: string | null;
+  tradeDate: string;
+  filedDate: string;
+  plainSummary: string;
+  filingContext?: string;
+  filingIds: string[];
+  source: "disclosed-trade" | "sec-filing" | "both";
+  sector?: string;
+  sourceNote?: string;
 }
 
 export interface GroupedFilings {

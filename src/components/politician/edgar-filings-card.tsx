@@ -12,13 +12,15 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { EdgarFiling, FilingInsight, GroupedFilings } from "@/types";
+import { EdgarFiling, FilingInsight, GroupedFilings, InvestmentSummary } from "@/types";
+import { InvestmentActivityList } from "@/components/politician/investment-activity-list";
 import { cn, formatDate } from "@/lib/utils";
 
 interface FilingsApiResponse {
   filings: EdgarFiling[];
   latest: EdgarFiling[];
   grouped: GroupedFilings[];
+  investments?: InvestmentSummary[];
   locked?: boolean;
   storedCount?: number;
 }
@@ -69,7 +71,18 @@ function FilingRow({
         <p className={cn("font-medium", featured && "text-base")}>
           {filing.entityName}
         </p>
-        <p className="text-xs text-muted-foreground">{filing.title}</p>
+        {filing.investmentSummary ? (
+          <p className="text-sm leading-6 text-foreground/90">
+            {filing.investmentSummary.plainSummary}
+          </p>
+        ) : (
+          <p className="text-xs text-muted-foreground">{filing.title}</p>
+        )}
+        {filing.investmentSummary?.filingContext && (
+          <p className="text-xs text-muted-foreground">
+            {filing.investmentSummary.filingContext}
+          </p>
+        )}
       </div>
 
       <Button
@@ -94,6 +107,7 @@ export function EdgarFilingsCard({
   const [filings, setFilings] = useState<EdgarFiling[]>([]);
   const [latest, setLatest] = useState<EdgarFiling[]>([]);
   const [grouped, setGrouped] = useState<GroupedFilings[]>([]);
+  const [investments, setInvestments] = useState<InvestmentSummary[]>([]);
   const [locked, setLocked] = useState(false);
   const [insight, setInsight] = useState<FilingInsight | null>(null);
   const [loadingFilings, setLoadingFilings] = useState(true);
@@ -123,6 +137,7 @@ export function EdgarFilingsCard({
           setFilings(data.filings ?? []);
           setLatest(data.latest ?? []);
           setGrouped(data.grouped ?? []);
+          setInvestments(data.investments ?? []);
           setLocked(Boolean(data.locked));
         }
       } catch (fetchError) {
@@ -236,6 +251,23 @@ export function EdgarFilingsCard({
           </p>
         ) : (
           <>
+            {investments.length > 0 && (
+              <section className="space-y-3 rounded-md border border-terminal-amber/30 bg-terminal-amber/5 p-4">
+                <div className="flex items-center justify-between gap-3">
+                  <h3 className="font-mono text-xs uppercase tracking-[0.2em] text-terminal-amber">
+                    What They Invested In
+                  </h3>
+                  <span className="font-mono text-[10px] text-muted-foreground">
+                    Plain English · what · how much · when
+                  </span>
+                </div>
+                <InvestmentActivityList
+                  investments={investments}
+                  politicianName={politicianName}
+                />
+              </section>
+            )}
+
             {latest.length > 0 && (
               <section className="space-y-3">
                 <div className="flex items-center justify-between gap-3">
