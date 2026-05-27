@@ -1,6 +1,8 @@
 import Link from "next/link";
 
 import { LiveTradeFeed } from "@/components/dashboard/live-trade-feed";
+import { PageHeader } from "@/components/layout/page-header";
+import { SectionBlock } from "@/components/layout/section-block";
 import { DataSourceBadge } from "@/components/shared/data-source-badge";
 import { ExportCsvLink } from "@/components/shared/export-csv-button";
 import { FollowTickerButton } from "@/components/shared/follow-ticker-button";

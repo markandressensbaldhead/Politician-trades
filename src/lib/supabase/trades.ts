@@ -99,11 +99,11 @@ export function profileTradesToCongressRows(
     const row = profileTradeToRow(politicianId, politicianName, trade);
 
     return {
+      ...row,
       id: row.trade_key,
       created_at: createdAt,
       sec_data: null,
       sec_synced_at: null,
-      ...row,
     };
   });
 }

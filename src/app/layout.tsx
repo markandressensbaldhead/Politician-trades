@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
 import { Inter, JetBrains_Mono } from "next/font/google";
 
-import { BRAND, COPY } from "@/lib/brand";
+import { DeprecationBanner } from "@/components/layout/deprecation-banner";
 import { SiteFooter, SiteHeader } from "@/components/layout/site-header";
+import { BRAND, COPY } from "@/lib/brand";
+import { DEPRECATION, isSiteDeprecated } from "@/lib/site-status";
 
 import "./globals.css";
 
@@ -19,15 +21,24 @@ const jetbrainsMono = JetBrains_Mono({
 export const metadata: Metadata = {
   metadataBase: new URL(BRAND.url),
   title: {
-    default: `${BRAND.name} — ${BRAND.tagline}`,
+    default: isSiteDeprecated()
+      ? DEPRECATION.title
+      : `${BRAND.name} — ${BRAND.tagline}`,
     template: `%s | ${BRAND.name}`,
   },
-  description:
-    "Track every disclosed trade on the Hill. Today's pick, crowd signals, vs-S&P performance — built for retail on Trade the Hill.",
+  description: isSiteDeprecated()
+    ? DEPRECATION.message
+    : "Track every disclosed trade on the Hill. Today's pick, crowd signals, vs-S&P performance — built for retail on Trade the Hill.",
+  robots: isSiteDeprecated()
+    ? { index: false, follow: false }
+    : undefined,
   openGraph: {
-    title: "Trade the Hill — see every congressional buy.",
-    description:
-      "Free STOCK Act feed: today's Hill pick, crowd signals, and performance vs the S&P.",
+    title: isSiteDeprecated()
+      ? DEPRECATION.title
+      : "Trade the Hill — see every congressional buy.",
+    description: isSiteDeprecated()
+      ? DEPRECATION.message
+      : "Free STOCK Act feed: today's Hill pick, crowd signals, and performance vs the S&P.",
     type: "website",
     siteName: BRAND.name,
   },
@@ -50,9 +61,10 @@ export default function RootLayout({
         className={`${inter.variable} ${jetbrainsMono.variable} h-full min-h-screen font-sans antialiased`}
       >
         <div className="relative flex min-h-screen w-full flex-col">
-          <SiteHeader />
+          {isSiteDeprecated() && <DeprecationBanner />}
+          <SiteHeader deprecated={isSiteDeprecated()} />
           <main className="min-w-0 flex-1 w-full">{children}</main>
-          <SiteFooter />
+          <SiteFooter deprecated={isSiteDeprecated()} />
         </div>
       </body>
     </html>

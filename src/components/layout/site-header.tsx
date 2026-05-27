@@ -68,9 +68,35 @@ function NavLink({
   );
 }
 
-export function SiteHeader() {
+export function SiteHeader({ deprecated = false }: { deprecated?: boolean }) {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
+
+  if (deprecated) {
+    return (
+      <header className="sticky top-0 z-50 w-full border-b border-border/80 bg-background/90 backdrop-blur-md">
+        <div className="layout-shell flex h-16 items-center justify-between gap-4">
+          <Link href="/" className="flex min-w-0 items-center gap-3">
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-muted text-muted-foreground">
+              <TrendingUp className="h-4 w-4" />
+            </div>
+            <div className="min-w-0 leading-tight">
+              <span className="text-base font-semibold tracking-tight">
+                {BRAND.name}
+              </span>
+              <p className="truncate text-xs text-muted-foreground">Retired</p>
+            </div>
+          </Link>
+          <Link
+            href="mailto:contact@tradethehill.org"
+            className="text-sm text-muted-foreground hover:text-foreground"
+          >
+            Contact
+          </Link>
+        </div>
+      </header>
+    );
+  }
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border/80 bg-background/90 backdrop-blur-md supports-[backdrop-filter]:bg-background/75">
@@ -171,7 +197,17 @@ export function SiteHeader() {
   );
 }
 
-export function SiteFooter() {
+export function SiteFooter({ deprecated = false }: { deprecated?: boolean }) {
+  if (deprecated) {
+    return (
+      <footer className="mt-auto w-full border-t border-border/80 bg-card/40">
+        <div className="layout-shell py-10 text-center text-sm text-muted-foreground">
+          <p>{BRAND.name} was retired in May 2026. Not investment advice.</p>
+        </div>
+      </footer>
+    );
+  }
+
   return (
     <footer className="mt-auto w-full border-t border-border/80 bg-card/40">
       <div className="layout-shell py-12 lg:py-16">

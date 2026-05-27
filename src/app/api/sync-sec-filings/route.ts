@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 
+import { assertSiteOperational } from "@/lib/operational-guard";
 import { syncSecFilingsAndLinkTrades } from "@/lib/sync-sec-filings";
 
 function isAuthorized(request: Request): boolean {
@@ -14,6 +15,9 @@ function isAuthorized(request: Request): boolean {
 }
 
 export async function POST(request: Request) {
+  const blocked = assertSiteOperational();
+  if (blocked) return blocked;
+
   if (!isAuthorized(request)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
