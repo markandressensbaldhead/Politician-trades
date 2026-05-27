@@ -15,12 +15,19 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { cn } from "@/lib/utils";
 
 interface FollowTickerButtonProps {
   ticker: string;
+  size?: "default" | "sm" | "lg" | "icon";
+  className?: string;
 }
 
-export function FollowTickerButton({ ticker }: FollowTickerButtonProps) {
+export function FollowTickerButton({
+  ticker,
+  size = "default",
+  className,
+}: FollowTickerButtonProps) {
   const [open, setOpen] = useState(false);
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
@@ -74,7 +81,7 @@ export function FollowTickerButton({ ticker }: FollowTickerButtonProps) {
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
-        <Button variant="outline" className="gap-2 text-sm">
+        <Button variant="outline" size={size} className={cn("gap-2 text-sm", className)}>
           <Bell className="h-4 w-4" />
           Alert me on {ticker}
         </Button>

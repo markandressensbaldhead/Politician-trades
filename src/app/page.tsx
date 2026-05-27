@@ -3,6 +3,7 @@ import { HighConvictionFeed } from "@/components/dashboard/high-conviction-feed"
 import { LiveTradeFeed } from "@/components/dashboard/live-trade-feed";
 import { MarketPulse } from "@/components/dashboard/market-pulse";
 import { TradeClustersPanel } from "@/components/dashboard/trade-clusters-panel";
+import { TradeOfTheDaySpotlight } from "@/components/dashboard/trade-of-the-day-spotlight";
 import { TrendingTickerStrip, TrendingTickers } from "@/components/dashboard/trending-tickers";
 import { TrumpSpotlight } from "@/components/dashboard/trump-spotlight";
 import { SiteContainer } from "@/components/layout/site-container";
@@ -22,6 +23,7 @@ import {
 } from "@/lib/trade-significance";
 import { politicians } from "@/lib/data";
 import { getMarketPulse, getTrendingTickers } from "@/lib/trade-analytics";
+import { getTradeOfTheDay } from "@/lib/trade-of-the-day";
 import { cn, formatPercent } from "@/lib/utils";
 
 export default async function HomePage() {
@@ -64,6 +66,13 @@ export default async function HomePage() {
     politicianIndex,
     diversify: true,
   });
+  const tradeOfTheDay = getTradeOfTheDay(allTrades, {
+    clusterIndex,
+    politicianIndex,
+    clusters,
+    days: 45,
+    minScore: 40,
+  });
   const totalTrades = entries.reduce(
     (sum, entry) => sum + entry.tradesLast90Days,
     0
@@ -83,6 +92,12 @@ export default async function HomePage() {
 
   return (
     <SiteContainer>
+      {tradeOfTheDay && (
+        <div className="mb-8">
+          <TradeOfTheDaySpotlight pick={tradeOfTheDay} />
+        </div>
+      )}
+
       <div className="mb-10 space-y-6">
         <div className="flex flex-col gap-8 xl:flex-row xl:items-end xl:justify-between">
           <div className="space-y-3 xl:max-w-2xl">
