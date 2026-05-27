@@ -9,6 +9,7 @@ interface ProfileNavProps {
 
 export function ProfileNav({ hasTrades = true, className }: ProfileNavProps) {
   const links = [
+    ...(hasTrades ? [{ id: "alpha" as const, label: "Alpha Brief" }] : []),
     ...(hasTrades ? [{ id: "overview" as const, label: "Overview" }] : []),
     { id: "research" as const, label: "Research" },
     { id: "filings" as const, label: "Filings" },

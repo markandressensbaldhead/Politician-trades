@@ -108,6 +108,29 @@ create policy "Allow service writes on politician_filing_insights"
   using (true)
   with check (true);
 
+create table if not exists public.politician_alpha_briefs (
+  politician_id text primary key,
+  politician_name text,
+  brief jsonb not null,
+  trades_in_window integer not null default 0,
+  window_days integer not null default 30,
+  generated_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+alter table public.politician_alpha_briefs enable row level security;
+
+drop policy if exists "Allow public read on politician_alpha_briefs" on public.politician_alpha_briefs;
+create policy "Allow public read on politician_alpha_briefs"
+  on public.politician_alpha_briefs for select
+  using (true);
+
+drop policy if exists "Allow service writes on politician_alpha_briefs" on public.politician_alpha_briefs;
+create policy "Allow service writes on politician_alpha_briefs"
+  on public.politician_alpha_briefs for all
+  using (true)
+  with check (true);
+
 create table if not exists public.sec_filings (
   filing_key text primary key,
   politician_id text not null,

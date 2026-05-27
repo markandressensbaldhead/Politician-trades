@@ -3,6 +3,7 @@ import { ArrowLeft, TrendingDown, TrendingUp } from "lucide-react";
 
 import { AiInsightsCard } from "@/components/politician/ai-insights-card";
 import { EdgarFilingsCard } from "@/components/politician/edgar-filings-card";
+import { ExecutiveAlphaBrief } from "@/components/politician/executive-alpha-brief";
 import { FollowPoliticianButton } from "@/components/politician/follow-politician-button";
 import {
   ProfileNav,
@@ -212,6 +213,15 @@ export function PoliticianProfile({ politician }: PoliticianProfileProps) {
           ))}
         </div>
       </div>
+
+      {hasTrades && (
+        <div className="mt-8">
+          <ExecutiveAlphaBrief
+            politicianId={politician.id}
+            politicianName={politician.name}
+          />
+        </div>
+      )}
 
       <ProfileNav hasTrades={hasTrades} className="mt-8" />
 

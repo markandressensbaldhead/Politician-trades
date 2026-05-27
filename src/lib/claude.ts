@@ -63,6 +63,40 @@ Single line: **[High / Medium / Low]** filing signal quality — one sentence ra
 
 const FILING_EXTRACT_PROMPT = `You are a hedge fund EDGAR analyst extracting hard facts for a PM dossier. Bullet points only. Include: form type, filing date, entity, ticker, transaction type, share counts, dollar values, and material event items if present. If a field is absent, write "Not stated." No speculation.`;
 
+const ALPHA_BRIEF_SYSTEM_PROMPT = `You are the CIO of a top-tier multi-strategy hedge fund publishing a 30-Day Alpha Brief. Your audience allocates real capital — portfolio managers, family offices, and sophisticated traders copying Washington signal flow.
+
+Your job: distill the HIGHEST-CONVICTION, MOST ACTIONABLE alpha from recent STOCK Act disclosures. Educate the reader on HOW to express the thesis with capital — single names, pairs, sector ETFs, sizing, and timing — not vague commentary.
+
+Rules:
+- Focus on trades within the stated analysis window (last 30 days by trade date). If the window is empty, use the most recent disclosures provided but flag staleness explicitly in riskManagement.
+- Rank deployment ideas by alpha potential — best idea first. Max 4 ideas.
+- Every deployment idea MUST use a ticker that appears in the input data.
+- Cite specific trade dates, amounts, and excess return vs SPY when available.
+- Map catalysts to committee/sector context ONLY when supported by input.
+- Write with conviction like Point72 / Citadel idea meetings — specific, teachable, zero filler.
+- Do not invent trades, legislation, or returns absent from the input.
+- This is institutional signal research, not personalized investment advice — but DO explain capital deployment mechanics clearly.
+
+Return ONLY valid JSON (no markdown fences, no commentary) matching this schema:
+{
+  "headline": "One punchy line — the single best alpha takeaway",
+  "thesis": "2-3 sentences on why this politician's recent book matters for capital allocation right now",
+  "deploymentIdeas": [
+    {
+      "ticker": "SYMBOL",
+      "direction": "Long" | "Short" | "Watch" | "Reduce",
+      "conviction": "High" | "Medium" | "Low",
+      "rationale": "Why follow this flow — cite trade date, amount, excess return if present",
+      "catalyst": "Legislative/regulatory/sector catalyst if supported, else 'Flow-led'",
+      "sizeHint": "How to size — starter position, core thesis weight, hedge leg, etc."
+    }
+  ],
+  "sectorTheme": "Where to deploy sector-level capital based on recent flow",
+  "timingEdge": "Disclosure lag, clustering, and when the signal is still actionable",
+  "riskManagement": "What invalidates the thesis — concentration, stale filings, reversals",
+  "playbook": "3-5 sentences teaching the reader HOW to deploy capital: expression (names vs ETF), entry approach, what to monitor weekly"
+}`;
+
 interface ClaudeResponse {
   content: Array<{ type: string; text?: string }>;
 }
@@ -156,4 +190,103 @@ export async function extractFilingData(
     } for ${politicianName}:\n\n${filingExcerpt}`,
     800
   );
+}
+
+interface AlphaBriefPromptInput {
+  politicianName: string;
+  party: string;
+  chamber: string;
+  committee?: string;
+  contextBlock: string;
+  tradeHistoryText: string;
+  tradesInWindow: number;
+  windowDays: number;
+}
+
+export async function generateAlphaBrief(
+  input: AlphaBriefPromptInput
+): Promise<string> {
+  return callClaude(
+    ALPHA_BRIEF_SYSTEM_PROMPT,
+    `Generate the 30-Day Alpha Brief for ${input.politicianName} (${input.party}, ${input.chamber}${
+      input.committee ? `, ${input.committee} Committee` : ""
+    }).
+
+Trades in ${input.windowDays}-day window: ${input.tradesInWindow}. Prioritize in-window activity; if zero, explain staleness and lean on provided recent history.
+
+Pre-computed flow analytics:
+---
+${input.contextBlock}
+---
+
+Disclosure detail:
+---
+${input.tradeHistoryText}
+---`,
+    1800
+  );
+}
+
+export function parseAlphaBriefJson(raw: string): import("@/types/alpha-brief").AlphaBriefContent {
+  const trimmed = raw.trim();
+  const jsonText = trimmed.startsWith("{")
+    ? trimmed
+    : trimmed.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/, "");
+
+  let parsed: unknown;
+
+  try {
+    parsed = JSON.parse(jsonText);
+  } catch {
+    throw new Error("Alpha brief response was not valid JSON");
+  }
+
+  if (!parsed || typeof parsed !== "object") {
+    throw new Error("Alpha brief response was empty");
+  }
+
+  const data = parsed as Record<string, unknown>;
+
+  const deploymentIdeas = Array.isArray(data.deploymentIdeas)
+    ? data.deploymentIdeas
+        .slice(0, 4)
+        .map((idea) => {
+          const row = idea as Record<string, unknown>;
+          return {
+            ticker: String(row.ticker ?? "—").toUpperCase(),
+            direction: normalizeDirection(row.direction),
+            conviction: normalizeConviction(row.conviction),
+            rationale: String(row.rationale ?? ""),
+            catalyst: String(row.catalyst ?? "Flow-led"),
+            sizeHint: String(row.sizeHint ?? ""),
+          };
+        })
+        .filter((idea) => idea.ticker !== "—" && idea.rationale.length > 0)
+    : [];
+
+  return {
+    headline: String(data.headline ?? "Recent disclosure flow warrants PM review"),
+    thesis: String(data.thesis ?? ""),
+    deploymentIdeas,
+    sectorTheme: String(data.sectorTheme ?? ""),
+    timingEdge: String(data.timingEdge ?? ""),
+    riskManagement: String(data.riskManagement ?? ""),
+    playbook: String(data.playbook ?? ""),
+  };
+}
+
+function normalizeDirection(
+  value: unknown
+): import("@/types/alpha-brief").DeploymentDirection {
+  const text = String(value ?? "Watch");
+  if (text === "Long" || text === "Short" || text === "Reduce") return text;
+  return "Watch";
+}
+
+function normalizeConviction(
+  value: unknown
+): import("@/types/alpha-brief").DeploymentConviction {
+  const text = String(value ?? "Medium");
+  if (text === "High" || text === "Low") return text;
+  return "Medium";
 }
