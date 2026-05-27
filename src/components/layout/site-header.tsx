@@ -2,14 +2,22 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { BarChart3, Landmark, Search, TrendingUp } from "lucide-react";
+import {
+  BarChart3,
+  Flame,
+  Landmark,
+  LineChart,
+  Search,
+  TrendingUp,
+} from "lucide-react";
 
 import { cn } from "@/lib/utils";
 
 const navItems = [
-  { href: "/", label: "Leaderboard", icon: TrendingUp },
-  { href: "/politician/donald-trump", label: "Trump", icon: Landmark },
+  { href: "/", label: "Home", icon: TrendingUp },
+  { href: "/feed", label: "Feed", icon: Flame },
   { href: "/search", label: "Search", icon: Search },
+  { href: "/politician/donald-trump", label: "Trump", icon: Landmark },
 ];
 
 export function SiteHeader() {
@@ -57,6 +65,13 @@ export function SiteHeader() {
               </Link>
             );
           })}
+          <Link
+            href="/feed"
+            className="ml-1 hidden items-center gap-1 rounded-md border border-terminal-amber/30 bg-terminal-amber/10 px-2 py-1.5 font-mono text-[10px] uppercase tracking-wider text-terminal-amber md:flex"
+          >
+            <LineChart className="h-3 w-3" />
+            Ticker Feed
+          </Link>
         </nav>
       </div>
     </header>
@@ -67,10 +82,24 @@ export function SiteFooter() {
   return (
     <footer className="border-t border-border/60 py-8">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <p className="text-center text-xs text-muted-foreground">
-          Data sourced from public financial disclosure filings (STOCK Act).
-          For informational purposes only — not investment advice.
-        </p>
+        <div className="flex flex-col items-center gap-3 text-center">
+          <div className="flex flex-wrap justify-center gap-4 text-xs text-muted-foreground">
+            <Link href="/feed" className="hover:text-foreground">
+              Live Feed
+            </Link>
+            <Link href="/search" className="hover:text-foreground">
+              Search
+            </Link>
+            <Link href="/ticker/NVDA" className="hover:text-foreground">
+              Example: NVDA
+            </Link>
+          </div>
+          <p className="text-xs text-muted-foreground">
+            Data sourced from public financial disclosure filings (STOCK Act).
+            Disclosure lag analytics are computed from trade vs filing dates.
+            For informational purposes only — not investment advice.
+          </p>
+        </div>
       </div>
     </footer>
   );

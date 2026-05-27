@@ -1,18 +1,16 @@
-import { LeaderboardEntry, Party, SearchPoliticianEntry } from "@/types";
-import { getTrumpSearchEntry } from "@/lib/trump-data";
+import { LeaderboardEntry, Party, SearchPoliticianEntry, Chamber } from "@/types";
 import { politicians } from "@/lib/data";
+import { getTrumpSearchEntry } from "@/lib/trump-data";
 import {
   averageExcessReturn,
   isWithinLast90Days,
-  mapChamber,
-  mapParty,
-  slugify,
 } from "@/lib/quiver-mappers";
 import {
-  fetchCongressTrades,
-  normalizeTradeType,
-  QuiverCongressTrade,
-} from "@/lib/quiverquant";
+  loadUnifiedTrades,
+  toLegacyRecentTrade,
+  TradeDataSource,
+} from "@/lib/unified-trades";
+import { UnifiedCongressTrade } from "@/types";
 
 export interface RecentCongressTrade {
   id: string;
@@ -21,108 +19,119 @@ export interface RecentCongressTrade {
   type: "Purchase" | "Sale";
   amount: string;
   date: string;
+  filingDate: string | null;
+  disclosureLagDays: number | null;
   sector: string;
   politicianId: string;
   politicianName: string;
   party: string;
+  chamber: string;
+  excessReturn: number | null;
 }
 
-export async function loadCongressTrades(): Promise<{
-  trades: QuiverCongressTrade[];
-  source: "live" | "mock";
-}> {
-  const apiKey = process.env.QUIVERQUANT_API_KEY;
-
-  if (!apiKey) {
-    return { trades: [], source: "mock" };
-  }
-
-  try {
-    const trades = await fetchCongressTrades(apiKey);
-
-    if (trades.length > 0) {
-      return { trades, source: "live" };
-    }
-  } catch (error) {
-    console.error(
-      "QuiverQuant fetch failed:",
-      error instanceof Error ? error.message : error
-    );
-  }
-
-  return { trades: [], source: "mock" };
-}
-
-function groupTradesByPolitician(trades: QuiverCongressTrade[]) {
+function groupUnifiedByPolitician(trades: UnifiedCongressTrade[]) {
   const grouped = new Map<
     string,
     {
       id: string;
       name: string;
       party: Party;
-      chamber: ReturnType<typeof mapChamber>;
-      allTrades: QuiverCongressTrade[];
-      recentTrades: QuiverCongressTrade[];
+      chamber: Chamber;
+      allTrades: UnifiedCongressTrade[];
+      recentTrades: UnifiedCongressTrade[];
     }
   >();
 
   for (const trade of trades) {
-    const id = trade.BioGuideID || slugify(trade.Representative);
-    const existing = grouped.get(id);
+    const existing = grouped.get(trade.politicianId);
 
     if (existing) {
       existing.allTrades.push(trade);
-      if (isWithinLast90Days(trade.TransactionDate)) {
+      if (isWithinLast90Days(trade.tradeDate)) {
         existing.recentTrades.push(trade);
       }
       continue;
     }
 
-    grouped.set(id, {
-      id,
-      name: trade.Representative,
-      party: mapParty(trade.Party),
-      chamber: mapChamber(trade.House),
+    grouped.set(trade.politicianId, {
+      id: trade.politicianId,
+      name: trade.politicianName,
+      party: trade.party,
+      chamber: trade.chamber,
       allTrades: [trade],
-      recentTrades: isWithinLast90Days(trade.TransactionDate) ? [trade] : [],
+      recentTrades: isWithinLast90Days(trade.tradeDate) ? [trade] : [],
     });
   }
 
   return grouped;
 }
 
-export function buildLeaderboardFromTrades(
-  trades: QuiverCongressTrade[]
+export function buildLeaderboardFromUnified(
+  trades: UnifiedCongressTrade[]
 ): LeaderboardEntry[] {
-  const grouped = groupTradesByPolitician(trades);
+  const grouped = groupUnifiedByPolitician(trades);
 
-  const entries: LeaderboardEntry[] = Array.from(grouped, ([, group]) => {
-    const excessReturns = group.recentTrades
-      .map((trade) => trade.ExcessReturn ?? 0)
-      .filter((value) => Number.isFinite(value));
+  return Array.from(grouped.values())
+    .map((group) => {
+      const excessReturns = group.recentTrades
+        .map((trade) => trade.excessReturn ?? 0)
+        .filter((value) => Number.isFinite(value));
 
-    return {
-      id: group.id,
-      name: group.name,
-      party: group.party,
-      chamber: group.chamber,
-      state: "",
-      tradesLast90Days: group.recentTrades.length,
-      totalTrades: group.allTrades.length,
-      returnVsSpy: averageExcessReturn(excessReturns),
-    };
-  });
+      return {
+        id: group.id,
+        name: group.name,
+        party: group.party,
+        chamber: group.chamber,
+        state: "",
+        tradesLast90Days: group.recentTrades.length,
+        totalTrades: group.allTrades.length,
+        returnVsSpy: averageExcessReturn(excessReturns),
+      };
+    })
+    .sort((a, b) => {
+      if (b.returnVsSpy !== a.returnVsSpy) {
+        return b.returnVsSpy - a.returnVsSpy;
+      }
 
-  return entries.sort((a, b) => {
-    if (b.returnVsSpy !== a.returnVsSpy) {
-      return b.returnVsSpy - a.returnVsSpy;
-    }
-
-    return b.tradesLast90Days - a.tradesLast90Days;
-  });
+      return b.tradesLast90Days - a.tradesLast90Days;
+    });
 }
 
-export function buildLeaderboardFromMock(): LeaderboardEntry[] {
+export function buildSearchIndexFromUnified(
+  trades: UnifiedCongressTrade[]
+): SearchPoliticianEntry[] {
+  const grouped = groupUnifiedByPolitician(trades);
+
+  return Array.from(grouped.values())
+    .map((group) => {
+      const excessReturns = group.recentTrades
+        .map((trade) => trade.excessReturn ?? 0)
+        .filter((value) => Number.isFinite(value));
+
+      const topTickers = [
+        ...new Set(group.recentTrades.map((trade) => trade.ticker)),
+      ].slice(0, 3);
+
+      return {
+        id: group.id,
+        name: group.name,
+        party: group.party,
+        chamber: group.chamber,
+        state: "",
+        committee:
+          topTickers.length > 0
+            ? `Recent: ${topTickers.join(", ")}`
+            : undefined,
+        tradesLast90Days: group.recentTrades.length,
+        totalTrades: group.allTrades.length,
+        returnVsSpy: averageExcessReturn(excessReturns),
+        source: "live" as const,
+      };
+    })
+    .sort((a, b) => a.name.localeCompare(b.name));
+}
+
+function buildLeaderboardFromMock(): LeaderboardEntry[] {
   return politicians
     .map((politician) => ({
       id: politician.id,
@@ -138,31 +147,7 @@ export function buildLeaderboardFromMock(): LeaderboardEntry[] {
     .sort((a, b) => b.returnVsSpy - a.returnVsSpy);
 }
 
-export function buildSearchIndexFromTrades(
-  trades: QuiverCongressTrade[]
-): SearchPoliticianEntry[] {
-  const grouped = groupTradesByPolitician(trades);
-
-  return Array.from(grouped, ([, group]) => {
-    const excessReturns = group.recentTrades
-      .map((trade) => trade.ExcessReturn ?? 0)
-      .filter((value) => Number.isFinite(value));
-
-    return {
-      id: group.id,
-      name: group.name,
-      party: group.party,
-      chamber: group.chamber,
-      state: "",
-      tradesLast90Days: group.recentTrades.length,
-      totalTrades: group.allTrades.length,
-      returnVsSpy: averageExcessReturn(excessReturns),
-      source: "live" as const,
-    };
-  }).sort((a, b) => a.name.localeCompare(b.name));
-}
-
-export function buildSearchIndexFromMock(): SearchPoliticianEntry[] {
+function buildSearchIndexFromMock(): SearchPoliticianEntry[] {
   return politicians.map((politician) => ({
     id: politician.id,
     name: politician.name,
@@ -180,114 +165,69 @@ export function buildSearchIndexFromMock(): SearchPoliticianEntry[] {
   }));
 }
 
-export function buildRecentTradesFromQuiver(
-  trades: QuiverCongressTrade[],
-  limit = 20
-): RecentCongressTrade[] {
-  return [...trades]
-    .sort(
-      (a, b) =>
-        new Date(b.TransactionDate).getTime() -
-        new Date(a.TransactionDate).getTime()
-    )
-    .slice(0, limit)
-    .map((trade, index) => {
-      const tradeType = normalizeTradeType(trade.Transaction);
-
-      return {
-        id: `${trade.BioGuideID || slugify(trade.Representative)}-${trade.TransactionDate}-${trade.Ticker}-${index}`,
-        ticker: trade.Ticker,
-        company: trade.Description?.trim() || trade.Ticker,
-        type: tradeType === "buy" ? "Purchase" : "Sale",
-        amount: trade.Range,
-        date: trade.TransactionDate,
-        sector: trade.TickerType ?? "",
-        politicianId: trade.BioGuideID || slugify(trade.Representative),
-        politicianName: trade.Representative,
-        party: mapParty(trade.Party),
-      };
-    });
-}
-
-export function buildRecentTradesFromMock(limit = 20): RecentCongressTrade[] {
-  const rows: RecentCongressTrade[] = [];
-
-  for (const politician of politicians) {
-    for (const trade of politician.trades) {
-      rows.push({
-        id: `${politician.id}-${trade.id}`,
-        ticker: trade.ticker,
-        company: trade.company,
-        type: trade.type,
-        amount: trade.amount,
-        date: trade.date,
-        sector: trade.sector,
-        politicianId: politician.id,
-        politicianName: politician.name,
-        party: politician.party,
-      });
-    }
-  }
-
-  return rows
-    .sort(
-      (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
-    )
-    .slice(0, limit);
+function mapSource(source: TradeDataSource): "live" | "mock" {
+  return source === "mock" ? "mock" : "live";
 }
 
 export async function getLeaderboardData(): Promise<{
   entries: LeaderboardEntry[];
   source: "live" | "mock";
 }> {
-  const { trades, source } = await loadCongressTrades();
+  const { trades, source } = await loadUnifiedTrades();
 
-  if (source === "live") {
-    return { entries: buildLeaderboardFromTrades(trades), source: "live" };
+  if (source === "mock") {
+    return { entries: buildLeaderboardFromMock(), source: "mock" };
   }
 
-  return { entries: buildLeaderboardFromMock(), source: "mock" };
+  return {
+    entries: buildLeaderboardFromUnified(trades),
+    source: mapSource(source),
+  };
 }
 
 export async function getSearchIndex(): Promise<{
   politicians: SearchPoliticianEntry[];
   source: "live" | "mock";
 }> {
-  const { trades, source } = await loadCongressTrades();
+  const { trades, source } = await loadUnifiedTrades();
 
-  if (source === "live") {
+  if (source === "mock") {
     return {
-      politicians: [
-        await getTrumpSearchEntry(),
-        ...buildSearchIndexFromTrades(trades),
-      ],
-      source: "live",
+      politicians: [await getTrumpSearchEntry(), ...buildSearchIndexFromMock()],
+      source: "mock",
     };
   }
 
   return {
-    politicians: [await getTrumpSearchEntry(), ...buildSearchIndexFromMock()],
-    source: "mock",
+    politicians: [
+      await getTrumpSearchEntry(),
+      ...buildSearchIndexFromUnified(trades),
+    ],
+    source: mapSource(source),
   };
 }
 
-export async function getRecentTrades(limit = 20): Promise<{
+export async function getRecentTrades(limit = 100): Promise<{
   trades: RecentCongressTrade[];
   source: "live" | "mock";
 }> {
-  const { trades, source } = await loadCongressTrades();
+  const { trades, source } = await loadUnifiedTrades();
 
-  if (source === "live") {
-    return {
-      trades: buildRecentTradesFromQuiver(trades, limit),
-      source: "live",
-    };
-  }
+  const sorted = [...trades].sort(
+    (a, b) => new Date(b.tradeDate).getTime() - new Date(a.tradeDate).getTime()
+  );
 
   return {
-    trades: buildRecentTradesFromMock(limit),
-    source: "mock",
+    trades: sorted.slice(0, limit).map(toLegacyRecentTrade),
+    source: mapSource(source),
   };
+}
+
+export async function getAllTrades(): Promise<{
+  trades: UnifiedCongressTrade[];
+  source: TradeDataSource;
+}> {
+  return loadUnifiedTrades();
 }
 
 export function filterLeaderboardByChamber(
@@ -301,3 +241,6 @@ export function filterLeaderboardByChamber(
   const chamber = filter === "senate" ? "Senate" : "House";
   return entries.filter((entry) => entry.chamber === chamber);
 }
+
+// Legacy export for sync paths still using Quiver directly
+export { loadUnifiedTrades as loadCongressTrades };

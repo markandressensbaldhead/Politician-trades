@@ -21,7 +21,7 @@ export const metadata: Metadata = {
     template: "%s | Capitol Trades",
   },
   description:
-    "Track congressional stock trades and portfolio performance from public financial disclosures.",
+    "Track congressional stock trades with disclosure lag analytics, ticker-first discovery, SEC filing cross-links, and AI-powered plain-English summaries.",
 };
 
 export default function RootLayout({

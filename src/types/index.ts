@@ -2,6 +2,33 @@ export type Party = "Democrat" | "Republican" | "Independent";
 export type Chamber = "Senate" | "House" | "Executive";
 export type TransactionType = "Purchase" | "Sale";
 
+export interface UnifiedCongressTrade {
+  id: string;
+  politicianId: string;
+  politicianName: string;
+  party: Party;
+  chamber: Chamber;
+  ticker: string;
+  company: string;
+  type: "Purchase" | "Sale";
+  amount: string;
+  tradeDate: string;
+  filingDate: string | null;
+  disclosureLagDays: number | null;
+  sector: string;
+  excessReturn: number | null;
+}
+
+export interface TrendingTickerEntry {
+  ticker: string;
+  tradeCount: number;
+  purchaseCount: number;
+  saleCount: number;
+  politicianCount: number;
+  lastTradeDate: string;
+  netFlow: "buying" | "selling" | "mixed";
+}
+
 export interface Trade {
   id: string;
   ticker: string;

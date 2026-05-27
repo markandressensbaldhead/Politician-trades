@@ -4,6 +4,7 @@ import { ArrowLeft, TrendingDown, TrendingUp } from "lucide-react";
 import { AiInsightsCard } from "@/components/politician/ai-insights-card";
 import { EdgarFilingsCard } from "@/components/politician/edgar-filings-card";
 import { FollowPoliticianButton } from "@/components/politician/follow-politician-button";
+import { ProfileIntelligence } from "@/components/politician/profile-intelligence";
 import { TradeHistoryTable } from "@/components/politician/trade-history-table";
 import { PartyBadge } from "@/components/leaderboard/party-badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -15,7 +16,13 @@ import {
   CardDescription,
   CardHeader,
 } from "@/components/ui/card";
-import { PoliticianProfileData } from "@/types";
+import { PoliticianProfileData, UnifiedCongressTrade } from "@/types";
+import {
+  getCommitteeOverlapFlags,
+  getDisclosureLagDays,
+  getPoliticianLagStats,
+  getSectorActivity,
+} from "@/lib/trade-analytics";
 import { cn, formatCurrency, formatPercent } from "@/lib/utils";
 
 interface PoliticianProfileProps {
@@ -32,6 +39,37 @@ function getInitials(name: string) {
 }
 
 export function PoliticianProfile({ politician }: PoliticianProfileProps) {
+  const unifiedTrades: UnifiedCongressTrade[] = politician.trades.map(
+    (trade) => ({
+      id: trade.id,
+      politicianId: politician.id,
+      politicianName: politician.name,
+      party: politician.party,
+      chamber: politician.chamber,
+      ticker: trade.ticker,
+      company: trade.company,
+      type:
+        trade.type === "Sale"
+          ? "Sale"
+          : trade.type === "Purchase"
+            ? "Purchase"
+            : "Purchase",
+      amount: trade.amount,
+      tradeDate: trade.tradeDate,
+      filingDate: trade.filingDate,
+      disclosureLagDays: getDisclosureLagDays(trade.tradeDate, trade.filingDate),
+      sector: trade.sector ?? "",
+      excessReturn: trade.excessReturn ?? null,
+    })
+  );
+
+  const lagStats = getPoliticianLagStats(unifiedTrades);
+  const sectors = getSectorActivity(unifiedTrades);
+  const overlapFlags = getCommitteeOverlapFlags({
+    trades: unifiedTrades,
+    committee: politician.committee,
+  });
+
   const stats = [
     {
       label: "vs. S&P 500 (90D)",
@@ -169,6 +207,15 @@ export function PoliticianProfile({ politician }: PoliticianProfileProps) {
           </Card>
         ))}
       </div>
+
+      {politician.trades.length > 0 && (
+        <ProfileIntelligence
+          politicianName={politician.name}
+          lagStats={lagStats}
+          sectors={sectors}
+          overlapFlags={overlapFlags}
+        />
+      )}
 
       <AiInsightsCard
         politicianId={politician.id}

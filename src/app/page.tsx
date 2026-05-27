@@ -1,15 +1,29 @@
 import { LeaderboardPanel } from "@/components/leaderboard/leaderboard-panel";
-import { RecentTrades } from "@/components/dashboard/recent-trades";
+import { LiveTradeFeed } from "@/components/dashboard/live-trade-feed";
+import { MarketPulse } from "@/components/dashboard/market-pulse";
+import { TrendingTickerStrip, TrendingTickers } from "@/components/dashboard/trending-tickers";
 import { TrumpSpotlight } from "@/components/dashboard/trump-spotlight";
-import { getLeaderboardData, getRecentTrades } from "@/lib/congress-data";
+import {
+  getAllTrades,
+  getLeaderboardData,
+  getRecentTrades,
+} from "@/lib/congress-data";
+import { getMarketPulse, getTrendingTickers } from "@/lib/trade-analytics";
 import { formatPercent } from "@/lib/utils";
 
 export default async function HomePage() {
-  const [{ entries, source }, { trades: recentTrades }] = await Promise.all([
+  const [
+    { entries, source },
+    { trades: recentTrades },
+    { trades: allTrades, source: tradeSource },
+  ] = await Promise.all([
     getLeaderboardData(),
-    getRecentTrades(20),
+    getRecentTrades(200),
+    getAllTrades(),
   ]);
 
+  const pulse = getMarketPulse(allTrades);
+  const trending = getTrendingTickers(allTrades, 12);
   const totalTrades = entries.reduce(
     (sum, entry) => sum + entry.tradesLast90Days,
     0
@@ -20,6 +34,12 @@ export default async function HomePage() {
         entries.length
       : 0;
   const topPerformer = entries[0];
+  const dataLabel =
+    tradeSource === "supabase"
+      ? "Locked DB"
+      : source === "live"
+        ? "Live"
+        : "Demo";
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
@@ -30,12 +50,12 @@ export default async function HomePage() {
               Capitol Trades Terminal
             </p>
             <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">
-              Congressional Trading Leaderboard
+              Who&apos;s beating the market — and what are they buying?
             </h1>
             <p className="max-w-2xl text-sm text-muted-foreground">
-              Real-time rankings of U.S. lawmakers by estimated portfolio
-              performance relative to the S&amp;P 500, based on STOCK Act
-              disclosures.
+              Congressional trading intelligence with disclosure lag analytics,
+              ticker-first discovery, and SEC filing cross-links — built for
+              investors who want transparency competitors don&apos;t show.
             </p>
             {source === "mock" && (
               <p className="rounded-md border border-terminal-amber/30 bg-terminal-amber/5 px-3 py-2 text-sm text-terminal-amber">
@@ -47,6 +67,7 @@ export default async function HomePage() {
           </div>
 
           <div className="terminal-ticker flex flex-wrap gap-px overflow-hidden rounded-md border border-border/60 bg-border/40">
+            <TickerStat label="Data" value={dataLabel} />
             <TickerStat label="Tracked" value={String(entries.length)} />
             <TickerStat label="Trades 90D" value={String(totalTrades)} />
             <TickerStat
@@ -61,13 +82,35 @@ export default async function HomePage() {
             />
           </div>
         </div>
+
+        {trending.length > 0 && (
+          <div className="space-y-2">
+            <p className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
+              Trending tickers — tap to see who traded
+            </p>
+            <TrendingTickerStrip tickers={trending} />
+          </div>
+        )}
+      </div>
+
+      <div className="mb-6">
+        <MarketPulse pulse={pulse} />
       </div>
 
       <TrumpSpotlight />
 
-      <div className="grid gap-6 xl:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)]">
+      <div className="my-6">
+        <TrendingTickers tickers={trending} />
+      </div>
+
+      <div className="grid gap-6 xl:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]">
         <LeaderboardPanel entries={entries} source={source} />
-        <RecentTrades trades={recentTrades} />
+        <LiveTradeFeed
+          trades={recentTrades.slice(0, 80)}
+          showFilters={false}
+          title="Latest Activity"
+          description="Newest disclosures across Congress."
+        />
       </div>
     </div>
   );
@@ -85,7 +128,7 @@ function TickerStat({
   compact?: boolean;
 }) {
   return (
-    <div className="min-w-[120px] flex-1 bg-background/80 px-4 py-3">
+    <div className="min-w-[100px] flex-1 bg-background/80 px-4 py-3">
       <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-terminal-amber">
         {label}
       </p>
