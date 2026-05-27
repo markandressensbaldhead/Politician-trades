@@ -8,6 +8,7 @@ import { RetailHero } from "@/components/dashboard/retail-hero";
 import { TradeClustersPanel } from "@/components/dashboard/trade-clusters-panel";
 import { TradeOfTheDaySpotlight } from "@/components/dashboard/trade-of-the-day-spotlight";
 import { TrendingTickers } from "@/components/dashboard/trending-tickers";
+import { XNewsPanel } from "@/components/dashboard/x-news-panel";
 import { SiteContainer } from "@/components/layout/site-container";
 import {
   getAllTrades,
@@ -26,6 +27,7 @@ import {
 import { politicians } from "@/lib/data";
 import { getMarketPulse, getTrendingTickers } from "@/lib/trade-analytics";
 import { getTradeOfTheDay } from "@/lib/trade-of-the-day";
+import { buildTopicalXNews } from "@/lib/x-news";
 
 export default async function HomePage() {
   const [
@@ -85,6 +87,12 @@ export default async function HomePage() {
         entries.length
       : 0;
   const isLive = source === "live" || tradeSource === "supabase";
+  const xTopical = buildTopicalXNews({
+    tradeOfTheDay,
+    clusters,
+    trending,
+    highConviction,
+  });
 
   return (
     <SiteContainer className="space-y-10 pb-12">
@@ -106,6 +114,8 @@ export default async function HomePage() {
         topPerformer={topPerformer ?? null}
         topCluster={clusters[0] ?? null}
       />
+
+      <XNewsPanel topical={xTopical} />
 
       <div className="grid gap-8 2xl:grid-cols-2">
         <HighConvictionFeed trades={highConviction} />

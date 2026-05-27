@@ -6,6 +6,7 @@ import {
   BarChart3,
   Landmark,
   MapPin,
+  MessageCircle,
   Search,
   Target,
   TrendingUp,
@@ -19,6 +20,7 @@ import { cn } from "@/lib/utils";
 
 const navItems = [
   { href: "/#trade-of-day", label: "Today", icon: Target },
+  { href: "/#x-news", label: "X Pulse", icon: MessageCircle },
   { href: "/feed", label: "Trades", icon: BarChart3 },
   { href: "/portfolio", label: "Portfolio", icon: Wallet },
   { href: "/search", label: "Search", icon: Search },
@@ -48,9 +50,9 @@ export function SiteHeader() {
         <nav className="hidden items-center gap-1 md:flex">
           {navItems.map(({ href, label, icon: Icon }) => {
             const isActive =
-              href === "/#trade-of-day"
+              href.startsWith("/#")
                 ? pathname === "/"
-                : pathname.startsWith(href.replace("/#trade-of-day", "/"));
+                : pathname.startsWith(href);
 
             return (
               <Link
