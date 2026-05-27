@@ -34,11 +34,7 @@ function sanitizeHoldings(raw: unknown): PortfolioHolding[] {
           ? Number(averageCost.toFixed(2))
           : null,
       source:
-        row.source === "robinhood_csv"
-          ? "robinhood_csv"
-          : row.source === "snaptrade"
-            ? "snaptrade"
-            : "manual",
+        row.source === "robinhood_csv" ? "robinhood_csv" : "manual",
     });
   }
 

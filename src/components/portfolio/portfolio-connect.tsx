@@ -30,7 +30,6 @@ import {
 } from "@/lib/portfolio-storage";
 import { PortfolioHolding, SavedPortfolio } from "@/types/portfolio";
 import { formatUsd } from "@/lib/utils";
-import { SnapTradeConnect } from "@/components/portfolio/snaptrade-connect";
 
 interface PortfolioConnectProps {
   portfolio: SavedPortfolio | null;
@@ -168,9 +167,8 @@ export function PortfolioConnect({
                 Link Robinhood portfolio
               </CardTitle>
               <CardDescription className="max-w-2xl leading-relaxed">
-                Connect Robinhood with one-click OAuth (via SnapTrade), import
-                a CSV export, or add positions manually. Holdings stay in your
-                browser until you request AI advice.
+                Import a Robinhood CSV export or add positions manually. Holdings
+                stay in your browser until you request AI advice.
               </CardDescription>
             </div>
             {portfolio && (
@@ -183,13 +181,6 @@ export function PortfolioConnect({
         </CardHeader>
 
         <CardContent className="space-y-6 p-6">
-          <SnapTradeConnect
-            portfolio={portfolio}
-            onPortfolioChange={onPortfolioChange}
-            onStatusMessage={onStatusMessage ?? (() => undefined)}
-            onError={onError ?? (() => undefined)}
-          />
-
           <div className="rounded-lg border border-dashed border-border bg-secondary/20 p-5">
             <Label htmlFor="robinhood-csv" className="text-sm font-medium">
               Import Robinhood CSV
@@ -221,14 +212,9 @@ export function PortfolioConnect({
                 className="hidden"
                 onChange={handleCsvUpload}
               />
-              {portfolio &&
-                (portfolio.broker === "snaptrade" ||
-                  portfolio.broker === "robinhood") && (
+              {portfolio?.broker === "robinhood" && (
                 <span className="text-xs text-muted-foreground">
-                  {portfolio.broker === "snaptrade"
-                    ? "Robinhood (OAuth)"
-                    : "Robinhood (CSV)"}{" "}
-                  · Last synced{" "}
+                  Robinhood (CSV) · Last imported{" "}
                   {new Date(portfolio.updatedAt).toLocaleString()}
                 </span>
               )}

@@ -18,7 +18,6 @@ export interface SetupStatus {
   cronSecret: boolean;
   resend: boolean;
   appUrl: boolean;
-  snapTrade: boolean;
   readyForInsights: boolean;
   missing: string[];
 }
@@ -34,9 +33,6 @@ export function getSetupStatus(): SetupStatus {
   const cronSecret = Boolean(process.env.CRON_SECRET);
   const resend = Boolean(process.env.RESEND_API_KEY);
   const appUrl = Boolean(process.env.NEXT_PUBLIC_APP_URL);
-  const snapTrade = Boolean(
-    process.env.SNAPTRADE_CLIENT_ID && process.env.SNAPTRADE_CONSUMER_KEY
-  );
 
   if (!supabase) missing.push("SUPABASE_URL + SUPABASE_ANON_KEY");
   if (!supabaseServiceRole) missing.push("SUPABASE_SERVICE_ROLE_KEY (recommended)");
@@ -54,7 +50,6 @@ export function getSetupStatus(): SetupStatus {
     cronSecret,
     resend,
     appUrl,
-    snapTrade,
     readyForInsights,
     missing,
   };

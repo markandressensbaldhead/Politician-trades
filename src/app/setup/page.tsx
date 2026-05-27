@@ -25,7 +25,6 @@ interface SetupResponse {
     cronSecret: boolean;
     resend: boolean;
     appUrl: boolean;
-    snapTrade: boolean;
     readyForInsights: boolean;
     missing: string[];
   };
@@ -158,10 +157,6 @@ export default function SetupPage() {
                 ok={data.status.databaseUrl}
               />
               <StatusRow label="QuiverQuant API key" ok={data.status.quiverQuant} />
-              <StatusRow
-                label="SnapTrade (Robinhood OAuth)"
-                ok={data.status.snapTrade}
-              />
               <StatusRow label="Database tables exist" ok={data.tables.ok} />
               <StatusRow label="AI Insights ready" ok={data.insightsReady} />
             </>
