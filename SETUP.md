@@ -94,4 +94,6 @@ Or manually: Vercel → **Settings** → **Domains** → add `tradethehill.com` 
 | `@` | A | `76.76.21.21` |
 | `www` | CNAME | `cname.vercel-dns.com` |
 
+**GoDaddy:** see [docs/godaddy-dns-tradethehill.md](docs/godaddy-dns-tradethehill.md) for click-by-click steps.
+
 Redirect `www` → apex in Vercel Domains. SSL is automatic once DNS validates.
