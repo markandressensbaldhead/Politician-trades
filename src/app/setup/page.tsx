@@ -62,13 +62,15 @@ export default function SetupPage() {
     loadStatus();
   }, []);
 
-  async function runSetup() {
+  async function runSetup(mode: "schema" | "full" = "full") {
     setRunning(true);
     setResult(null);
     setError(null);
 
     try {
-      const response = await fetch("/api/setup", {
+      const url =
+        mode === "schema" ? "/api/setup?mode=schema" : "/api/setup";
+      const response = await fetch(url, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${cronSecret}`,
@@ -82,9 +84,13 @@ export default function SetupPage() {
       }
 
       setResult(
-        json.insightsReady
-          ? "Setup complete. AI Insights is ready."
-          : "Setup ran, but some items still need attention."
+        json.tables?.ok
+          ? mode === "schema"
+            ? "Database tables created successfully."
+            : json.insightsReady
+              ? "Setup complete. AI Insights is ready."
+              : "Setup ran, but some items still need attention."
+          : "Setup ran, but some tables are still missing."
       );
       await loadStatus();
     } catch (setupError) {
@@ -177,18 +183,27 @@ export default function SetupPage() {
           </div>
 
           <Button
-            onClick={runSetup}
+            onClick={() => runSetup("schema")}
             disabled={running || !cronSecret}
             className="w-full font-mono text-xs uppercase tracking-wider"
           >
             {running ? (
               <>
                 <Loader2 className="h-4 w-4 animate-spin" />
-                Running setup...
+                Creating tables...
               </>
             ) : (
-              "Initialize Database & Verify AI Insights"
+              "Create Database Tables"
             )}
+          </Button>
+
+          <Button
+            onClick={() => runSetup("full")}
+            disabled={running || !cronSecret}
+            variant="outline"
+            className="w-full font-mono text-xs uppercase tracking-wider"
+          >
+            Initialize Database & Verify AI Insights
           </Button>
 
           {result && <p className="text-sm text-gain">{result}</p>}

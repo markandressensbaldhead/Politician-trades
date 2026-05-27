@@ -4,6 +4,7 @@ import {
   checkDatabaseTables,
   getSetupStatus,
   runFullSetup,
+  runSchemaSetup,
 } from "@/lib/setup";
 
 function isAuthorized(request: Request): boolean {
@@ -38,7 +39,19 @@ export async function POST(request: Request) {
     );
   }
 
+  const mode = new URL(request.url).searchParams.get("mode");
+
   try {
+    if (mode === "schema") {
+      const result = await runSchemaSetup();
+
+      return NextResponse.json({
+        success: true,
+        insightsReady: result.status.readyForInsights && result.tables.ok,
+        ...result,
+      });
+    }
+
     const result = await runFullSetup();
 
     return NextResponse.json({

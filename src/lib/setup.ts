@@ -145,6 +145,31 @@ export async function runSupabaseSchema(): Promise<{ executed: number }> {
   return { executed };
 }
 
+export async function runSchemaSetup(): Promise<{
+  status: SetupStatus;
+  tables: Awaited<ReturnType<typeof checkDatabaseTables>>;
+  schema: { executed: number };
+}> {
+  const status = getSetupStatus();
+
+  if (!status.supabase) {
+    throw new Error(
+      `Missing required configuration: ${status.missing.join(", ")}`
+    );
+  }
+
+  if (!getDatabaseUrl()) {
+    throw new Error(
+      "DATABASE_URL is not configured. Connect Supabase in Vercel or add POSTGRES_URL."
+    );
+  }
+
+  const schema = await runSupabaseSchema();
+  const tables = await checkDatabaseTables();
+
+  return { status, tables, schema };
+}
+
 export async function runFullSetup(): Promise<{
   status: SetupStatus;
   tables: Awaited<ReturnType<typeof checkDatabaseTables>>;
@@ -158,17 +183,11 @@ export async function runFullSetup(): Promise<{
     );
   }
 
-  let schema: { executed: number } | undefined;
+  const { schema, tables } = await runSchemaSetup();
 
-  if (getDatabaseUrl()) {
-    schema = await runSupabaseSchema();
-  }
-
-  const tables = await checkDatabaseTables();
-
-  if (!tables.ok && !getDatabaseUrl()) {
+  if (!tables.ok) {
     throw new Error(
-      "Database tables are missing. Add DATABASE_URL to Vercel and run setup again, or paste supabase/schema.sql into the Supabase SQL Editor."
+      "Database tables are missing after schema setup. Check Supabase logs or paste supabase/schema.sql into the SQL Editor."
     );
   }
 
