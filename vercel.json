@@ -8,5 +8,29 @@
       "path": "/api/sync-sec-filings",
       "schedule": "0 7 * * *"
     }
+  ],
+  "redirects": [
+    {
+      "source": "/:path*",
+      "has": [
+        {
+          "type": "host",
+          "value": "politician-trades.vercel.app"
+        }
+      ],
+      "destination": "https://tradethehill.org/:path*",
+      "permanent": true
+    },
+    {
+      "source": "/:path*",
+      "has": [
+        {
+          "type": "host",
+          "value": "politician-trades-markandressensbaldheads-projects.vercel.app"
+        }
+      ],
+      "destination": "https://tradethehill.org/:path*",
+      "permanent": true
+    }
   ]
 }
