@@ -227,11 +227,30 @@ ${input.tradeHistoryText}
   );
 }
 
-export function parseAlphaBriefJson(raw: string): import("@/types/alpha-brief").AlphaBriefContent {
+function extractJsonPayload(raw: string): string {
   const trimmed = raw.trim();
-  const jsonText = trimmed.startsWith("{")
-    ? trimmed
-    : trimmed.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/, "");
+
+  if (trimmed.startsWith("{")) {
+    return trimmed;
+  }
+
+  const fenced = trimmed.match(/```(?:json)?\s*([\s\S]*?)```/i);
+  if (fenced?.[1]) {
+    return fenced[1].trim();
+  }
+
+  const start = trimmed.indexOf("{");
+  const end = trimmed.lastIndexOf("}");
+
+  if (start >= 0 && end > start) {
+    return trimmed.slice(start, end + 1);
+  }
+
+  return trimmed;
+}
+
+export function parseAlphaBriefJson(raw: string): import("@/types/alpha-brief").AlphaBriefContent {
+  const jsonText = extractJsonPayload(raw);
 
   let parsed: unknown;
 

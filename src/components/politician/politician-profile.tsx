@@ -18,6 +18,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { PoliticianProfileData, UnifiedCongressTrade } from "@/types";
+import { PoliticianAlphaBrief } from "@/types/alpha-brief";
 import {
   getCommitteeOverlapFlags,
   getDisclosureLagDays,
@@ -28,6 +29,7 @@ import { cn, formatCurrency, formatPercent } from "@/lib/utils";
 
 interface PoliticianProfileProps {
   politician: PoliticianProfileData;
+  initialAlphaBrief?: PoliticianAlphaBrief | null;
 }
 
 function getInitials(name: string) {
@@ -39,7 +41,10 @@ function getInitials(name: string) {
     .toUpperCase();
 }
 
-export function PoliticianProfile({ politician }: PoliticianProfileProps) {
+export function PoliticianProfile({
+  politician,
+  initialAlphaBrief = null,
+}: PoliticianProfileProps) {
   const unifiedTrades: UnifiedCongressTrade[] = politician.trades.map(
     (trade) => ({
       id: trade.id,
@@ -219,6 +224,7 @@ export function PoliticianProfile({ politician }: PoliticianProfileProps) {
           <ExecutiveAlphaBrief
             politicianId={politician.id}
             politicianName={politician.name}
+            initialBrief={initialAlphaBrief}
           />
         </div>
       )}

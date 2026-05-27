@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 
+import { getOrGenerateAlphaBrief } from "@/lib/alpha-brief";
 import { getOrGenerateInsight } from "@/lib/insights";
 
 interface RouteParams {
@@ -8,7 +9,9 @@ interface RouteParams {
 
 export async function GET(request: Request, { params }: RouteParams) {
   const politicianId = decodeURIComponent(params.politician);
-  const refresh = new URL(request.url).searchParams.get("refresh") === "1";
+  const url = new URL(request.url);
+  const refresh = url.searchParams.get("refresh") === "1";
+  const alpha = url.searchParams.get("alpha") === "1";
 
   if (!politicianId) {
     return NextResponse.json(
@@ -18,6 +21,14 @@ export async function GET(request: Request, { params }: RouteParams) {
   }
 
   try {
+    if (alpha) {
+      const brief = await getOrGenerateAlphaBrief(politicianId, {
+        forceRefresh: refresh,
+      });
+
+      return NextResponse.json(brief);
+    }
+
     const insight = await getOrGenerateInsight(politicianId, {
       forceRefresh: refresh,
     });

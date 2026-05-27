@@ -1,6 +1,7 @@
 import {
   ALPHA_BRIEF_WINDOW_DAYS,
   buildAlphaContextBlock,
+  buildFallbackAlphaBrief,
   filterTradesInWindow,
 } from "@/lib/alpha-brief-analytics";
 import { generateAlphaBrief, parseAlphaBriefJson } from "@/lib/claude";
@@ -17,7 +18,7 @@ import {
   profileTradesToCongressRows,
   syncPoliticianTradesIfMissing,
 } from "@/lib/supabase/trades";
-import { PoliticianAlphaBrief } from "@/types/alpha-brief";
+import { AlphaBriefContent, PoliticianAlphaBrief } from "@/types/alpha-brief";
 import { CongressTradeRow } from "@/types/supabase";
 
 function uniqueIds(...values: Array<string | undefined>): string[] {
@@ -71,6 +72,45 @@ async function ensureTradesForAnalysis(politicianId: string) {
   return { profile, trades };
 }
 
+async function persistAlphaBrief(
+  politicianId: string,
+  politicianName: string,
+  brief: AlphaBriefContent,
+  tradesInWindow: number
+): Promise<PoliticianAlphaBrief> {
+  const payload = {
+    politicianId,
+    politicianName,
+    brief,
+    tradesInWindow,
+    windowDays: ALPHA_BRIEF_WINDOW_DAYS,
+    generatedAt: new Date().toISOString(),
+    cached: false,
+  };
+
+  try {
+    const saved = await saveAlphaBrief({
+      politicianId,
+      politicianName,
+      brief,
+      tradesInWindow,
+      windowDays: ALPHA_BRIEF_WINDOW_DAYS,
+    });
+
+    return {
+      politicianId: saved.politicianId,
+      politicianName: saved.politicianName,
+      brief: saved.brief,
+      tradesInWindow: saved.tradesInWindow,
+      windowDays: saved.windowDays,
+      generatedAt: saved.generatedAt,
+      cached: false,
+    };
+  } catch {
+    return payload;
+  }
+}
+
 export async function getOrGenerateAlphaBrief(
   politicianId: string,
   options?: { forceRefresh?: boolean }
@@ -113,6 +153,22 @@ export async function getOrGenerateAlphaBrief(
   const tradesForPrompt =
     recentTrades.length > 0 ? recentTrades : trades.slice(0, 15);
 
+  const fallback = buildFallbackAlphaBrief({
+    politicianName: profile.name,
+    committee: profile.committee,
+    trades,
+    windowDays: ALPHA_BRIEF_WINDOW_DAYS,
+  });
+
+  if (!process.env.ANTHROPIC_API_KEY) {
+    return persistAlphaBrief(
+      politicianId,
+      profile.name,
+      fallback,
+      recentTrades.length
+    );
+  }
+
   const contextBlock = buildAlphaContextBlock(
     trades,
     profile.committee,
@@ -127,46 +183,33 @@ export async function getOrGenerateAlphaBrief(
     tradesForPrompt
   );
 
-  const rawJson = await generateAlphaBrief({
-    politicianName: profile.name,
-    party: profile.party,
-    chamber: profile.chamber,
-    committee: profile.committee,
-    contextBlock,
-    tradeHistoryText,
-    tradesInWindow: recentTrades.length,
-    windowDays: ALPHA_BRIEF_WINDOW_DAYS,
-  });
-
-  const brief = parseAlphaBriefJson(rawJson);
+  let brief = fallback;
 
   try {
-    const saved = await saveAlphaBrief({
-      politicianId,
+    const rawJson = await generateAlphaBrief({
       politicianName: profile.name,
-      brief,
+      party: profile.party,
+      chamber: profile.chamber,
+      committee: profile.committee,
+      contextBlock,
+      tradeHistoryText,
       tradesInWindow: recentTrades.length,
       windowDays: ALPHA_BRIEF_WINDOW_DAYS,
     });
 
-    return {
-      politicianId: saved.politicianId,
-      politicianName: saved.politicianName,
-      brief: saved.brief,
-      tradesInWindow: saved.tradesInWindow,
-      windowDays: saved.windowDays,
-      generatedAt: saved.generatedAt,
-      cached: false,
-    };
+    brief = parseAlphaBriefJson(rawJson);
+
+    if (brief.deploymentIdeas.length === 0) {
+      brief = fallback;
+    }
   } catch {
-    return {
-      politicianId,
-      politicianName: profile.name,
-      brief,
-      tradesInWindow: recentTrades.length,
-      windowDays: ALPHA_BRIEF_WINDOW_DAYS,
-      generatedAt: new Date().toISOString(),
-      cached: false,
-    };
+    brief = fallback;
   }
+
+  return persistAlphaBrief(
+    politicianId,
+    profile.name,
+    brief,
+    recentTrades.length
+  );
 }

@@ -51,11 +51,15 @@ export async function getStoredAlphaBrief(
   }
 
   const row = data as AlphaBriefRow;
+  const brief =
+    typeof row.brief === "string"
+      ? (JSON.parse(row.brief) as AlphaBriefContent)
+      : row.brief;
 
   return {
     politicianId: row.politician_id,
     politicianName: row.politician_name ?? "",
-    brief: row.brief,
+    brief,
     tradesInWindow: row.trades_in_window,
     windowDays: row.window_days,
     generatedAt: row.generated_at,
@@ -95,11 +99,15 @@ export async function saveAlphaBrief(input: {
   }
 
   const row = data as AlphaBriefRow;
+  const brief =
+    typeof row.brief === "string"
+      ? (JSON.parse(row.brief) as AlphaBriefContent)
+      : row.brief;
 
   return {
     politicianId: row.politician_id,
     politicianName: row.politician_name ?? input.politicianName,
-    brief: row.brief,
+    brief,
     tradesInWindow: row.trades_in_window,
     windowDays: row.window_days,
     generatedAt: row.generated_at,

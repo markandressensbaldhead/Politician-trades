@@ -1,3 +1,7 @@
+import {
+  AlphaBriefContent,
+  DeploymentDirection,
+} from "@/types/alpha-brief";
 import { CongressTradeRow } from "@/types/supabase";
 
 export const ALPHA_BRIEF_WINDOW_DAYS = 30;
@@ -109,4 +113,90 @@ export function buildAlphaContextBlock(
   }
 
   return lines.join("\n");
+}
+
+function directionForTrade(trade: CongressTradeRow): DeploymentDirection {
+  if (trade.trade_type === "Purchase") return "Long";
+  if (trade.trade_type === "Sale") return "Short";
+  return "Watch";
+}
+
+export function buildFallbackAlphaBrief(input: {
+  politicianName: string;
+  committee?: string;
+  trades: CongressTradeRow[];
+  windowDays?: number;
+}): AlphaBriefContent {
+  const windowDays = input.windowDays ?? ALPHA_BRIEF_WINDOW_DAYS;
+  const recent = filterTradesInWindow(input.trades, windowDays);
+  const source = recent.length > 0 ? recent : input.trades.slice(0, 10);
+  const purchases = source.filter((trade) => trade.trade_type === "Purchase");
+  const sales = source.filter((trade) => trade.trade_type !== "Purchase");
+
+  const ranked = [...source].sort((a, b) => {
+    const aScore = a.excess_return ?? -999;
+    const bScore = b.excess_return ?? -999;
+    if (bScore !== aScore) return bScore - aScore;
+    return b.trade_date.localeCompare(a.trade_date);
+  });
+
+  const topSector = [...source.reduce((map, trade) => {
+    if (!trade.sector) return map;
+    map.set(trade.sector, (map.get(trade.sector) ?? 0) + 1);
+    return map;
+  }, new Map<string, number>())].sort((a, b) => b[1] - a[1])[0];
+
+  const deploymentIdeas = ranked.slice(0, 4).map((trade) => {
+    const direction = directionForTrade(trade);
+    const excess =
+      trade.excess_return != null
+        ? `${trade.excess_return >= 0 ? "+" : ""}${trade.excess_return.toFixed(2)}% vs SPY`
+        : "benchmark data unavailable";
+
+    return {
+      ticker: trade.ticker.toUpperCase(),
+      direction,
+      conviction:
+        trade.excess_return != null && trade.excess_return > 5
+          ? ("High" as const)
+          : ("Medium" as const),
+      rationale: `${input.politicianName} ${trade.trade_type.toLowerCase()}d ${trade.amount_range ?? "undisclosed amount"} on ${trade.trade_date} (${excess}).`,
+      catalyst: input.committee
+        ? `${input.committee} committee overlap — verify sector catalyst`
+        : "Flow-led",
+      sizeHint:
+        direction === "Long"
+          ? "Starter long aligned to disclosed purchase size"
+          : direction === "Short"
+            ? "Hedge leg or pair vs sector ETF"
+            : "Watchlist until next filing",
+    };
+  });
+
+  const headline =
+    recent.length > 0
+      ? `${input.politicianName}'s last ${windowDays} days skew ${purchases.length >= sales.length ? "net buying" : "net selling"} — ${ranked[0]?.ticker ?? "flow"} leads the book`
+      : `No filings in the last ${windowDays} days — lean on most recent disclosed activity`;
+
+  return {
+    headline,
+    thesis:
+      recent.length > 0
+        ? `Over the last ${windowDays} days, ${input.politicianName} filed ${recent.length} transactions (${purchases.length} purchases, ${sales.length} sales). The highest-signal name is ${ranked[0]?.ticker ?? "unclear"} based on recency and excess return where available.`
+        : `${input.politicianName} has not filed new trades inside the ${windowDays}-day window. The ideas below reflect the latest available disclosures — treat timing as stale until a fresh filing lands.`,
+    deploymentIdeas,
+    sectorTheme: topSector
+      ? `${topSector[0]} dominates recent flow (${topSector[1]} trades) — consider a sector ETF expression if single-name risk is too high.`
+      : "Sector data is sparse — express the thesis through the individual names below.",
+    timingEdge:
+      recent.length > 0
+        ? "Disclosure dates are within the last month — signal is relatively fresh. Enter in tranches as price confirms the flow direction."
+        : "Signal freshness is weak. Scale in only after a new PTR filing or price confirmation.",
+    riskManagement:
+      "Congressional flow can reverse without warning. Cap single-name exposure, use stops on the underlying, and re-check filings weekly.",
+    playbook:
+      recent.length > 0
+        ? `Deploy capital by mirroring the largest recent purchase tickers with starter positions (25–50 bps of portfolio), add on confirmation, and hedge sector risk with an inverse or paired ETF if the book is one-directional. Monitor ${input.politicianName}'s next filing — that is your exit signal if flow reverses.`
+        : `Without fresh 30-day flow, keep powder dry or run a small watchlist position in the most recent buy names only. Wait for the next disclosure before sizing up.`,
+  };
 }

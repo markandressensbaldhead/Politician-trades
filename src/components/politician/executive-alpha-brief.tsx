@@ -22,6 +22,7 @@ import { cn, formatDate } from "@/lib/utils";
 interface ExecutiveAlphaBriefProps {
   politicianId: string;
   politicianName: string;
+  initialBrief?: PoliticianAlphaBrief | null;
 }
 
 const DIRECTION_STYLES: Record<
@@ -37,9 +38,10 @@ const DIRECTION_STYLES: Record<
 export function ExecutiveAlphaBrief({
   politicianId,
   politicianName,
+  initialBrief = null,
 }: ExecutiveAlphaBriefProps) {
-  const [brief, setBrief] = useState<PoliticianAlphaBrief | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [brief, setBrief] = useState<PoliticianAlphaBrief | null>(initialBrief);
+  const [loading, setLoading] = useState(!initialBrief);
   const [error, setError] = useState<string | null>(null);
 
   const fetchBrief = useCallback(
@@ -47,18 +49,29 @@ export function ExecutiveAlphaBrief({
       setLoading(true);
       setError(null);
 
-      try {
-        const query = refresh ? "?refresh=1" : "";
-        const response = await fetch(
-          `/api/alpha-brief/${encodeURIComponent(politicianId)}${query}`
-        );
-        const data = await response.json();
+      const query = refresh ? "?refresh=1" : "";
+      const alphaQuery = refresh ? "?alpha=1&refresh=1" : "?alpha=1";
+      const endpoints = [
+        `/api/alpha-brief/${encodeURIComponent(politicianId)}${query}`,
+        `/api/insights/${encodeURIComponent(politicianId)}${alphaQuery}`,
+      ];
 
-        if (!response.ok) {
-          throw new Error(data.error ?? "Failed to load alpha brief");
+      try {
+        let lastError = "Failed to load alpha brief";
+
+        for (const endpoint of endpoints) {
+          const response = await fetch(endpoint);
+          const data = await response.json();
+
+          if (response.ok) {
+            setBrief(data as PoliticianAlphaBrief);
+            return;
+          }
+
+          lastError = data.error ?? lastError;
         }
 
-        setBrief(data as PoliticianAlphaBrief);
+        throw new Error(lastError);
       } catch (fetchError) {
         setError(
           fetchError instanceof Error
@@ -73,8 +86,10 @@ export function ExecutiveAlphaBrief({
   );
 
   useEffect(() => {
-    void fetchBrief(false);
-  }, [fetchBrief]);
+    if (!initialBrief) {
+      void fetchBrief(false);
+    }
+  }, [fetchBrief, initialBrief]);
 
   return (
     <section
