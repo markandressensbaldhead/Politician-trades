@@ -156,8 +156,8 @@ export function SiteFooter() {
             {COPY.disclosureDisclaimer}
           </p>
           <p className="text-xs text-muted-foreground">
-            Live disclosures via Unusual Whales (primary) and QuiverQuant
-            (fallback).
+            Live disclosures via Unusual Whales, FMP, QuiverQuant, Capitol Trades,
+            and official House Clerk PTR filings.
           </p>
         </div>
       </div>

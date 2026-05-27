@@ -21,6 +21,7 @@ interface SetupResponse {
     supabaseServiceRole: boolean;
     anthropic: boolean;
     unusualWhales: boolean;
+    fmp: boolean;
     quiverQuant: boolean;
     congressData: boolean;
     databaseUrl: boolean;
@@ -163,7 +164,11 @@ export default function SetupPage() {
                 ok={data.status.unusualWhales}
               />
               <StatusRow
-                label="QuiverQuant API key (fallback)"
+                label="FMP API key (House + Senate disclosures)"
+                ok={data.status.fmp}
+              />
+              <StatusRow
+                label="QuiverQuant API key (returns + alt data)"
                 ok={data.status.quiverQuant}
               />
               <StatusRow

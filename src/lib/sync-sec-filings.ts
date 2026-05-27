@@ -62,6 +62,7 @@ async function getPoliticiansForSecSync(): Promise<PoliticianSecTarget[]> {
 
   const hasLiveProvider =
     process.env.UNUSUAL_WHALES_API_KEY?.trim() ||
+    process.env.FMP_API_KEY?.trim() ||
     process.env.QUIVERQUANT_API_KEY?.trim();
 
   if (hasLiveProvider) {

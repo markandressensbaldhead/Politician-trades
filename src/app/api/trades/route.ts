@@ -12,7 +12,7 @@ export async function GET() {
     return NextResponse.json(
       {
         error:
-          "Configure UNUSUAL_WHALES_API_KEY or QUIVERQUANT_API_KEY for live trade data",
+          "Configure UNUSUAL_WHALES_API_KEY, FMP_API_KEY, or QUIVERQUANT_API_KEY for live trade data",
       },
       { status: 503 }
     );

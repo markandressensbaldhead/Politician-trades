@@ -10,12 +10,14 @@ import {
 } from "@/lib/supabase/env";
 
 import { isUnusualWhalesConfigured } from "@/lib/unusual-whales";
+import { isFmpConfigured } from "@/lib/fmp-congress";
 
 export interface SetupStatus {
   supabase: boolean;
   supabaseServiceRole: boolean;
   anthropic: boolean;
   unusualWhales: boolean;
+  fmp: boolean;
   quiverQuant: boolean;
   congressData: boolean;
   databaseUrl: boolean;
@@ -33,8 +35,9 @@ export function getSetupStatus(): SetupStatus {
   const supabaseServiceRole = Boolean(getSupabaseServiceRoleKey());
   const anthropic = Boolean(process.env.ANTHROPIC_API_KEY);
   const unusualWhales = isUnusualWhalesConfigured();
+  const fmp = isFmpConfigured();
   const quiverQuant = Boolean(process.env.QUIVERQUANT_API_KEY);
-  const congressData = unusualWhales || quiverQuant;
+  const congressData = unusualWhales || fmp || quiverQuant;
   const databaseUrl = Boolean(getDatabaseUrl());
   const cronSecret = Boolean(process.env.CRON_SECRET);
   const resend = Boolean(process.env.RESEND_API_KEY);
@@ -52,6 +55,7 @@ export function getSetupStatus(): SetupStatus {
     supabaseServiceRole,
     anthropic,
     unusualWhales,
+    fmp,
     quiverQuant,
     congressData,
     databaseUrl,

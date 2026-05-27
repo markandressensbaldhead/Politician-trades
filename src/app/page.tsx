@@ -1,5 +1,6 @@
 import { LeaderboardPanel } from "@/components/leaderboard/leaderboard-panel";
 import { CongressStatsPanel } from "@/components/dashboard/congress-stats-panel";
+import { OfficialPtrPanel } from "@/components/dashboard/official-ptr-panel";
 import { DiscoveryRail } from "@/components/dashboard/discovery-rail";
 import { EdgeLeadersPanel } from "@/components/dashboard/edge-leaders-panel";
 import { HighConvictionFeed } from "@/components/dashboard/high-conviction-feed";
@@ -32,6 +33,7 @@ import {
   fetchCongressUnusualTradeStats,
   isUnusualWhalesConfigured,
 } from "@/lib/unusual-whales";
+import { fetchHousePtrFilings } from "@/lib/house-clerk";
 
 export default async function HomePage() {
   const [
@@ -48,6 +50,7 @@ export default async function HomePage() {
     isUnusualWhalesConfigured()
       ? await fetchCongressUnusualTradeStats().catch(() => null)
       : null;
+  const housePtrFilings = await fetchHousePtrFilings({ limit: 6 });
 
   const pulse = getMarketPulse(allTrades);
   const trending = getTrendingTickers(allTrades, 12);
@@ -119,6 +122,7 @@ export default async function HomePage() {
       />
 
       {congressStats && <CongressStatsPanel stats={congressStats} />}
+      <OfficialPtrPanel filings={housePtrFilings} />
 
       {tradeOfTheDay && <TradeOfTheDaySpotlight pick={tradeOfTheDay} />}
 

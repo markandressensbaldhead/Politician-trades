@@ -6,13 +6,17 @@ export function getProviderLabel(provider: CongressDataProvider): string {
       return "Unusual Whales";
     case "quiverquant":
       return "QuiverQuant";
+    case "fmp":
+      return "FMP";
+    case "mixed":
+      return "Multi-source";
     default:
       return "Demo";
   }
 }
 
 export function getLiveDataSetupMessage(): string {
-  return "Demo data — add UNUSUAL_WHALES_API_KEY (recommended) or QUIVERQUANT_API_KEY for live congressional trades.";
+  return "Demo data — add UNUSUAL_WHALES_API_KEY (primary), FMP_API_KEY, or QUIVERQUANT_API_KEY for live congressional trades.";
 }
 
 export function getProviderAttribution(provider: CongressDataProvider): string | null {
@@ -21,7 +25,15 @@ export function getProviderAttribution(provider: CongressDataProvider): string |
       return "Congressional trade data powered by Unusual Whales.";
     case "quiverquant":
       return "Congressional trade data powered by QuiverQuant.";
+    case "fmp":
+      return "Congressional trade data powered by Financial Modeling Prep.";
+    case "mixed":
+      return "Congressional trade data merged from Unusual Whales, FMP, QuiverQuant, and Capitol Trades.";
     default:
       return null;
   }
+}
+
+export function getDataSourceStackMessage(): string {
+  return "Live disclosures via Unusual Whales, FMP, QuiverQuant, Capitol Trades, and official House Clerk PTR filings.";
 }

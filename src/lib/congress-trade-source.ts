@@ -1,5 +1,19 @@
 import { UnifiedCongressTrade } from "@/types";
 import { getDisclosureLagDays } from "@/lib/trade-analytics";
+import {
+  capitolRecordToUnified,
+  enrichTradesWithCapitolTrades,
+  enrichTradesWithQuiverReturns,
+  mergeSupplementalTrades,
+} from "@/lib/congress-enrichment";
+import {
+  fetchCapitolTradesRecent,
+  isCapitolTradesConfigured,
+} from "@/lib/capitol-trades";
+import {
+  fetchFmpCongressTrades,
+  isFmpConfigured,
+} from "@/lib/fmp-congress";
 import { slugify } from "@/lib/quiver-mappers";
 import { fetchCongressTrades, QuiverCongressTrade } from "@/lib/quiverquant";
 import {
@@ -14,12 +28,45 @@ import {
 } from "@/lib/unusual-whales";
 import { TradeInsertRow, buildTradeKey } from "@/lib/supabase/trades";
 
-export type CongressDataProvider = "unusual_whales" | "quiverquant" | "none";
+export type CongressDataProvider =
+  | "unusual_whales"
+  | "quiverquant"
+  | "fmp"
+  | "mixed"
+  | "none";
 
 export function getPreferredCongressProvider(): CongressDataProvider {
   if (isUnusualWhalesConfigured()) return "unusual_whales";
+  if (isFmpConfigured()) return "fmp";
   if (process.env.QUIVERQUANT_API_KEY?.trim()) return "quiverquant";
   return "none";
+}
+
+function unifiedToRow(trade: UnifiedCongressTrade): TradeInsertRow {
+  return {
+    trade_key: buildTradeKey({
+      politicianId: trade.politicianId,
+      ticker: trade.ticker,
+      tradeDate: trade.tradeDate,
+      tradeType: trade.type,
+      amountRange: trade.amount,
+    }),
+    politician_id: trade.politicianId,
+    politician_name: trade.politicianName,
+    ticker: trade.ticker,
+    trade_type: trade.type,
+    amount_range: trade.amount,
+    trade_date: trade.tradeDate,
+    filing_date: trade.filingDate,
+    sector: trade.sector || null,
+    excess_return: trade.excessReturn,
+    sec_data: {
+      source: trade.dataSource ?? "unknown",
+      uw_politician_id: trade.uwPoliticianId ?? null,
+      notes: trade.filingNotes ?? null,
+      is_active: trade.isActiveFiling ?? null,
+    },
+  };
 }
 
 function quiverToUnified(trade: QuiverCongressTrade, index: number): UnifiedCongressTrade {
@@ -91,73 +138,95 @@ export function unusualWhalesTradeToUnified(
 }
 
 export function unusualWhalesTradeToRow(trade: UnusualWhalesTrade): TradeInsertRow {
-  const politicianId = resolvePoliticianId(trade);
-  const tradeType = mapUnusualWhalesTradeType(trade.txn_type);
-
-  return {
-    trade_key: buildTradeKey({
-      politicianId,
-      ticker: trade.ticker.toUpperCase(),
-      tradeDate: trade.transaction_date,
-      tradeType,
-      amountRange: trade.amounts,
-    }),
-    politician_id: politicianId,
-    politician_name: trade.name,
-    ticker: trade.ticker.toUpperCase(),
-    trade_type: tradeType,
-    amount_range: trade.amounts,
-    trade_date: trade.transaction_date,
-    filing_date: trade.filed_at_date,
-    sector: null,
-    excess_return: null,
-    sec_data: {
-      source: "unusual_whales",
-      uw_politician_id: trade.politician_id,
-      notes: trade.notes ?? null,
-      issuer: trade.issuer ?? null,
-      reporter: trade.reporter ?? null,
-      is_active: trade.is_active ?? null,
-      member_type: trade.member_type ?? null,
-    },
-  };
+  return unifiedToRow(unusualWhalesTradeToUnified(trade, 0));
 }
 
 export function quiverTradeToRowFromSource(trade: QuiverCongressTrade): TradeInsertRow {
-  const politicianId = trade.BioGuideID || slugify(trade.Representative);
-  const tradeType =
-    trade.Transaction.toLowerCase().includes("purchase") ||
-    trade.Transaction.toLowerCase().includes("buy")
-      ? "Purchase"
-      : "Sale";
-
-  return {
-    trade_key: buildTradeKey({
-      politicianId,
-      ticker: trade.Ticker,
-      tradeDate: trade.TransactionDate,
-      tradeType,
-      amountRange: trade.Range,
-    }),
-    politician_id: politicianId,
-    politician_name: trade.Representative,
-    ticker: trade.Ticker,
-    trade_type: tradeType,
-    amount_range: trade.Range,
-    trade_date: trade.TransactionDate,
-    filing_date: trade.ReportDate,
-    sector: trade.TickerType ?? null,
-    excess_return: trade.ExcessReturn ?? null,
-    sec_data: {
-      source: "quiverquant",
-    },
-  };
+  return unifiedToRow(quiverToUnified(trade, 0));
 }
 
 function monthsAgoIso(months: number): string {
   const date = new Date();
   date.setMonth(date.getMonth() - months);
   return date.toISOString().slice(0, 10);
+}
+
+async function loadQuiverTrades(): Promise<QuiverCongressTrade[]> {
+  const quiverKey = process.env.QUIVERQUANT_API_KEY?.trim();
+  if (!quiverKey) return [];
+
+  try {
+    return await fetchCongressTrades(quiverKey);
+  } catch (error) {
+    console.error(
+      "QuiverQuant congress trade fetch failed:",
+      error instanceof Error ? error.message : error
+    );
+    return [];
+  }
+}
+
+async function enrichCongressTrades(
+  trades: UnifiedCongressTrade[],
+  primaryProvider: CongressDataProvider
+): Promise<{ trades: UnifiedCongressTrade[]; provider: CongressDataProvider }> {
+  let enriched = trades;
+  const supplementalSources: CongressDataProvider[] =
+    primaryProvider === "none" ? [] : [primaryProvider];
+
+  const quiverTrades = await loadQuiverTrades();
+  if (quiverTrades.length > 0) {
+    enriched = enrichTradesWithQuiverReturns(enriched, quiverTrades);
+    if (primaryProvider !== "quiverquant") {
+      supplementalSources.push("quiverquant");
+    }
+  }
+
+  if (isCapitolTradesConfigured()) {
+    const capitolRecords = await fetchCapitolTradesRecent({
+      pageSize: 100,
+      maxPages: 4,
+    }).catch(() => []);
+
+    if (capitolRecords.length > 0) {
+      enriched = enrichTradesWithCapitolTrades(enriched, capitolRecords);
+
+      if (primaryProvider === "none" || enriched.length < 50) {
+        const capitolUnified = capitolRecords.map(capitolRecordToUnified);
+        enriched = mergeSupplementalTrades(enriched, capitolUnified);
+      }
+    }
+  }
+
+  if (isFmpConfigured()) {
+    const fmpTrades = await fetchFmpCongressTrades({
+      maxPages: 6,
+      lookbackMonths: 18,
+    }).catch(() => []);
+
+    if (fmpTrades.length > 0) {
+      if (primaryProvider === "none" || enriched.length < 50) {
+        enriched = mergeSupplementalTrades(enriched, fmpTrades);
+      } else {
+        enriched = mergeSupplementalTrades(enriched, fmpTrades.slice(0, 250));
+      }
+      supplementalSources.push("fmp");
+    }
+  }
+
+  const uniqueSources = [...new Set(supplementalSources)];
+  const provider: CongressDataProvider =
+    uniqueSources.length > 1
+      ? "mixed"
+      : uniqueSources[0] === "fmp"
+        ? "fmp"
+        : uniqueSources[0] === "quiverquant"
+          ? "quiverquant"
+          : uniqueSources[0] === "unusual_whales"
+            ? "unusual_whales"
+            : "none";
+
+  return { trades: enriched, provider };
 }
 
 export async function fetchLiveCongressTrades(options: {
@@ -178,14 +247,13 @@ export async function fetchLiveCongressTrades(options: {
       ]);
 
       if (rawTrades.length > 0) {
-        return {
-          trades: rawTrades.map((trade, index) => {
-            const slug = resolvePoliticianId(trade);
-            const meta = metaIndex.get(slug) ?? metaIndex.get(trade.politician_id);
-            return unusualWhalesTradeToUnified(trade, index, meta);
-          }),
-          provider: "unusual_whales",
-        };
+        const trades = rawTrades.map((trade, index) => {
+          const slug = resolvePoliticianId(trade);
+          const meta = metaIndex.get(slug) ?? metaIndex.get(trade.politician_id);
+          return unusualWhalesTradeToUnified(trade, index, meta);
+        });
+
+        return enrichCongressTrades(trades, "unusual_whales");
       }
     } catch (error) {
       console.error(
@@ -200,10 +268,7 @@ export async function fetchLiveCongressTrades(options: {
     try {
       const live = await fetchCongressTrades(quiverKey);
       if (live.length > 0) {
-        return {
-          trades: live.map(quiverToUnified),
-          provider: "quiverquant",
-        };
+        return enrichCongressTrades(live.map(quiverToUnified), "quiverquant");
       }
     } catch (error) {
       console.error(
@@ -213,7 +278,25 @@ export async function fetchLiveCongressTrades(options: {
     }
   }
 
-  return { trades: [], provider: "none" };
+  if (isFmpConfigured()) {
+    try {
+      const fmpTrades = await fetchFmpCongressTrades({
+        maxPages: options.maxPages ?? 8,
+        lookbackMonths: options.lookbackMonths ?? 18,
+      });
+
+      if (fmpTrades.length > 0) {
+        return enrichCongressTrades(fmpTrades, "fmp");
+      }
+    } catch (error) {
+      console.error(
+        "FMP congress trade fetch failed:",
+        error instanceof Error ? error.message : error
+      );
+    }
+  }
+
+  return enrichCongressTrades([], "none");
 }
 
 export async function fetchLiveCongressTradeRows(options: {
@@ -223,44 +306,9 @@ export async function fetchLiveCongressTradeRows(options: {
   rows: TradeInsertRow[];
   provider: CongressDataProvider;
 }> {
-  if (isUnusualWhalesConfigured()) {
-    try {
-      const raw = await fetchAllPoliticianTrades({
-        maxPages: options.maxPages ?? 24,
-        transactionNewerThan: monthsAgoIso(options.lookbackMonths ?? 18),
-      });
-
-      if (raw.length > 0) {
-        return {
-          rows: raw.map(unusualWhalesTradeToRow),
-          provider: "unusual_whales",
-        };
-      }
-    } catch (error) {
-      console.error(
-        "Unusual Whales row fetch failed:",
-        error instanceof Error ? error.message : error
-      );
-    }
-  }
-
-  const quiverKey = process.env.QUIVERQUANT_API_KEY?.trim();
-  if (quiverKey) {
-    try {
-      const live = await fetchCongressTrades(quiverKey);
-      if (live.length > 0) {
-        return {
-          rows: live.map(quiverTradeToRowFromSource),
-          provider: "quiverquant",
-        };
-      }
-    } catch (error) {
-      console.error(
-        "QuiverQuant row fetch failed:",
-        error instanceof Error ? error.message : error
-      );
-    }
-  }
-
-  return { rows: [], provider: "none" };
+  const { trades, provider } = await fetchLiveCongressTrades(options);
+  return {
+    rows: trades.map(unifiedToRow),
+    provider,
+  };
 }

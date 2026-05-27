@@ -24,7 +24,11 @@ function rowToUnified(row: CongressTradeRow, index: number): UnifiedCongressTrad
       ? "unusual_whales"
       : secData?.source === "quiverquant"
         ? "quiverquant"
-        : undefined;
+        : secData?.source === "fmp"
+          ? "fmp"
+          : secData?.source === "capitol_trades"
+            ? "capitol_trades"
+            : undefined;
 
   return {
     id: row.trade_key || `${row.politician_id}-${index}`,
@@ -172,10 +176,17 @@ export async function loadUnifiedTrades(): Promise<{
     const trades = enrichTrades(fromDb);
     const provider =
       trades.some((trade) => trade.dataSource === "unusual_whales")
-        ? "unusual_whales"
-        : trades.some((trade) => trade.dataSource === "quiverquant")
-          ? "quiverquant"
-          : "none";
+        ? trades.some(
+            (trade) =>
+              trade.dataSource === "fmp" || trade.dataSource === "capitol_trades"
+          )
+          ? "mixed"
+          : "unusual_whales"
+        : trades.some((trade) => trade.dataSource === "fmp")
+          ? "fmp"
+          : trades.some((trade) => trade.dataSource === "quiverquant")
+            ? "quiverquant"
+            : "none";
 
     cache = {
       expiresAt: Date.now() + 5 * 60 * 1000,

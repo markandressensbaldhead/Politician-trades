@@ -7,6 +7,7 @@ import { FollowTickerButton } from "@/components/shared/follow-ticker-button";
 import { DisclosureLagBadge } from "@/components/shared/disclosure-lag-badge";
 import { TradeSignificanceBadge } from "@/components/shared/trade-significance-badge";
 import { PartyBadge } from "@/components/leaderboard/party-badge";
+import { TickerAltDataPanel } from "@/components/ticker/ticker-alt-data-panel";
 import { TickerHoldersPanel } from "@/components/ticker/ticker-holders-panel";
 import { TickerIntelligencePanel } from "@/components/ticker/ticker-intelligence-panel";
 import { Badge } from "@/components/ui/badge";
@@ -36,6 +37,7 @@ import {
   fetchPoliticianHoldersByTicker,
   isUnusualWhalesConfigured,
 } from "@/lib/unusual-whales";
+import { fetchQuiverTickerAltData } from "@/lib/quiver-alt-data";
 import { cn, formatDate, formatPercent } from "@/lib/utils";
 
 interface TickerPageProps {
@@ -56,6 +58,12 @@ export async function TickerPageContent({ symbol }: TickerPageProps) {
     isUnusualWhalesConfigured() && trades.length > 0
       ? await fetchPoliticianHoldersByTicker(ticker, true).catch(() => [])
       : [];
+  const altData = await fetchQuiverTickerAltData(ticker).catch(() => ({
+    insiders: [],
+    lobbying: [],
+    contracts: [],
+    configured: false,
+  }));
 
   const intelligence = buildTickerIntelligence(ticker, trades, allTrades);
   const clusters = getTradeClusters(allTrades, {
@@ -114,6 +122,13 @@ export async function TickerPageContent({ symbol }: TickerPageProps) {
           {holders.length > 0 && (
             <TickerHoldersPanel ticker={ticker} holders={holders} />
           )}
+          <TickerAltDataPanel
+            ticker={ticker}
+            insiders={altData.insiders}
+            lobbying={altData.lobbying}
+            contracts={altData.contracts}
+            configured={altData.configured}
+          />
 
           <Card className="border-border/60 bg-card/40">
             <CardHeader>

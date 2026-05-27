@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 
+import { OfficialPtrPanel } from "@/components/dashboard/official-ptr-panel";
 import { LiveTradeFeed } from "@/components/dashboard/live-trade-feed";
 import { MarketPulse } from "@/components/dashboard/market-pulse";
 import { TrendingTickers } from "@/components/dashboard/trending-tickers";
@@ -8,6 +9,7 @@ import { NextDisclosureSync } from "@/components/shared/next-disclosure-sync";
 import { BRAND, COPY } from "@/lib/brand";
 import { ExportCsvLink } from "@/components/shared/export-csv-button";
 import { getAllTrades, getRecentTrades } from "@/lib/congress-data";
+import { fetchHousePtrFilings } from "@/lib/house-clerk";
 import { getMarketPulse, getTrendingTickers } from "@/lib/trade-analytics";
 
 export const metadata: Metadata = {
@@ -17,8 +19,12 @@ export const metadata: Metadata = {
 };
 
 export default async function FeedPage() {
-  const [{ trades: allTrades, source }, { trades: recentTrades }] =
-    await Promise.all([getAllTrades(), getRecentTrades(500)]);
+  const [{ trades: allTrades, source }, { trades: recentTrades }, housePtrFilings] =
+    await Promise.all([
+      getAllTrades(),
+      getRecentTrades(500),
+      fetchHousePtrFilings({ limit: 12 }),
+    ]);
 
   const pulse = getMarketPulse(allTrades);
   const trending = getTrendingTickers(allTrades, 12);
@@ -49,6 +55,7 @@ export default async function FeedPage() {
       </div>
 
       <div className="space-y-8">
+        <OfficialPtrPanel filings={housePtrFilings} />
         <MarketPulse pulse={pulse} />
         <TrendingTickers tickers={trending} />
         <LiveTradeFeed trades={recentTrades} />

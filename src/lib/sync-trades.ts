@@ -13,6 +13,7 @@ import {
   getPreferredCongressProvider,
 } from "@/lib/congress-trade-source";
 import { isUnusualWhalesConfigured } from "@/lib/unusual-whales";
+import { isFmpConfigured } from "@/lib/fmp-congress";
 
 export interface SyncTradesResult {
   scanned: number;
@@ -28,10 +29,11 @@ function alertTradeType(tradeType: string): "buy" | "sell" {
 export async function syncTradesAndSendAlerts(): Promise<SyncTradesResult> {
   if (
     !isUnusualWhalesConfigured() &&
+    !isFmpConfigured() &&
     !process.env.QUIVERQUANT_API_KEY?.trim()
   ) {
     throw new Error(
-      "Configure UNUSUAL_WHALES_API_KEY or QUIVERQUANT_API_KEY for trade sync"
+      "Configure UNUSUAL_WHALES_API_KEY, FMP_API_KEY, or QUIVERQUANT_API_KEY for trade sync"
     );
   }
 

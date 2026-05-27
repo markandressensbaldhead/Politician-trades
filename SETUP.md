@@ -31,7 +31,8 @@ Also confirm these exist (you may have added them already):
 |-----|--------|
 | `NEXT_PUBLIC_APP_URL` | `https://tradethehill.org` |
 | `UNUSUAL_WHALES_API_KEY` | your Unusual Whales key (primary congress data) |
-| `QUIVERQUANT_API_KEY` | QuiverQuant fallback (optional) |
+| `FMP_API_KEY` | Financial Modeling Prep (official House + Senate disclosures) |
+| `QUIVERQUANT_API_KEY` | QuiverQuant (returns enrichment + insider/lobbying/contracts) |
 | `CRON_SECRET` | any random string |
 
 ---

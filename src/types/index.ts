@@ -21,7 +21,7 @@ export interface UnifiedCongressTrade {
   excessReturn: number | null;
   priceChange?: number | null;
   spyChange?: number | null;
-  dataSource?: "unusual_whales" | "quiverquant" | "mock";
+    dataSource?: "unusual_whales" | "quiverquant" | "fmp" | "capitol_trades" | "house_clerk" | "mock";
   uwPoliticianId?: string;
   filingNotes?: string | null;
   isActiveFiling?: boolean;
