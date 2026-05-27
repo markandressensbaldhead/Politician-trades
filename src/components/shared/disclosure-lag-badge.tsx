@@ -13,11 +13,11 @@ export function DisclosureLagBadge({
   return (
     <span
       className={cn(
-        "inline-flex items-center rounded border px-2 py-0.5 font-mono text-[10px] uppercase tracking-wider",
-        severity === "fast" && "border-gain/40 bg-gain/10 text-gain",
-        severity === "normal" && "border-terminal-amber/40 bg-terminal-amber/10 text-terminal-amber",
-        severity === "slow" && "border-loss/40 bg-loss/10 text-loss",
-        severity === "unknown" && "border-border/60 text-muted-foreground",
+        "inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium",
+        severity === "fast" && "bg-gain/10 text-gain",
+        severity === "normal" && "bg-primary/10 text-primary",
+        severity === "slow" && "bg-loss/10 text-loss",
+        severity === "unknown" && "bg-secondary text-muted-foreground",
         className
       )}
       title={getLagLabel(days)}

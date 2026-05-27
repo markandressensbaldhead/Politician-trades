@@ -78,22 +78,19 @@ export function FollowPoliticianButton({
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
-        <Button
-          variant="outline"
-          className="border-primary/30 bg-primary/5 font-mono text-[11px] uppercase tracking-wider hover:border-primary/50 hover:bg-primary/10 hover:text-primary"
-        >
-          <Bell className="h-3.5 w-3.5" />
-          Follow this Politician
+        <Button variant="outline" className="gap-2 text-sm">
+          <Bell className="h-4 w-4" />
+          Get trade alerts
         </Button>
       </DialogTrigger>
 
-      <DialogContent className="terminal-panel border-border/60 bg-card/95 sm:max-w-md">
+      <DialogContent className="surface-card sm:max-w-md">
         <DialogHeader>
-          <DialogTitle className="font-mono text-sm uppercase tracking-[0.2em] text-terminal-amber">
-            Trade Alerts
+          <DialogTitle className="text-lg font-semibold">
+            Email alerts
           </DialogTitle>
           <DialogDescription>
-            Get emailed when {politicianName} files a new stock trade.
+            We&apos;ll email you when {politicianName} reports a new trade.
           </DialogDescription>
         </DialogHeader>
 
@@ -116,9 +113,7 @@ export function FollowPoliticianButton({
         ) : (
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="alert-email" className="font-mono text-xs uppercase">
-                Email address
-              </Label>
+              <Label htmlFor="alert-email">Email address</Label>
               <Input
                 id="alert-email"
                 type="email"
@@ -135,18 +130,14 @@ export function FollowPoliticianButton({
             )}
 
             <DialogFooter>
-              <Button
-                type="submit"
-                disabled={loading}
-                className="w-full font-mono text-xs uppercase tracking-wider sm:w-auto"
-              >
+              <Button type="submit" disabled={loading} className="w-full sm:w-auto">
                 {loading ? (
                   <>
                     <Loader2 className="h-4 w-4 animate-spin" />
                     Subscribing...
                   </>
                 ) : (
-                  "Subscribe to Alerts"
+                  "Subscribe"
                 )}
               </Button>
             </DialogFooter>

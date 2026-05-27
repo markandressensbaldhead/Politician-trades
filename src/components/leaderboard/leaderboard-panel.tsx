@@ -34,9 +34,9 @@ function getInitials(name: string) {
 }
 
 function getRankStyle(rank: number) {
-  if (rank === 1) return "text-terminal-amber";
-  if (rank === 2) return "text-zinc-300";
-  if (rank === 3) return "text-amber-700";
+  if (rank === 1) return "text-primary";
+  if (rank === 2) return "text-foreground/80";
+  if (rank === 3) return "text-foreground/60";
   return "text-muted-foreground";
 }
 
@@ -59,23 +59,18 @@ export function LeaderboardPanel({ entries, source }: LeaderboardPanelProps) {
   }, [entries, chamberFilter]);
 
   return (
-    <div className="terminal-panel overflow-hidden">
-      <div className="terminal-header flex flex-col gap-4 border-b border-border/60 px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+    <div className="surface-card overflow-hidden">
+      <div className="surface-header flex flex-col gap-4 px-5 py-5 sm:flex-row sm:items-center sm:justify-between sm:px-6">
         <div className="space-y-1">
-          <div className="flex items-center gap-3">
-            <span className="live-dot" />
-            <h2 className="font-mono text-sm font-semibold uppercase tracking-[0.25em] text-terminal-amber">
-              Performance Leaderboard
-            </h2>
-          </div>
-          <p className="font-mono text-[11px] text-muted-foreground">
-            Ranked by estimated excess return vs. S&amp;P 500 · Last 90 days
+          <h2 className="section-title">Top performers</h2>
+          <p className="section-description">
+            Ranked by estimated return vs. the S&amp;P 500 over the last 90 days
           </p>
         </div>
 
         <div className="flex flex-wrap items-center gap-3">
-          <span className="rounded border border-border/60 bg-background/50 px-2 py-1 font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
-            {source === "live" ? "Live Feed" : "Demo Data"}
+          <span className="status-pill">
+            {source === "live" ? "Live data" : "Sample data"}
           </span>
           <ChamberFilterBar
             value={chamberFilter}
@@ -88,24 +83,24 @@ export function LeaderboardPanel({ entries, source }: LeaderboardPanelProps) {
       <div className="overflow-x-auto">
         <Table>
           <TableHeader>
-            <TableRow className="border-border/60 hover:bg-transparent">
-              <TableHead className="w-16 font-mono text-[10px] uppercase tracking-[0.18em] text-terminal-amber">
+            <TableRow className="border-border hover:bg-transparent">
+              <TableHead className="w-16 text-xs font-medium text-muted-foreground">
                 Rank
               </TableHead>
-              <TableHead className="min-w-[220px] font-mono text-[10px] uppercase tracking-[0.18em] text-terminal-amber">
+              <TableHead className="min-w-[220px] text-xs font-medium text-muted-foreground">
                 Politician
               </TableHead>
-              <TableHead className="font-mono text-[10px] uppercase tracking-[0.18em] text-terminal-amber">
+              <TableHead className="text-xs font-medium text-muted-foreground">
                 Party
               </TableHead>
-              <TableHead className="text-right font-mono text-[10px] uppercase tracking-[0.18em] text-terminal-amber">
+              <TableHead className="text-right text-xs font-medium text-muted-foreground">
                 Trades (90D)
               </TableHead>
-              <TableHead className="text-right font-mono text-[10px] uppercase tracking-[0.18em] text-terminal-amber">
+              <TableHead className="text-right text-xs font-medium text-muted-foreground">
                 vs. S&amp;P 500
               </TableHead>
-              <TableHead className="w-32 text-right font-mono text-[10px] uppercase tracking-[0.18em] text-terminal-amber">
-                Action
+              <TableHead className="w-32 text-right text-xs font-medium text-muted-foreground">
+                
               </TableHead>
             </TableRow>
           </TableHeader>
@@ -127,12 +122,12 @@ export function LeaderboardPanel({ entries, source }: LeaderboardPanelProps) {
                 return (
                   <TableRow
                     key={entry.id}
-                    className="border-border/40 transition-colors hover:bg-gain/5"
+                  className="border-border transition-colors hover:bg-secondary/40"
                   >
                     <TableCell>
                       <span
                         className={cn(
-                          "font-mono text-lg font-bold tabular-nums",
+                          "text-lg font-semibold tabular-nums",
                           getRankStyle(rank)
                         )}
                       >
@@ -153,7 +148,7 @@ export function LeaderboardPanel({ entries, source }: LeaderboardPanelProps) {
                           <p className="truncate font-medium tracking-tight">
                             {entry.name}
                           </p>
-                          <p className="font-mono text-[11px] text-muted-foreground">
+                          <p className="text-sm text-muted-foreground">
                             {entry.chamber}
                             {entry.state
                               ? ` · ${entry.state}${entry.district ? `-${entry.district}` : ""}`
@@ -168,7 +163,7 @@ export function LeaderboardPanel({ entries, source }: LeaderboardPanelProps) {
                     </TableCell>
 
                     <TableCell className="text-right">
-                      <span className="font-mono text-base font-semibold tabular-nums">
+                      <span className="text-base font-semibold tabular-nums">
                         {entry.tradesLast90Days}
                       </span>
                     </TableCell>
@@ -176,7 +171,7 @@ export function LeaderboardPanel({ entries, source }: LeaderboardPanelProps) {
                     <TableCell className="text-right">
                       <span
                         className={cn(
-                          "inline-flex items-center justify-end gap-1.5 font-mono text-base font-semibold tabular-nums",
+                          "inline-flex items-center justify-end gap-1.5 text-base font-semibold tabular-nums",
                           isPositive ? "text-gain" : "text-loss"
                         )}
                       >
@@ -187,8 +182,8 @@ export function LeaderboardPanel({ entries, source }: LeaderboardPanelProps) {
                         )}
                         {formatPercent(entry.returnVsSpy)}
                       </span>
-                      <p className="mt-0.5 font-mono text-[10px] text-muted-foreground">
-                        excess return
+                      <p className="mt-0.5 text-xs text-muted-foreground">
+                        vs. benchmark
                       </p>
                     </TableCell>
 
@@ -197,10 +192,10 @@ export function LeaderboardPanel({ entries, source }: LeaderboardPanelProps) {
                         variant="outline"
                         size="sm"
                         asChild
-                        className="border-border/60 bg-background/30 font-mono text-[11px] uppercase tracking-wider hover:border-primary/40 hover:bg-primary/5 hover:text-primary"
+                        className="text-sm"
                       >
                         <Link href={`/politician/${entry.id}`}>
-                          View Profile
+                          View profile
                           <ArrowUpRight className="h-3.5 w-3.5" />
                         </Link>
                       </Button>
@@ -213,12 +208,9 @@ export function LeaderboardPanel({ entries, source }: LeaderboardPanelProps) {
         </Table>
       </div>
 
-      <div className="flex items-center justify-between border-t border-border/60 px-4 py-3 sm:px-6">
-        <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
-          Showing {filteredEntries.length} of {entries.length} politicians
-        </p>
-        <p className="font-mono text-[10px] text-muted-foreground">
-          Sorted by performance ↓
+      <div className="flex items-center justify-between border-t border-border px-5 py-3 sm:px-6">
+        <p className="text-xs text-muted-foreground">
+          Showing {filteredEntries.length} of {entries.length} members
         </p>
       </div>
     </div>

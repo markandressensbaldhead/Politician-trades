@@ -53,8 +53,8 @@ function toUnified(trade: RecentCongressTrade): UnifiedCongressTrade {
 export function LiveTradeFeed({
   trades,
   showFilters = true,
-  title = "Live Trade Feed",
-  description = "Filterable firehose of every disclosed congressional trade — search by ticker, politician, or party.",
+  title = "Recent trades",
+  description = "Search and filter recent stock disclosures from members of Congress.",
   exportFilename = "capitol-trades-feed.csv",
 }: LiveTradeFeedProps) {
   const [query, setQuery] = useState("");
@@ -72,15 +72,17 @@ export function LiveTradeFeed({
   );
 
   return (
-    <Card className="terminal-panel overflow-hidden border-border/60 bg-card/40">
-      <CardHeader className="terminal-header border-b border-border/60">
+    <Card className="surface-card overflow-hidden shadow-sm">
+      <CardHeader className="surface-header">
         <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
           <div className="space-y-2">
-            <CardTitle className="flex items-center gap-2 font-mono text-sm uppercase tracking-[0.2em] text-terminal-amber">
-              <Filter className="h-4 w-4" />
+            <CardTitle className="flex items-center gap-2 text-lg font-semibold">
+              <Filter className="h-4 w-4 text-primary" />
               {title}
             </CardTitle>
-            <CardDescription>{description}</CardDescription>
+            <CardDescription className="text-sm leading-relaxed">
+              {description}
+            </CardDescription>
           </div>
           <ExportCsvButton rows={exportRows} filename={exportFilename} />
         </div>
@@ -101,7 +103,7 @@ export function LiveTradeFeed({
                   key={value}
                   size="sm"
                   variant={type === value ? "default" : "outline"}
-                  className="font-mono text-[10px] uppercase"
+                  className="text-xs"
                   onClick={() => setType(value)}
                 >
                   {value === "all" ? "All" : value}
@@ -112,7 +114,7 @@ export function LiveTradeFeed({
                   key={window}
                   size="sm"
                   variant={days === window ? "default" : "outline"}
-                  className="font-mono text-[10px] uppercase"
+                  className="text-xs"
                   onClick={() => setDays(window)}
                 >
                   {window}D

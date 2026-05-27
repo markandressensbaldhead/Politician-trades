@@ -3,10 +3,7 @@
 import { RefreshCw } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import {
-  parseAnalysisSections,
-  parseBodyBlocks,
-} from "@/lib/parse-analysis";
+import { parseAnalysisSections } from "@/lib/parse-analysis";
 import { cn } from "@/lib/utils";
 
 interface ResearchDeskOutputProps {
@@ -31,25 +28,38 @@ function renderInline(text: string) {
 }
 
 function AnalysisBody({ body }: { body: string }) {
-  const blocks = parseBodyBlocks(body);
+  const lines = body.split("\n").map((line) => line.trim()).filter(Boolean);
+  const blocks: Array<{ type: "list"; items: string[] } | { type: "p"; text: string }> = [];
+  let listItems: string[] = [];
 
-  if (blocks.length === 0) {
-    return null;
+  const flushList = () => {
+    if (listItems.length > 0) {
+      blocks.push({ type: "list", items: [...listItems] });
+      listItems = [];
+    }
+  };
+
+  for (const line of lines) {
+    const bulletMatch = line.match(/^[-*•]\s+(.+)/);
+    if (bulletMatch) {
+      listItems.push(bulletMatch[1]);
+      continue;
+    }
+    flushList();
+    blocks.push({ type: "p", text: line });
   }
+  flushList();
 
   return (
     <div className="space-y-3">
       {blocks.map((block, index) => {
         if (block.type === "list") {
           return (
-            <ul
-              key={`list-${index}`}
-              className="space-y-2.5 border-l-2 border-border/60 pl-4"
-            >
+            <ul key={`list-${index}`} className="space-y-2 pl-5">
               {block.items.map((item, itemIndex) => (
                 <li
                   key={itemIndex}
-                  className="text-[15px] leading-7 text-foreground/90"
+                  className="list-disc text-sm leading-7 text-foreground/90"
                 >
                   {renderInline(item)}
                 </li>
@@ -59,34 +69,13 @@ function AnalysisBody({ body }: { body: string }) {
         }
 
         return (
-          <p
-            key={`p-${index}`}
-            className="text-[15px] leading-7 text-foreground/90"
-          >
+          <p key={`p-${index}`} className="text-sm leading-7 text-foreground/90">
             {renderInline(block.text)}
           </p>
         );
       })}
     </div>
   );
-}
-
-function getDeskViewTone(title: string, body: string): "constructive" | "neutral" | "cautious" | null {
-  if (!title.toLowerCase().includes("desk view")) {
-    return null;
-  }
-
-  const text = body.toLowerCase();
-
-  if (text.includes("constructive") || text.includes("high")) {
-    return "constructive";
-  }
-
-  if (text.includes("cautious") || text.includes("low")) {
-    return "cautious";
-  }
-
-  return "neutral";
 }
 
 export function ResearchDeskOutput({
@@ -101,54 +90,39 @@ export function ResearchDeskOutput({
 
   return (
     <div className={cn("space-y-4", className)}>
-      {sections.map((section) => {
-        const isExecutive = section.title.toLowerCase().includes("executive");
-        const deskTone = getDeskViewTone(section.title, section.body);
-
-        return (
-          <section
-            key={section.title}
-            className={cn(
-              "rounded-lg border border-border/50 bg-background/25 p-4 sm:p-5",
-              isExecutive && "border-l-[3px] border-l-terminal-amber/70 bg-background/40",
-              deskTone === "constructive" &&
-                "border-gain/30 bg-gain/[0.06]",
-              deskTone === "cautious" && "border-loss/30 bg-loss/[0.06]",
-              deskTone === "neutral" &&
-                "border-terminal-amber/30 bg-terminal-amber/[0.06]"
-            )}
-          >
-            <h4 className="mb-3 text-xs font-semibold uppercase tracking-[0.16em] text-terminal-amber">
-              {section.title}
-            </h4>
-            <AnalysisBody body={section.body} />
-          </section>
-        );
-      })}
+      {sections.map((section) => (
+        <section
+          key={section.title}
+          className="rounded-lg border border-border bg-secondary/20 p-5"
+        >
+          <h4 className="mb-3 text-sm font-semibold text-foreground">
+            {section.title}
+          </h4>
+          <AnalysisBody body={section.body} />
+        </section>
+      ))}
     </div>
   );
-}
-
-interface RefreshAnalysisButtonProps {
-  loading?: boolean;
-  onRefresh: () => void;
 }
 
 export function RefreshAnalysisButton({
   loading = false,
   onRefresh,
-}: RefreshAnalysisButtonProps) {
+}: {
+  loading?: boolean;
+  onRefresh: () => void;
+}) {
   return (
     <Button
       type="button"
       variant="outline"
       size="sm"
-      className="shrink-0 text-xs"
+      className="shrink-0 text-sm"
       onClick={onRefresh}
       disabled={loading}
     >
       <RefreshCw className={cn("h-3.5 w-3.5", loading && "animate-spin")} />
-      Refresh memo
+      Refresh
     </Button>
   );
 }

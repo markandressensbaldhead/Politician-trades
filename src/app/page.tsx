@@ -9,7 +9,7 @@ import {
   getRecentTrades,
 } from "@/lib/congress-data";
 import { getMarketPulse, getTrendingTickers } from "@/lib/trade-analytics";
-import { formatPercent } from "@/lib/utils";
+import { cn, formatPercent } from "@/lib/utils";
 
 export default async function HomePage() {
   const [
@@ -36,110 +36,105 @@ export default async function HomePage() {
   const topPerformer = entries[0];
   const dataLabel =
     tradeSource === "supabase"
-      ? "Locked DB"
+      ? "Updated"
       : source === "live"
         ? "Live"
-        : "Demo";
+        : "Sample";
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
-      <div className="mb-6 space-y-4">
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-          <div className="space-y-2">
-            <p className="font-mono text-[11px] uppercase tracking-[0.3em] text-terminal-amber">
-              Capitol Trades Terminal
-            </p>
-            <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">
-              Who&apos;s beating the market — and what are they buying?
+    <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
+      <div className="mb-10 space-y-6">
+        <div className="flex flex-col gap-8 lg:flex-row lg:items-end lg:justify-between">
+          <div className="max-w-2xl space-y-3">
+            <p className="page-eyebrow">Congressional stock tracker</p>
+            <h1 className="text-3xl font-semibold sm:text-4xl">
+              See what lawmakers are buying and selling
             </h1>
-            <p className="max-w-2xl text-sm text-muted-foreground">
-              Congressional trading intelligence with disclosure lag analytics,
-              ticker-first discovery, and SEC filing cross-links — built for
-              investors who want transparency competitors don&apos;t show.
+            <p className="text-base leading-relaxed text-muted-foreground">
+              Follow disclosed trades, compare returns to the S&amp;P 500, and
+              read plain-English summaries of what each filing means.
             </p>
             {source === "mock" && (
-              <p className="rounded-md border border-terminal-amber/30 bg-terminal-amber/5 px-3 py-2 text-sm text-terminal-amber">
-                Demo mode — add{" "}
-                <code className="font-mono text-xs">QUIVERQUANT_API_KEY</code>{" "}
-                in Vercel to show live congressional trade data.
+              <p className="rounded-lg border border-border bg-secondary/50 px-4 py-3 text-sm text-muted-foreground">
+                You&apos;re viewing sample data. Connect a data provider in
+                settings to see live congressional trades.
               </p>
             )}
           </div>
 
-          <div className="terminal-ticker flex flex-wrap gap-px overflow-hidden rounded-md border border-border/60 bg-border/40">
-            <TickerStat label="Data" value={dataLabel} />
-            <TickerStat label="Tracked" value={String(entries.length)} />
-            <TickerStat label="Trades 90D" value={String(totalTrades)} />
-            <TickerStat
-              label="Avg vs SPY"
+          <div className="stat-strip grid grid-cols-2 gap-px bg-border sm:grid-cols-3 lg:min-w-[420px]">
+            <StatTile label="Data" value={dataLabel} />
+            <StatTile label="Members tracked" value={String(entries.length)} />
+            <StatTile label="Trades (90 days)" value={String(totalTrades)} />
+            <StatTile
+              label="Avg. vs S&P 500"
               value={formatPercent(avgReturn)}
               positive={avgReturn >= 0}
             />
-            <TickerStat
-              label="Top"
+            <StatTile
+              label="Top performer"
               value={topPerformer?.name.split(" ").pop() ?? "—"}
-              compact
+              className="col-span-2 sm:col-span-1"
             />
           </div>
         </div>
 
         {trending.length > 0 && (
-          <div className="space-y-2">
-            <p className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
-              Trending tickers — tap to see who traded
+          <div className="space-y-3">
+            <p className="text-sm font-medium text-muted-foreground">
+              Popular stocks this month
             </p>
             <TrendingTickerStrip tickers={trending} />
           </div>
         )}
       </div>
 
-      <div className="mb-6">
+      <div className="mb-8">
         <MarketPulse pulse={pulse} />
       </div>
 
       <TrumpSpotlight />
 
-      <div className="my-6">
+      <div className="my-8">
         <TrendingTickers tickers={trending} />
       </div>
 
-      <div className="grid gap-6 xl:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]">
+      <div className="grid gap-8 xl:grid-cols-[minmax(0,1.35fr)_minmax(0,1fr)]">
         <LeaderboardPanel entries={entries} source={source} />
         <LiveTradeFeed
           trades={recentTrades.slice(0, 80)}
           showFilters={false}
-          title="Latest Activity"
-          description="Newest disclosures across Congress."
+          title="Latest trades"
+          description="The most recent stock disclosures from Congress."
         />
       </div>
     </div>
   );
 }
 
-function TickerStat({
+function StatTile({
   label,
   value,
   positive,
-  compact,
+  className,
 }: {
   label: string;
   value: string;
   positive?: boolean;
-  compact?: boolean;
+  className?: string;
 }) {
   return (
-    <div className="min-w-[100px] flex-1 bg-background/80 px-4 py-3">
-      <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-terminal-amber">
-        {label}
-      </p>
+    <div className={cn("bg-card px-4 py-4", className)}>
+      <p className="text-xs text-muted-foreground">{label}</p>
       <p
-        className={`mt-1 truncate font-mono text-sm font-semibold tabular-nums ${
+        className={cn(
+          "mt-1 text-lg font-semibold tabular-nums",
           positive === undefined
             ? "text-foreground"
             : positive
               ? "text-gain"
               : "text-loss"
-        } ${compact ? "text-xs" : ""}`}
+        )}
       >
         {value}
       </p>

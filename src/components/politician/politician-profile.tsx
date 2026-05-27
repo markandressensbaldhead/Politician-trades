@@ -127,12 +127,12 @@ export function PoliticianProfile({
         </Button>
       </div>
 
-      <div className="terminal-panel overflow-hidden">
-        <div className="terminal-header border-b border-border/60 p-6 sm:p-8">
+      <div className="surface-card overflow-hidden shadow-sm">
+        <div className="surface-header p-6 sm:p-8">
           <div className="flex flex-col gap-6 lg:flex-row lg:items-start">
             <div className="photo-placeholder shrink-0 self-start">
               <Avatar className="h-20 w-20 border-0 bg-transparent sm:h-24 sm:w-24">
-                <AvatarFallback className="bg-secondary/80 text-xl font-semibold sm:text-2xl">
+                <AvatarFallback className="bg-secondary text-xl font-semibold sm:text-2xl">
                   {getInitials(politician.name)}
                 </AvatarFallback>
               </Avatar>
@@ -140,23 +140,25 @@ export function PoliticianProfile({
 
             <div className="min-w-0 flex-1 space-y-4">
               <div className="space-y-2">
-                <div className="flex flex-wrap items-center gap-2">
-                  <span className="live-dot" />
-                  <p className="text-xs font-medium uppercase tracking-[0.2em] text-terminal-amber">
-                    {politician.source === "live"
-                      ? "Live Profile"
-                      : politician.source === "disclosure"
-                        ? "OGE Disclosure Profile"
-                        : "Demo Profile"}
-                  </p>
-                </div>
+                <span
+                  className={cn(
+                    "status-pill",
+                    politician.source === "live" && "status-pill-live"
+                  )}
+                >
+                  {politician.source === "live"
+                    ? "Live data"
+                    : politician.source === "disclosure"
+                      ? "Financial disclosure"
+                      : "Sample profile"}
+                </span>
 
                 <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
-                  <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">
+                  <h1 className="text-3xl font-semibold sm:text-4xl">
                     {politician.name}
                   </h1>
                   <PartyBadge party={politician.party} />
-                  <Badge variant="outline" className="text-xs uppercase">
+                  <Badge variant="outline" className="rounded-full text-xs">
                     {politician.chamber}
                   </Badge>
                 </div>

@@ -8,9 +8,9 @@ import { getAllTrades, getRecentTrades } from "@/lib/congress-data";
 import { getMarketPulse, getTrendingTickers } from "@/lib/trade-analytics";
 
 export const metadata: Metadata = {
-  title: "Live Feed",
+  title: "Recent Trades",
   description:
-    "Filterable congressional trade firehose with disclosure lag, ticker search, and party filters.",
+    "Browse recent congressional stock trades with filters for ticker, party, and date.",
 };
 
 export default async function FeedPage() {
@@ -21,32 +21,30 @@ export default async function FeedPage() {
   const trending = getTrendingTickers(allTrades, 12);
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
-      <div className="mb-8 space-y-2">
-        <p className="font-mono text-[11px] uppercase tracking-[0.3em] text-terminal-amber">
-          Live Feed
-        </p>
-        <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">
-          Congressional Trade Firehose
+    <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
+      <div className="mb-8 space-y-3">
+        <p className="page-eyebrow">Recent trades</p>
+        <h1 className="text-3xl font-semibold sm:text-4xl">
+          Every disclosed congressional trade
         </h1>
-        <p className="max-w-3xl text-muted-foreground">
-          Every disclosed trade in one filterable stream — search by ticker,
-          filter by party, and see disclosure lag on every row.
-          {source === "supabase" && " Reading from locked database cache."}
+        <p className="max-w-2xl text-base leading-relaxed text-muted-foreground">
+          Search by stock ticker, filter by party, and see how long each trade
+          took to be reported.
+          {source === "supabase" && " Data is synced from our database."}
         </p>
-        <div className="flex flex-wrap gap-2 pt-2">
+        <div className="flex flex-wrap gap-2 pt-1">
           <ExportCsvLink
             href="/api/export/trades?scope=feed"
-            label="Export feed (500 rows)"
+            label="Download recent trades"
           />
           <ExportCsvLink
             href="/api/export/trades?scope=all"
-            label="Export full database"
+            label="Download full history"
           />
         </div>
       </div>
 
-      <div className="space-y-6">
+      <div className="space-y-8">
         <MarketPulse pulse={pulse} />
         <TrendingTickers tickers={trending} />
         <LiveTradeFeed trades={recentTrades} />

@@ -6,7 +6,6 @@ import {
   ArrowUpRight,
   Loader2,
   RefreshCw,
-  Target,
   TrendingUp,
 } from "lucide-react";
 
@@ -29,10 +28,10 @@ const DIRECTION_STYLES: Record<
   DeploymentDirection,
   { badge: "gain" | "loss" | "secondary" | "outline"; label: string }
 > = {
-  Long: { badge: "gain", label: "Long" },
-  Short: { badge: "loss", label: "Short" },
+  Long: { badge: "gain", label: "Buy signal" },
+  Short: { badge: "loss", label: "Sold" },
   Watch: { badge: "secondary", label: "Watch" },
-  Reduce: { badge: "outline", label: "Reduce" },
+  Reduce: { badge: "outline", label: "Trim" },
 };
 
 export function ExecutiveAlphaBrief({
@@ -94,43 +93,38 @@ export function ExecutiveAlphaBrief({
   return (
     <section
       id="alpha"
-      className="scroll-mt-28 overflow-hidden rounded-xl border border-terminal-amber/30 bg-gradient-to-br from-terminal-amber/[0.08] via-card/60 to-background/80 shadow-[0_0_60px_-20px_rgba(245,158,11,0.25)]"
+      className="scroll-mt-28 overflow-hidden rounded-xl border border-border bg-card shadow-sm"
     >
-      <div className="border-b border-terminal-amber/20 bg-terminal-amber/[0.06] px-6 py-5 sm:px-8">
+      <div className="border-b border-border px-6 py-5 sm:px-8">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div className="space-y-2">
-            <div className="flex items-center gap-2">
-              <Target className="h-4 w-4 text-terminal-amber" />
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-terminal-amber">
-                30-Day Alpha Brief
-              </p>
-            </div>
-            <h2 className="text-xl font-bold tracking-tight sm:text-2xl">
-              Executive Summary
+            <p className="page-eyebrow">Monthly summary</p>
+            <h2 className="text-xl font-semibold sm:text-2xl">
+              What to know this month
             </h2>
-            <p className="max-w-3xl text-sm leading-relaxed text-muted-foreground">
-              Highest-conviction signals from {politicianName}&apos;s last month
-              of disclosures — how to express the flow with capital.
+            <p className="max-w-2xl text-sm leading-relaxed text-muted-foreground">
+              Key takeaways from {politicianName}&apos;s recent stock
+              disclosures, written in plain English.
             </p>
           </div>
 
           <div className="flex flex-wrap items-center gap-3 sm:flex-col sm:items-end">
             {brief && (
               <p className="text-xs text-muted-foreground">
-                {brief.cached ? "Cached" : "Fresh"} · {brief.tradesInWindow}{" "}
-                trades in {brief.windowDays}d · {formatDate(brief.generatedAt)}
+                Updated {formatDate(brief.generatedAt)} · {brief.tradesInWindow}{" "}
+                trades in the last {brief.windowDays} days
               </p>
             )}
             <Button
               type="button"
               variant="outline"
               size="sm"
-              className="shrink-0 text-xs"
+              className="shrink-0 text-sm"
               onClick={() => void fetchBrief(true)}
               disabled={loading}
             >
               <RefreshCw className={cn("h-3.5 w-3.5", loading && "animate-spin")} />
-              Refresh brief
+              Refresh
             </Button>
           </div>
         </div>
@@ -139,8 +133,8 @@ export function ExecutiveAlphaBrief({
       <div className="px-6 py-6 sm:px-8 sm:py-8">
         {loading && (
           <div className="flex items-center justify-center gap-3 py-12 text-muted-foreground">
-            <Loader2 className="h-5 w-5 animate-spin text-terminal-amber" />
-            <span className="text-sm">Building 30-day alpha brief...</span>
+            <Loader2 className="h-5 w-5 animate-spin text-primary" />
+            <span className="text-sm">Generating summary...</span>
           </div>
         )}
 
@@ -148,11 +142,11 @@ export function ExecutiveAlphaBrief({
           <div className="rounded-lg border border-loss/30 bg-loss/5 p-5">
             <p className="text-sm font-medium text-loss">{error}</p>
             <p className="mt-2 text-sm text-muted-foreground">
-              Requires trades and{" "}
+              This feature needs trade data and an AI connection. Visit{" "}
               <a href="/setup" className="text-primary underline-offset-4 hover:underline">
-                ANTHROPIC_API_KEY
-              </a>
-              . Run schema setup if the alpha brief table is missing.
+                setup
+              </a>{" "}
+              to check your configuration.
             </p>
           </div>
         )}
@@ -189,9 +183,7 @@ function AlphaBriefBody({
         <div className="space-y-4">
           <div className="flex items-center gap-2">
             <TrendingUp className="h-4 w-4 text-gain" />
-            <h3 className="text-sm font-semibold uppercase tracking-[0.14em] text-foreground">
-              Capital Deployment Ideas
-            </h3>
+            <h3 className="section-title">Stocks to watch</h3>
           </div>
 
           <div className="grid gap-4 lg:grid-cols-2">
@@ -201,18 +193,18 @@ function AlphaBriefBody({
               return (
                 <article
                   key={`${idea.ticker}-${idea.direction}`}
-                  className="rounded-lg border border-border/60 bg-background/40 p-5 transition-colors hover:border-terminal-amber/30"
+                  className="rounded-lg border border-border bg-secondary/20 p-5 transition-colors hover:border-primary/20"
                 >
                   <div className="mb-3 flex flex-wrap items-center gap-2">
                     <Link
                       href={`/ticker/${idea.ticker}`}
-                      className="font-mono text-lg font-bold tracking-tight hover:text-terminal-amber"
+                      className="text-lg font-semibold hover:text-primary"
                     >
                       {idea.ticker}
                     </Link>
                     <Badge variant={style.badge}>{style.label}</Badge>
-                    <Badge variant="outline" className="text-[10px] uppercase">
-                      {idea.conviction} conviction
+                    <Badge variant="outline" className="text-xs">
+                      {idea.conviction} confidence
                     </Badge>
                   </div>
 
@@ -223,14 +215,14 @@ function AlphaBriefBody({
                   <div className="mt-4 space-y-2 border-t border-border/40 pt-4 text-xs leading-relaxed text-muted-foreground">
                     <p>
                       <span className="font-medium text-foreground/80">
-                        Catalyst:{" "}
+                        Why it matters:{" "}
                       </span>
                       {idea.catalyst}
                     </p>
                     {idea.sizeHint && (
                       <p>
                         <span className="font-medium text-foreground/80">
-                          Size:{" "}
+                          How to think about it:{" "}
                         </span>
                         {idea.sizeHint}
                       </p>
@@ -245,28 +237,27 @@ function AlphaBriefBody({
 
       <div className="grid gap-4 lg:grid-cols-3">
         {brief.sectorTheme && (
-          <InsightBlock title="Sector Theme" body={brief.sectorTheme} />
+          <InsightBlock title="Sector focus" body={brief.sectorTheme} />
         )}
         {brief.timingEdge && (
-          <InsightBlock title="Timing Edge" body={brief.timingEdge} />
+          <InsightBlock title="Timing" body={brief.timingEdge} />
         )}
         {brief.riskManagement && (
-          <InsightBlock title="Risk Management" body={brief.riskManagement} accent="risk" />
+          <InsightBlock title="Things to watch out for" body={brief.riskManagement} accent="risk" />
         )}
       </div>
 
       {brief.playbook && (
-        <div className="rounded-lg border border-gain/25 bg-gain/[0.06] p-5 sm:p-6">
-          <p className="mb-2 text-xs font-semibold uppercase tracking-[0.14em] text-gain">
-            Capital Playbook
+        <div className="rounded-lg border border-border bg-secondary/30 p-5 sm:p-6">
+          <p className="mb-2 text-sm font-semibold text-foreground">
+            What this means for you
           </p>
-          <p className="text-[15px] leading-8 text-foreground/95">
+          <p className="text-[15px] leading-8 text-foreground/90">
             {brief.playbook}
           </p>
           <p className="mt-4 text-xs leading-relaxed text-muted-foreground">
-            Signal research on {politicianName}&apos;s disclosures — not personalized
-            investment advice. Size positions to your risk budget and verify filings
-            before deploying capital.
+            This summary is based on public filings from {politicianName}. It is
+            for research and education only — not personalized investment advice.
           </p>
         </div>
       )}
@@ -274,13 +265,13 @@ function AlphaBriefBody({
       <div className="flex flex-wrap gap-3 pt-1">
         <Button variant="outline" size="sm" asChild>
           <a href="#research" className="gap-2">
-            Full desk memo
+            Full analysis
             <ArrowUpRight className="h-3.5 w-3.5" />
           </a>
         </Button>
         <Button variant="outline" size="sm" asChild>
           <a href="#trades" className="gap-2">
-            Source trades
+            View trades
             <ArrowUpRight className="h-3.5 w-3.5" />
           </a>
         </Button>
@@ -305,7 +296,7 @@ function InsightBlock({
         accent === "risk" && "border-loss/20 bg-loss/[0.04]"
       )}
     >
-      <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-terminal-amber">
+      <p className="mb-2 text-sm font-medium text-foreground">
         {title}
       </p>
       <p className="text-sm leading-7 text-foreground/90">{body}</p>

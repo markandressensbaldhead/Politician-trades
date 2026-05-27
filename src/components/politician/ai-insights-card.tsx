@@ -48,7 +48,7 @@ export function AiInsightsCard({
         const data = await response.json();
 
         if (!response.ok) {
-          throw new Error(data.error ?? "Failed to load research memo");
+          throw new Error(data.error ?? "Failed to load analysis");
         }
 
         setInsight({
@@ -60,7 +60,7 @@ export function AiInsightsCard({
         setError(
           fetchError instanceof Error
             ? fetchError.message
-            : "Failed to load research memo"
+            : "Failed to load analysis"
         );
       } finally {
         setLoading(false);
@@ -74,25 +74,24 @@ export function AiInsightsCard({
   }, [fetchInsight]);
 
   return (
-    <Card className="terminal-panel overflow-hidden border-border/60 bg-card/40">
-      <CardHeader className="terminal-header border-b border-border/60 px-6 py-5">
+    <Card className="surface-card overflow-hidden shadow-sm">
+      <CardHeader className="surface-header px-6 py-5">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div className="space-y-1.5">
-            <CardTitle className="flex items-center gap-2 text-base font-semibold tracking-tight text-foreground">
-              <Sparkles className="h-4 w-4 text-terminal-amber" />
-              Washington Signal Desk
+            <CardTitle className="flex items-center gap-2 text-lg font-semibold">
+              <Sparkles className="h-4 w-4 text-primary" />
+              AI trade analysis
             </CardTitle>
             <CardDescription className="max-w-2xl text-sm leading-relaxed">
-              PM-grade memo on {politicianName}&apos;s disclosure book —
-              positioning, alpha, catalysts, and risk flags.
+              A deeper look at {politicianName}&apos;s trading patterns, sector
+              focus, and recent activity.
             </CardDescription>
           </div>
 
           <div className="flex flex-wrap items-center gap-3 sm:flex-col sm:items-end">
             {insight && (
               <p className="text-xs text-muted-foreground">
-                {insight.cached ? "Cached" : "Fresh"} ·{" "}
-                {formatDate(insight.generatedAt)}
+                Updated {formatDate(insight.generatedAt)}
               </p>
             )}
             <RefreshAnalysisButton
@@ -106,8 +105,8 @@ export function AiInsightsCard({
       <CardContent className="p-6 sm:p-8">
         {loading && (
           <div className="flex items-center justify-center gap-3 py-14 text-muted-foreground">
-            <Loader2 className="h-5 w-5 animate-spin text-terminal-amber" />
-            <span className="text-sm">Running desk analysis...</span>
+            <Loader2 className="h-5 w-5 animate-spin text-primary" />
+            <span className="text-sm">Analyzing trades...</span>
           </div>
         )}
 
@@ -115,14 +114,8 @@ export function AiInsightsCard({
           <div className="rounded-lg border border-loss/30 bg-loss/5 p-5">
             <p className="text-sm font-medium text-loss">{error}</p>
             <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-              Check{" "}
-              <a
-                href="/setup"
-                className="text-primary underline-offset-4 hover:underline"
-              >
-                /setup
-              </a>{" "}
-              for ANTHROPIC_API_KEY and Supabase.
+              Check your setup page to make sure AI and database connections are
+              configured.
             </p>
           </div>
         )}
