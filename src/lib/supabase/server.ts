@@ -1,11 +1,16 @@
 import { createClient, SupabaseClient } from "@supabase/supabase-js";
 
+import {
+  getSupabaseServerKey,
+  getSupabaseUrl,
+  isSupabaseConfigured,
+} from "@/lib/supabase/env";
+
 let serverClient: SupabaseClient | null = null;
 
 function getSupabaseConfig() {
-  const url = process.env.SUPABASE_URL;
-  const key =
-    process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY;
+  const url = getSupabaseUrl();
+  const key = getSupabaseServerKey();
 
   if (!url || !key) {
     throw new Error(
@@ -29,9 +34,8 @@ export function getSupabaseServerClient(): SupabaseClient {
   return serverClient;
 }
 
-export function isSupabaseConfigured(): boolean {
-  return Boolean(
-    process.env.SUPABASE_URL &&
-      (process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY)
-  );
+export function createSupabaseClient(): SupabaseClient {
+  return getSupabaseServerClient();
 }
+
+export { isSupabaseConfigured };

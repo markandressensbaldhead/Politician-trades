@@ -3,6 +3,10 @@ import { join } from "path";
 import pg from "pg";
 
 import { isSupabaseConfigured } from "@/lib/supabase/server";
+import {
+  getDatabaseUrl,
+  getSupabaseServiceRoleKey,
+} from "@/lib/supabase/env";
 
 export interface SetupStatus {
   supabase: boolean;
@@ -21,10 +25,10 @@ export function getSetupStatus(): SetupStatus {
   const missing: string[] = [];
 
   const supabase = isSupabaseConfigured();
-  const supabaseServiceRole = Boolean(process.env.SUPABASE_SERVICE_ROLE_KEY);
+  const supabaseServiceRole = Boolean(getSupabaseServiceRoleKey());
   const anthropic = Boolean(process.env.ANTHROPIC_API_KEY);
   const quiverQuant = Boolean(process.env.QUIVERQUANT_API_KEY);
-  const databaseUrl = Boolean(process.env.DATABASE_URL);
+  const databaseUrl = Boolean(getDatabaseUrl());
   const cronSecret = Boolean(process.env.CRON_SECRET);
   const resend = Boolean(process.env.RESEND_API_KEY);
   const appUrl = Boolean(process.env.NEXT_PUBLIC_APP_URL);
@@ -92,7 +96,7 @@ function isIgnorableSqlError(message: string): boolean {
 }
 
 export async function runSupabaseSchema(): Promise<{ executed: number }> {
-  const connectionString = process.env.DATABASE_URL;
+  const connectionString = getDatabaseUrl();
 
   if (!connectionString) {
     throw new Error(
@@ -156,13 +160,13 @@ export async function runFullSetup(): Promise<{
 
   let schema: { executed: number } | undefined;
 
-  if (process.env.DATABASE_URL) {
+  if (getDatabaseUrl()) {
     schema = await runSupabaseSchema();
   }
 
   const tables = await checkDatabaseTables();
 
-  if (!tables.ok && !process.env.DATABASE_URL) {
+  if (!tables.ok && !getDatabaseUrl()) {
     throw new Error(
       "Database tables are missing. Add DATABASE_URL to Vercel and run setup again, or paste supabase/schema.sql into the Supabase SQL Editor."
     );
