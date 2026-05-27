@@ -40,3 +40,11 @@ export function getDatabaseUrl(): string | undefined {
     process.env.POSTGRES_URL_NON_POOLING
   );
 }
+
+export function getSchemaDatabaseUrl(): string | undefined {
+  return firstDefined(
+    process.env.POSTGRES_URL_NON_POOLING,
+    process.env.DATABASE_URL,
+    process.env.POSTGRES_URL
+  );
+}

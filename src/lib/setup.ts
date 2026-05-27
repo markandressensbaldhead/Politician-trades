@@ -5,6 +5,7 @@ import pg from "pg";
 import { isSupabaseConfigured } from "@/lib/supabase/server";
 import {
   getDatabaseUrl,
+  getSchemaDatabaseUrl,
   getSupabaseServiceRoleKey,
 } from "@/lib/supabase/env";
 
@@ -95,8 +96,28 @@ function isIgnorableSqlError(message: string): boolean {
   );
 }
 
+function normalizePgConnectionString(connectionString: string): string {
+  const url = new URL(connectionString.replace(/^postgres:\/\//, "postgresql://"));
+
+  url.searchParams.delete("sslmode");
+  url.searchParams.set("sslmode", "no-verify");
+
+  return url.toString().replace(/^postgresql:\/\//, "postgres://");
+}
+
+function createSchemaPgClient(connectionString: string): pg.Client {
+  const normalized = normalizePgConnectionString(connectionString);
+  const usesSsl =
+    !normalized.includes("localhost") && !normalized.includes("127.0.0.1");
+
+  return new pg.Client({
+    connectionString: normalized,
+    ssl: usesSsl ? { rejectUnauthorized: false } : undefined,
+  });
+}
+
 export async function runSupabaseSchema(): Promise<{ executed: number }> {
-  const connectionString = getDatabaseUrl();
+  const connectionString = getSchemaDatabaseUrl();
 
   if (!connectionString) {
     throw new Error(
@@ -115,10 +136,7 @@ export async function runSupabaseSchema(): Promise<{ executed: number }> {
         statement.length > 0 && !statement.startsWith("--")
     );
 
-  const client = new pg.Client({
-    connectionString,
-    ssl: { rejectUnauthorized: false },
-  });
+  const client = createSchemaPgClient(connectionString);
 
   await client.connect();
 
