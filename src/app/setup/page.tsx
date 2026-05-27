@@ -24,6 +24,7 @@ interface SetupResponse {
     cronSecret: boolean;
     resend: boolean;
     appUrl: boolean;
+    snapTrade: boolean;
     readyForInsights: boolean;
     missing: string[];
   };
