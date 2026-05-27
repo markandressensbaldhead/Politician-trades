@@ -1,8 +1,10 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import { ExternalLink } from "lucide-react";
 
+import { DisclosureLagBadge } from "@/components/shared/disclosure-lag-badge";
 import { Badge } from "@/components/ui/badge";
 import {
   Card,
@@ -11,18 +13,11 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { MarketQuote, ProfileTrade } from "@/types";
 import { ExportCsvButton } from "@/components/shared/export-csv-button";
 import { profileTradeToCsvRow, slugifyFilename } from "@/lib/csv-export";
 import { translateTradeToInvestment } from "@/lib/filing-translator";
+import { getDisclosureLagDays } from "@/lib/trade-analytics";
 import { cn, formatDate, formatPercent, formatUsd } from "@/lib/utils";
 
 interface TradeHistoryTableProps {
@@ -31,6 +26,32 @@ interface TradeHistoryTableProps {
   politicianName?: string;
   politicianParty?: string;
   politicianChamber?: string;
+}
+
+function TradeMeta({
+  label,
+  value,
+  valueClassName,
+}: {
+  label: string;
+  value: React.ReactNode;
+  valueClassName?: string;
+}) {
+  return (
+    <div className="rounded-md border border-border/40 bg-background/30 px-3 py-2.5">
+      <p className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
+        {label}
+      </p>
+      <div
+        className={cn(
+          "mt-1 text-sm font-medium tabular-nums text-foreground",
+          valueClassName
+        )}
+      >
+        {value}
+      </div>
+    </div>
+  );
 }
 
 export function TradeHistoryTable({
@@ -110,15 +131,15 @@ export function TradeHistoryTable({
 
   return (
     <Card className="terminal-panel overflow-hidden border-border/60 bg-card/40">
-      <CardHeader className="terminal-header border-b border-border/60">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-          <div>
-            <CardTitle className="font-mono text-sm uppercase tracking-[0.2em] text-terminal-amber">
+      <CardHeader className="terminal-header border-b border-border/60 px-6 py-5">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+          <div className="space-y-1.5">
+            <CardTitle className="text-base font-semibold tracking-tight text-foreground">
               Trade History
             </CardTitle>
-            <CardDescription>
-              Reported transactions with live Yahoo Finance prices. Linked SEC
-              filings are locked from EDGAR sync when available.
+            <CardDescription className="max-w-2xl text-sm leading-relaxed">
+              Every reported transaction with plain-English summaries, live
+              prices, and linked SEC filings when available.
             </CardDescription>
           </div>
           <ExportCsvButton
@@ -127,99 +148,42 @@ export function TradeHistoryTable({
           />
         </div>
       </CardHeader>
-      <CardContent className="p-0">
-        <Table>
-          <TableHeader>
-            <TableRow className="border-border/60 hover:bg-transparent">
-              <TableHead className="font-mono text-[10px] uppercase tracking-wider text-terminal-amber">
-                Trade Date
-              </TableHead>
-              <TableHead className="font-mono text-[10px] uppercase tracking-wider text-terminal-amber">
-                Filed
-              </TableHead>
-              <TableHead className="font-mono text-[10px] uppercase tracking-wider text-terminal-amber">
-                Ticker
-              </TableHead>
-              <TableHead className="font-mono text-[10px] uppercase tracking-wider text-terminal-amber">
-                Asset
-              </TableHead>
-              <TableHead className="font-mono text-[10px] uppercase tracking-wider text-terminal-amber">
-                Type
-              </TableHead>
-              <TableHead className="text-right font-mono text-[10px] uppercase tracking-wider text-terminal-amber">
-                Amount
-              </TableHead>
-                    <TableHead className="text-right font-mono text-[10px] uppercase tracking-wider text-terminal-amber">
-                      Price
-                    </TableHead>
-                    <TableHead className="text-right font-mono text-[10px] uppercase tracking-wider text-terminal-amber">
-                      Day Chg
-                    </TableHead>
-              {showExcessReturn && (
-                <TableHead className="text-right font-mono text-[10px] uppercase tracking-wider text-terminal-amber">
-                  vs. SPY
-                </TableHead>
-              )}
-              <TableHead className="font-mono text-[10px] uppercase tracking-wider text-terminal-amber">
-                Plain English
-              </TableHead>
-              <TableHead className="font-mono text-[10px] uppercase tracking-wider text-terminal-amber">
-                SEC Filings
-              </TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {trades.length === 0 ? (
-              <TableRow>
-                <TableCell
-                  colSpan={showExcessReturn ? 11 : 10}
-                  className="py-12 text-center text-muted-foreground"
-                >
-                  No trades on record.
-                </TableCell>
-              </TableRow>
-            ) : (
-              trades.map((trade) => {
-                const quote = quotes[trade.ticker.toUpperCase()];
-                const isPositive = (trade.excessReturn ?? 0) >= 0;
-                const changePositive = (quote?.changePercent ?? 0) >= 0;
-                const investment = translateTradeToInvestment(
-                  trade,
-                  politicianName,
-                  trade.secFilings ?? []
-                );
 
-                return (
-                  <TableRow
-                    key={trade.id}
-                    className="border-border/40 hover:bg-gain/5"
-                  >
-                    <TableCell className="font-mono text-xs text-muted-foreground">
-                      {formatDate(trade.tradeDate)}
-                    </TableCell>
-                    <TableCell className="font-mono text-xs text-muted-foreground">
-                      {formatDate(trade.filingDate)}
-                    </TableCell>
-                    <TableCell className="font-mono font-semibold">
-                      {trade.ticker}
-                    </TableCell>
-                    <TableCell>
-                      <div>
-                        <p>{trade.company}</p>
-                        {trade.sector && (
-                          <p className="text-xs text-muted-foreground">
-                            {trade.sector}
-                          </p>
-                        )}
-                        {trade.sourceNote && (
-                          <p className="mt-1 text-xs text-muted-foreground/80">
-                            {trade.sourceNote}
-                          </p>
-                        )}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex flex-col gap-1">
+      <CardContent className="p-0">
+        {trades.length === 0 ? (
+          <p className="py-16 text-center text-sm text-muted-foreground">
+            No trades on record.
+          </p>
+        ) : (
+          <div className="divide-y divide-border/40">
+            {trades.map((trade) => {
+              const quote = quotes[trade.ticker.toUpperCase()];
+              const isPositive = (trade.excessReturn ?? 0) >= 0;
+              const changePositive = (quote?.changePercent ?? 0) >= 0;
+              const lagDays = getDisclosureLagDays(
+                trade.tradeDate,
+                trade.filingDate
+              );
+              const investment = translateTradeToInvestment(
+                trade,
+                politicianName,
+                trade.secFilings ?? []
+              );
+
+              return (
+                <article
+                  key={trade.id}
+                  className="space-y-4 p-5 transition-colors hover:bg-gain/[0.03] sm:p-6"
+                >
+                  <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                    <div className="min-w-0 space-y-2">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <Link
+                          href={`/ticker/${trade.ticker}`}
+                          className="font-mono text-xl font-bold tracking-tight hover:text-terminal-amber"
+                        >
+                          {trade.ticker}
+                        </Link>
                         <Badge
                           variant={
                             trade.type === "Purchase"
@@ -231,100 +195,132 @@ export function TradeHistoryTable({
                         >
                           {trade.type}
                         </Badge>
-                        {trade.disclosureType && (
-                          <span className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
-                            {trade.disclosureType.replace(/-/g, " ")}
-                          </span>
-                        )}
+                        <DisclosureLagBadge days={lagDays} />
                       </div>
-                    </TableCell>
-                    <TableCell className="text-right font-mono tabular-nums">
-                      {trade.amount}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      {loadingQuotes ? (
-                        <span className="text-muted-foreground">…</span>
-                      ) : quote?.price != null ? (
-                        <span className="font-mono tabular-nums">
-                          {formatUsd(quote.price)}
-                        </span>
-                      ) : (
-                        <span className="text-muted-foreground">—</span>
-                      )}
-                    </TableCell>
-                    <TableCell className="text-right font-mono tabular-nums text-sm">
-                      {loadingQuotes ? (
-                        <span className="text-muted-foreground">…</span>
-                      ) : quote?.changePercent != null ? (
-                        <span
-                          className={cn(
-                            changePositive ? "text-gain" : "text-loss"
-                          )}
-                        >
-                          {formatPercent(quote.changePercent)}
-                        </span>
-                      ) : (
-                        <span className="text-muted-foreground">—</span>
-                      )}
-                    </TableCell>
-                    {showExcessReturn && (
-                      <TableCell className="text-right">
-                        {trade.excessReturn !== undefined ? (
-                          <span
-                            className={cn(
-                              "font-mono tabular-nums font-medium",
-                              isPositive ? "text-gain" : "text-loss"
-                            )}
-                          >
-                            {formatPercent(trade.excessReturn)}
+
+                      <p className="text-sm leading-relaxed text-foreground/90">
+                        {trade.company}
+                        {trade.sector && (
+                          <span className="text-muted-foreground">
+                            {" "}
+                            · {trade.sector}
                           </span>
-                        ) : (
-                          <span className="text-muted-foreground">—</span>
                         )}
-                      </TableCell>
-                    )}
-                    <TableCell className="max-w-xs">
-                      <p className="text-xs leading-6 text-foreground/90">
-                        {investment.plainSummary}
                       </p>
-                    </TableCell>
-                    <TableCell>
-                      {trade.secFilings && trade.secFilings.length > 0 ? (
-                        <div className="flex max-w-xs flex-col gap-1.5">
-                          {trade.secFilings.slice(0, 2).map((filing) => (
-                            <a
-                              key={filing.id}
-                              href={filing.documentUrl}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="group inline-flex items-start gap-1 text-xs text-foreground/90 hover:text-terminal-amber"
-                            >
-                              <ExternalLink className="mt-0.5 h-3 w-3 shrink-0 opacity-60 group-hover:opacity-100" />
-                              <span>
-                                <span className="font-mono">{filing.form}</span>
-                                <span className="text-muted-foreground">
-                                  {" "}
-                                  · {formatDate(filing.filedAt)}
-                                </span>
-                              </span>
-                            </a>
-                          ))}
-                          {trade.secFilings.length > 2 && (
-                            <span className="font-mono text-[10px] text-muted-foreground">
-                              +{trade.secFilings.length - 2} more locked
-                            </span>
-                          )}
-                        </div>
-                      ) : (
-                        <span className="text-muted-foreground">—</span>
+
+                      {trade.disclosureType && (
+                        <p className="text-xs uppercase tracking-wide text-muted-foreground">
+                          {trade.disclosureType.replace(/-/g, " ")}
+                        </p>
                       )}
-                    </TableCell>
-                  </TableRow>
-                );
-              })
-            )}
-          </TableBody>
-        </Table>
+
+                      {trade.sourceNote && (
+                        <p className="text-xs leading-relaxed text-muted-foreground">
+                          {trade.sourceNote}
+                        </p>
+                      )}
+                    </div>
+
+                    <div className="shrink-0 text-left sm:text-right">
+                      <p className="font-mono text-lg font-semibold tabular-nums">
+                        {trade.amount}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+                    <TradeMeta
+                      label="Trade date"
+                      value={formatDate(trade.tradeDate)}
+                    />
+                    <TradeMeta
+                      label="Filed"
+                      value={formatDate(trade.filingDate)}
+                    />
+                    <TradeMeta
+                      label="Price"
+                      value={
+                        loadingQuotes ? (
+                          "…"
+                        ) : quote?.price != null ? (
+                          formatUsd(quote.price)
+                        ) : (
+                          "—"
+                        )
+                      }
+                    />
+                    <TradeMeta
+                      label="Day change"
+                      value={
+                        loadingQuotes ? (
+                          "…"
+                        ) : quote?.changePercent != null ? (
+                          formatPercent(quote.changePercent)
+                        ) : (
+                          "—"
+                        )
+                      }
+                      valueClassName={cn(
+                        quote?.changePercent != null &&
+                          (changePositive ? "text-gain" : "text-loss")
+                      )}
+                    />
+                    {showExcessReturn && (
+                      <TradeMeta
+                        label="vs. SPY"
+                        value={
+                          trade.excessReturn !== undefined
+                            ? formatPercent(trade.excessReturn)
+                            : "—"
+                        }
+                        valueClassName={cn(
+                          trade.excessReturn !== undefined &&
+                            (isPositive ? "text-gain" : "text-loss")
+                        )}
+                      />
+                    )}
+                  </div>
+
+                  <div className="rounded-lg border border-border/50 bg-background/40 p-4">
+                    <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-terminal-amber">
+                      Plain English
+                    </p>
+                    <p className="text-sm leading-7 text-foreground/95">
+                      {investment.plainSummary}
+                    </p>
+                  </div>
+
+                  {trade.secFilings && trade.secFilings.length > 0 && (
+                    <div className="flex flex-wrap gap-2">
+                      {trade.secFilings.slice(0, 3).map((filing) => (
+                        <a
+                          key={filing.id}
+                          href={filing.documentUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="group inline-flex items-center gap-1.5 rounded-md border border-border/50 bg-background/30 px-3 py-1.5 text-xs transition-colors hover:border-terminal-amber/40 hover:text-terminal-amber"
+                        >
+                          <ExternalLink className="h-3 w-3 opacity-60 group-hover:opacity-100" />
+                          <span className="font-mono font-medium">
+                            {filing.form}
+                          </span>
+                          <span className="text-muted-foreground">
+                            {formatDate(filing.filedAt)}
+                          </span>
+                        </a>
+                      ))}
+                      {trade.secFilings.length > 3 && (
+                        <span className="self-center px-1 text-xs text-muted-foreground">
+                          +{trade.secFilings.length - 3} more
+                        </span>
+                      )}
+                    </div>
+                  )}
+                </article>
+              );
+            })}
+          </div>
+        )}
       </CardContent>
     </Card>
   );

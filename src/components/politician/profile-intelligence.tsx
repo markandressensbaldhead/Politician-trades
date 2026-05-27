@@ -5,7 +5,11 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { PoliticianLagStats, SectorActivity, OverlapFlag } from "@/lib/trade-analytics";
+import {
+  PoliticianLagStats,
+  SectorActivity,
+  OverlapFlag,
+} from "@/lib/trade-analytics";
 import { formatDate } from "@/lib/utils";
 
 interface ProfileIntelligenceProps {
@@ -24,20 +28,19 @@ export function ProfileIntelligence({
   const maxSector = sectors[0]?.count ?? 1;
 
   return (
-    <div className="grid gap-4 lg:grid-cols-2">
+    <div className="space-y-4">
       <Card className="border-border/60 bg-card/40">
-        <CardHeader>
-          <CardTitle className="font-mono text-sm uppercase tracking-[0.18em] text-terminal-amber">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-sm font-semibold tracking-tight text-foreground">
             Disclosure Transparency
           </CardTitle>
-          <CardDescription>
-            How fast {politicianName} reports trades after they happen — a metric
-            most trackers ignore.
+          <CardDescription className="text-sm leading-relaxed">
+            How quickly {politicianName} reports trades after they happen.
           </CardDescription>
         </CardHeader>
-        <CardContent className="grid gap-4 sm:grid-cols-3">
+        <CardContent className="grid gap-3 sm:grid-cols-3">
           <StatBlock
-            label="Median Lag"
+            label="Median lag"
             value={
               lagStats.medianLagDays != null
                 ? `${lagStats.medianLagDays} days`
@@ -45,7 +48,7 @@ export function ProfileIntelligence({
             }
           />
           <StatBlock
-            label="Fast (&le;30d)"
+            label="Fast (≤30d)"
             value={
               lagStats.medianLagDays != null
                 ? `${Math.round(lagStats.fastDisclosureRate * 100)}%`
@@ -53,14 +56,14 @@ export function ProfileIntelligence({
             }
           />
           <StatBlock
-            label="Avg Lag"
+            label="Avg lag"
             value={
               lagStats.avgLagDays != null ? `${lagStats.avgLagDays} days` : "—"
             }
           />
         </CardContent>
         {lagStats.slowestTrade && (
-          <div className="border-t border-border/60 px-6 pb-4 text-xs text-muted-foreground">
+          <div className="border-t border-border/60 px-6 pb-4 pt-3 text-xs leading-relaxed text-muted-foreground">
             Slowest: {lagStats.slowestTrade.ticker} disclosed after{" "}
             {lagStats.slowestTrade.disclosureLagDays} days (trade{" "}
             {formatDate(lagStats.slowestTrade.tradeDate)})
@@ -69,21 +72,21 @@ export function ProfileIntelligence({
       </Card>
 
       <Card className="border-border/60 bg-card/40">
-        <CardHeader>
-          <CardTitle className="font-mono text-sm uppercase tracking-[0.18em] text-terminal-amber">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-sm font-semibold tracking-tight text-foreground">
             Sector Footprint
           </CardTitle>
-          <CardDescription>
-            Where capital is concentrated — useful for spotting committee overlap.
+          <CardDescription className="text-sm leading-relaxed">
+            Where capital is concentrated across disclosed trades.
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-3">
+        <CardContent className="space-y-4">
           {sectors.slice(0, 5).map((sector) => (
             <div key={sector.sector}>
-              <div className="mb-1 flex items-center justify-between text-sm">
-                <span>{sector.sector}</span>
-                <span className="font-mono text-xs text-muted-foreground">
-                  {sector.count} trades · {sector.tickers.join(", ")}
+              <div className="mb-2 flex items-start justify-between gap-3 text-sm">
+                <span className="font-medium">{sector.sector}</span>
+                <span className="shrink-0 text-right text-xs text-muted-foreground">
+                  {sector.count} trades
                 </span>
               </div>
               <div className="h-2 overflow-hidden rounded-full bg-secondary">
@@ -92,29 +95,31 @@ export function ProfileIntelligence({
                   style={{ width: `${(sector.count / maxSector) * 100}%` }}
                 />
               </div>
+              <p className="mt-1.5 text-xs text-muted-foreground">
+                {sector.tickers.join(", ")}
+              </p>
             </div>
           ))}
         </CardContent>
       </Card>
 
       {overlapFlags.length > 0 && (
-        <Card className="border-terminal-amber/30 bg-terminal-amber/5 lg:col-span-2">
-          <CardHeader>
-            <CardTitle className="font-mono text-sm uppercase tracking-[0.18em] text-terminal-amber">
+        <Card className="border-terminal-amber/30 bg-terminal-amber/5">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm font-semibold tracking-tight text-foreground">
               Oversight Overlap Flags
             </CardTitle>
-            <CardDescription>
-              Sector activity mapped to typical committee jurisdiction — a
-              Capitol Trades exclusive.
+            <CardDescription className="text-sm leading-relaxed">
+              Sector activity mapped to typical committee jurisdiction.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
             {overlapFlags.map((flag) => (
               <div
                 key={`${flag.sector}-${flag.message}`}
-                className="rounded-md border border-terminal-amber/20 bg-background/40 p-3 text-sm leading-6"
+                className="rounded-lg border border-terminal-amber/20 bg-background/40 p-3.5 text-sm leading-7"
               >
-                <span className="mr-2 font-mono text-[10px] uppercase tracking-wider text-terminal-amber">
+                <span className="mb-1 mr-2 inline-flex rounded border border-terminal-amber/30 bg-terminal-amber/10 px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-terminal-amber">
                   {flag.severity}
                 </span>
                 {flag.message}
@@ -129,11 +134,11 @@ export function ProfileIntelligence({
 
 function StatBlock({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-md border border-border/60 bg-background/30 p-3">
-      <p className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
+    <div className="rounded-lg border border-border/60 bg-background/30 px-3 py-3">
+      <p className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
         {label}
       </p>
-      <p className="mt-1 font-mono text-xl font-semibold tabular-nums">{value}</p>
+      <p className="mt-1 text-lg font-semibold tabular-nums">{value}</p>
     </div>
   );
 }

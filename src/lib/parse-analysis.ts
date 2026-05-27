@@ -3,6 +3,10 @@ export interface AnalysisSection {
   body: string;
 }
 
+export type BodyBlock =
+  | { type: "paragraph"; text: string }
+  | { type: "list"; items: string[] };
+
 export function parseAnalysisSections(analysis: string): AnalysisSection[] {
   const trimmed = analysis.trim();
 
@@ -34,10 +38,39 @@ export function parseAnalysisSections(analysis: string): AnalysisSection[] {
     }));
 }
 
-export function renderAnalysisBody(body: string): string[] {
-  return body
-    .split("\n")
-    .map((line) => line.trim())
-    .filter(Boolean)
-    .map((line) => line.replace(/^[-*]\s+/, "• "));
+export function parseBodyBlocks(body: string): BodyBlock[] {
+  const lines = body.split("\n").map((line) => line.trim());
+  const blocks: BodyBlock[] = [];
+  let listItems: string[] = [];
+
+  const flushList = () => {
+    if (listItems.length > 0) {
+      blocks.push({ type: "list", items: [...listItems] });
+      listItems = [];
+    }
+  };
+
+  for (const line of lines) {
+    if (!line) {
+      flushList();
+      continue;
+    }
+
+    const bulletMatch = line.match(/^[-*•]\s+(.+)/);
+
+    if (bulletMatch) {
+      listItems.push(bulletMatch[1]);
+      continue;
+    }
+
+    flushList();
+    blocks.push({ type: "paragraph", text: line });
+  }
+
+  flushList();
+  return blocks;
+}
+
+export function stripMarkdownBold(text: string): string {
+  return text.replace(/\*\*([^*]+)\*\*/g, "$1");
 }

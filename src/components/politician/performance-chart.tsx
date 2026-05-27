@@ -72,18 +72,17 @@ export function PerformanceChart({
 
   return (
     <Card className="border-border/60 bg-card/40">
-      <CardHeader>
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-          <div>
-            <CardTitle className="font-mono text-sm uppercase tracking-[0.18em] text-terminal-amber">
+      <CardHeader className="pb-3">
+        <div className="flex flex-col gap-4">
+          <div className="space-y-1.5">
+            <CardTitle className="text-sm font-semibold tracking-tight text-foreground">
               Performance vs S&amp;P 500
             </CardTitle>
-            <CardDescription>
-              Cumulative return across disclosed trades for {politicianName} —
-              portfolio line vs SPY benchmark.
+            <CardDescription className="text-sm leading-relaxed">
+              Cumulative return across disclosed trades for {politicianName}.
             </CardDescription>
           </div>
-          <div className="flex flex-wrap gap-4 font-mono text-xs">
+          <div className="flex flex-wrap gap-x-5 gap-y-2 text-xs">
             <LegendItem
               color="hsl(var(--gain))"
               label={
@@ -112,7 +111,7 @@ export function PerformanceChart({
           </div>
         </div>
       </CardHeader>
-      <CardContent>
+      <CardContent className="pt-0">
         <div className="overflow-x-auto rounded-md border border-border/60 bg-background/30 p-3">
           <svg
             viewBox={`0 0 ${width} ${height}`}
@@ -177,7 +176,7 @@ export function PerformanceChart({
             })}
           </svg>
         </div>
-        <p className="mt-3 text-xs text-muted-foreground">
+        <p className="mt-3 text-xs leading-relaxed text-muted-foreground">
           Based on {summary.tradesWithData} trade
           {summary.tradesWithData !== 1 ? "s" : ""} with return data. Estimated
           from QuiverQuant price/SPY change fields — not a audited portfolio

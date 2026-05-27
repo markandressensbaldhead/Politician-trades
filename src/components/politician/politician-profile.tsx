@@ -4,6 +4,10 @@ import { ArrowLeft, TrendingDown, TrendingUp } from "lucide-react";
 import { AiInsightsCard } from "@/components/politician/ai-insights-card";
 import { EdgarFilingsCard } from "@/components/politician/edgar-filings-card";
 import { FollowPoliticianButton } from "@/components/politician/follow-politician-button";
+import {
+  ProfileNav,
+  ProfileSection,
+} from "@/components/politician/profile-nav";
 import { ProfileIntelligence } from "@/components/politician/profile-intelligence";
 import { PerformanceChart } from "@/components/politician/performance-chart";
 import { TradeHistoryTable } from "@/components/politician/trade-history-table";
@@ -12,12 +16,6 @@ import { PartyBadge } from "@/components/leaderboard/party-badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-} from "@/components/ui/card";
 import { PoliticianProfileData, UnifiedCongressTrade } from "@/types";
 import {
   getCommitteeOverlapFlags,
@@ -110,153 +108,179 @@ export function PoliticianProfile({ politician }: PoliticianProfileProps) {
     politician.committee ? `${politician.committee} Committee` : null,
   ].filter(Boolean);
 
+  const hasTrades = politician.trades.length > 0;
+
   return (
-    <div className="space-y-8">
-      <div className="flex items-start gap-4">
-        <Button variant="ghost" size="icon" asChild className="mt-1 shrink-0">
-          <Link href="/">
+    <div className="pb-12">
+      <div className="mb-6 flex items-center gap-3">
+        <Button variant="ghost" size="sm" asChild className="shrink-0 -ml-2">
+          <Link href="/" className="gap-2 text-muted-foreground hover:text-foreground">
             <ArrowLeft className="h-4 w-4" />
+            Back
           </Link>
         </Button>
+      </div>
 
-        <div className="terminal-panel flex-1 overflow-hidden">
-          <div className="terminal-header flex flex-col gap-6 border-b border-border/60 p-6 sm:flex-row sm:items-center">
-            <div className="photo-placeholder shrink-0">
-              <Avatar className="h-20 w-20 border-0 bg-transparent">
-                <AvatarFallback className="bg-secondary/80 text-xl font-semibold">
+      <div className="terminal-panel overflow-hidden">
+        <div className="terminal-header border-b border-border/60 p-6 sm:p-8">
+          <div className="flex flex-col gap-6 lg:flex-row lg:items-start">
+            <div className="photo-placeholder shrink-0 self-start">
+              <Avatar className="h-20 w-20 border-0 bg-transparent sm:h-24 sm:w-24">
+                <AvatarFallback className="bg-secondary/80 text-xl font-semibold sm:text-2xl">
                   {getInitials(politician.name)}
                 </AvatarFallback>
               </Avatar>
             </div>
 
-            <div className="flex-1 space-y-3">
+            <div className="min-w-0 flex-1 space-y-4">
+              <div className="space-y-2">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="live-dot" />
+                  <p className="text-xs font-medium uppercase tracking-[0.2em] text-terminal-amber">
+                    {politician.source === "live"
+                      ? "Live Profile"
+                      : politician.source === "disclosure"
+                        ? "OGE Disclosure Profile"
+                        : "Demo Profile"}
+                  </p>
+                </div>
+
+                <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+                  <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">
+                    {politician.name}
+                  </h1>
+                  <PartyBadge party={politician.party} />
+                  <Badge variant="outline" className="text-xs uppercase">
+                    {politician.chamber}
+                  </Badge>
+                </div>
+
+                {politician.officeTitle && (
+                  <p className="text-base text-foreground/90">
+                    {politician.officeTitle}
+                  </p>
+                )}
+
+                {locationParts.length > 0 && (
+                  <p className="text-sm leading-relaxed text-muted-foreground">
+                    {locationParts.join(" · ")}
+                  </p>
+                )}
+              </div>
+
               <div className="flex flex-wrap items-center gap-2">
-                <span className="live-dot" />
-                <p className="font-mono text-[10px] uppercase tracking-[0.25em] text-terminal-amber">
-                  {politician.source === "live"
-                    ? "Live Profile"
-                    : politician.source === "disclosure"
-                      ? "OGE Disclosure Profile"
-                      : "Demo Profile"}
-                </p>
-              </div>
-
-              <div className="flex flex-wrap items-center gap-3">
-                <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">
-                  {politician.name}
-                </h1>
-                <PartyBadge party={politician.party} />
-                <Badge variant="outline" className="font-mono text-[10px] uppercase">
-                  {politician.chamber}
-                </Badge>
-              </div>
-
-              {politician.officeTitle && (
-                <p className="font-mono text-sm text-foreground/90">
-                  {politician.officeTitle}
-                </p>
-              )}
-
-              {locationParts.length > 0 && (
-                <p className="font-mono text-sm text-muted-foreground">
-                  {locationParts.join(" · ")}
-                </p>
-              )}
-
-              {politician.bioGuideId && (
-                <p className="font-mono text-[11px] text-muted-foreground">
-                  BioGuide ID: {politician.bioGuideId}
-                </p>
-              )}
-
-              <div className="flex flex-wrap items-center gap-2 pt-1">
                 <FollowPoliticianButton
                   politicianId={politician.id}
                   politicianName={politician.name}
                 />
-                <ExportCsvLink
-                  href={`/api/export/trades?politician=${encodeURIComponent(politician.id)}`}
-                  label="Export CSV"
-                />
+                {hasTrades && (
+                  <ExportCsvLink
+                    href={`/api/export/trades?politician=${encodeURIComponent(politician.id)}`}
+                    label="Export CSV"
+                  />
+                )}
               </div>
             </div>
           </div>
         </div>
-      </div>
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {stats.map((stat) => (
-          <Card
-            key={stat.label}
-            className="border-border/60 bg-card/50 backdrop-blur-sm"
-          >
-            <CardHeader className="pb-2">
-              <CardDescription className="font-mono text-[10px] uppercase tracking-wider">
+        <div className="grid grid-cols-2 gap-px border-t border-border/40 bg-border/40 sm:grid-cols-3 lg:grid-cols-5">
+          {stats.map((stat) => (
+            <div
+              key={stat.label}
+              className="bg-card/80 px-4 py-4 sm:px-5"
+            >
+              <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
                 {stat.label}
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
+              </p>
               <p
                 className={cn(
-                  "text-2xl font-bold font-mono tabular-nums",
+                  "mt-1.5 flex items-center gap-1 text-xl font-semibold tabular-nums sm:text-2xl",
                   stat.highlight === true && "text-gain",
                   stat.highlight === false && "text-loss"
                 )}
               >
                 {stat.highlight !== undefined &&
                   (stat.highlight ? (
-                    <TrendingUp className="mr-1 inline h-5 w-5" />
+                    <TrendingUp className="h-5 w-5 shrink-0" />
                   ) : (
-                    <TrendingDown className="mr-1 inline h-5 w-5" />
+                    <TrendingDown className="h-5 w-5 shrink-0" />
                   ))}
                 {stat.value}
               </p>
-            </CardContent>
-          </Card>
-        ))}
+            </div>
+          ))}
+        </div>
       </div>
 
-      {politician.trades.length > 0 && (
-        <PerformanceChart
-          politicianName={politician.name}
-          trades={politician.trades.map((trade) => ({
-            tradeDate: trade.tradeDate,
-            type: trade.type,
-            excessReturn: trade.excessReturn,
-            priceChange: trade.priceChange,
-            spyChange: trade.spyChange,
-          }))}
-        />
+      <ProfileNav hasTrades={hasTrades} className="mt-8" />
+
+      <div
+        className={cn(
+          "mt-8 grid gap-8",
+          hasTrades ? "xl:grid-cols-12" : "max-w-4xl"
+        )}
+      >
+        <aside className="order-1 space-y-6 xl:order-2 xl:col-span-4 xl:sticky xl:top-28 xl:self-start">
+          {hasTrades && (
+            <ProfileSection id="overview">
+              <PerformanceChart
+                politicianName={politician.name}
+                trades={politician.trades.map((trade) => ({
+                  tradeDate: trade.tradeDate,
+                  type: trade.type,
+                  excessReturn: trade.excessReturn,
+                  priceChange: trade.priceChange,
+                  spyChange: trade.spyChange,
+                }))}
+              />
+
+              <ProfileIntelligence
+                politicianName={politician.name}
+                lagStats={lagStats}
+                sectors={sectors}
+                overlapFlags={overlapFlags}
+              />
+            </ProfileSection>
+          )}
+        </aside>
+
+        <div
+          className={cn(
+            "order-2 space-y-8",
+            hasTrades ? "xl:order-1 xl:col-span-8" : ""
+          )}
+        >
+          <ProfileSection id="research">
+            <AiInsightsCard
+              politicianId={politician.id}
+              politicianName={politician.name}
+            />
+          </ProfileSection>
+
+          <ProfileSection id="filings">
+            <EdgarFilingsCard
+              politicianId={politician.id}
+              politicianName={politician.name}
+            />
+          </ProfileSection>
+        </div>
+      </div>
+
+      {hasTrades && (
+        <ProfileSection id="trades" className="mt-8">
+          <TradeHistoryTable
+            trades={politician.trades}
+            politicianName={politician.name}
+            politicianParty={politician.party}
+            politicianChamber={politician.chamber}
+            showExcessReturn={
+              politician.source === "live" ||
+              politician.source === "disclosure"
+            }
+          />
+        </ProfileSection>
       )}
-
-      {politician.trades.length > 0 && (
-        <ProfileIntelligence
-          politicianName={politician.name}
-          lagStats={lagStats}
-          sectors={sectors}
-          overlapFlags={overlapFlags}
-        />
-      )}
-
-      <AiInsightsCard
-        politicianId={politician.id}
-        politicianName={politician.name}
-      />
-
-      <EdgarFilingsCard
-        politicianId={politician.id}
-        politicianName={politician.name}
-      />
-
-      <TradeHistoryTable
-        trades={politician.trades}
-        politicianName={politician.name}
-        politicianParty={politician.party}
-        politicianChamber={politician.chamber}
-        showExcessReturn={
-          politician.source === "live" || politician.source === "disclosure"
-        }
-      />
     </div>
   );
 }

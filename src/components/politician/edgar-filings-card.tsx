@@ -44,46 +44,50 @@ function FilingRow({
   return (
     <div
       className={cn(
-        "flex flex-col gap-3 rounded-md border p-4 sm:flex-row sm:items-center sm:justify-between",
+        "flex flex-col gap-4 rounded-lg border p-4 sm:flex-row sm:items-start sm:justify-between sm:p-5",
         featured
-          ? "border-terminal-amber/50 bg-terminal-amber/10 shadow-[0_0_24px_rgba(245,158,11,0.08)]"
+          ? "border-terminal-amber/40 bg-terminal-amber/[0.07]"
           : "border-border/60 bg-background/30"
       )}
     >
-      <div className="space-y-2">
+      <div className="min-w-0 space-y-2.5">
         <div className="flex flex-wrap items-center gap-2">
           {featured && (
-            <Badge className="bg-terminal-amber/20 font-mono text-[10px] text-terminal-amber hover:bg-terminal-amber/20">
+            <Badge className="bg-terminal-amber/20 text-[10px] text-terminal-amber hover:bg-terminal-amber/20">
               Latest
             </Badge>
           )}
-          <Badge variant="outline" className="font-mono text-[10px]">
+          <Badge variant="outline" className="text-[10px]">
             {filing.form}
           </Badge>
-          <Badge variant="secondary" className="font-mono text-[10px]">
+          <Badge variant="secondary" className="text-[10px]">
             {filing.categoryLabel}
           </Badge>
-          <span className="font-mono text-xs text-muted-foreground">
-            {formatDate(filing.filedAt)} · {filing.recencyLabel}
-          </span>
           {filing.ticker && (
             <Badge variant="secondary" className="font-mono text-[10px]">
               {filing.ticker}
             </Badge>
           )}
         </div>
-        <p className={cn("font-medium", featured && "text-base")}>
-          {filing.entityName}
-        </p>
+
+        <p className="font-medium leading-snug">{filing.entityName}</p>
+
         {filing.investmentSummary ? (
-          <p className="text-sm leading-6 text-foreground/90">
+          <p className="text-sm leading-7 text-foreground/90">
             {filing.investmentSummary.plainSummary}
           </p>
         ) : (
-          <p className="text-xs text-muted-foreground">{filing.title}</p>
+          <p className="text-sm leading-relaxed text-muted-foreground">
+            {filing.title}
+          </p>
         )}
+
+        <p className="text-xs text-muted-foreground">
+          {formatDate(filing.filedAt)} · {filing.recencyLabel}
+        </p>
+
         {filing.investmentSummary?.filingContext && (
-          <p className="text-xs text-muted-foreground">
+          <p className="text-xs leading-relaxed text-muted-foreground">
             {filing.investmentSummary.filingContext}
           </p>
         )}
@@ -166,19 +170,6 @@ export function EdgarFilingsCard({
     };
   }, [politicianId]);
 
-  useEffect(() => {
-    if (filings.length === 0 && !loadingFilings) {
-      setLoadingInsight(false);
-      return;
-    }
-
-    if (loadingFilings) {
-      return;
-    }
-
-    loadFilingInsight(false);
-  }, [politicianId, filings.length, loadingFilings]);
-
   const loadFilingInsight = useCallback(
     async (refresh = false) => {
       setLoadingInsight(true);
@@ -204,6 +195,19 @@ export function EdgarFilingsCard({
     [politicianId]
   );
 
+  useEffect(() => {
+    if (filings.length === 0 && !loadingFilings) {
+      setLoadingInsight(false);
+      return;
+    }
+
+    if (loadingFilings) {
+      return;
+    }
+
+    void loadFilingInsight(false);
+  }, [filings.length, loadingFilings, loadFilingInsight]);
+
   const featuredIds = useMemo(
     () => new Set(latest.map((filing) => filing.id)),
     [latest]
@@ -211,20 +215,20 @@ export function EdgarFilingsCard({
 
   return (
     <Card className="terminal-panel overflow-hidden border-border/60 bg-card/40">
-      <CardHeader className="terminal-header border-b border-border/60">
-        <CardTitle className="flex items-center gap-2 font-mono text-sm uppercase tracking-[0.2em] text-terminal-amber">
-          <FileText className="h-4 w-4" />
+      <CardHeader className="terminal-header border-b border-border/60 px-6 py-5">
+        <CardTitle className="flex items-center gap-2 text-base font-semibold tracking-tight text-foreground">
+          <FileText className="h-4 w-4 text-terminal-amber" />
           SEC EDGAR Filings
         </CardTitle>
-        <CardDescription>
+        <CardDescription className="max-w-2xl text-sm leading-relaxed">
           {locked
-            ? "Locked SEC EDGAR records from database — synced and linked to disclosed trades."
-            : "Ranked by recency — newest material events and insider filings appear first"}{" "}
-          for {politicianName}
+            ? "Locked SEC records synced from EDGAR and linked to disclosed trades."
+            : "Newest material events and insider filings for"}{" "}
+          {politicianName}.
         </CardDescription>
       </CardHeader>
 
-      <CardContent className="space-y-8 p-6">
+      <CardContent className="space-y-8 p-6 sm:p-8">
         {loadingFilings ? (
           <div className="flex items-center gap-3 py-8 text-muted-foreground">
             <Loader2 className="h-4 w-4 animate-spin text-terminal-amber" />
@@ -239,14 +243,14 @@ export function EdgarFilingsCard({
         ) : (
           <>
             {investments.length > 0 && (
-              <section className="space-y-3 rounded-md border border-terminal-amber/30 bg-terminal-amber/5 p-4">
-                <div className="flex items-center justify-between gap-3">
-                  <h3 className="font-mono text-xs uppercase tracking-[0.2em] text-terminal-amber">
+              <section className="space-y-4 rounded-lg border border-terminal-amber/30 bg-terminal-amber/[0.06] p-5">
+                <div className="space-y-1">
+                  <h3 className="text-sm font-semibold text-foreground">
                     What They Invested In
                   </h3>
-                  <span className="font-mono text-[10px] text-muted-foreground">
-                    Plain English · what · how much · when
-                  </span>
+                  <p className="text-xs text-muted-foreground">
+                    Plain English summaries — what, how much, when
+                  </p>
                 </div>
                 <InvestmentActivityList
                   investments={investments}
@@ -256,14 +260,14 @@ export function EdgarFilingsCard({
             )}
 
             {latest.length > 0 && (
-              <section className="space-y-3">
-                <div className="flex items-center justify-between gap-3">
-                  <h3 className="font-mono text-xs uppercase tracking-[0.2em] text-terminal-amber">
+              <section className="space-y-4">
+                <div className="space-y-1">
+                  <h3 className="text-sm font-semibold text-foreground">
                     Latest Filings
                   </h3>
-                  <span className="font-mono text-[10px] text-muted-foreground">
-                    Most recent · highest visibility
-                  </span>
+                  <p className="text-xs text-muted-foreground">
+                    Most recent disclosures with highest visibility
+                  </p>
                 </div>
                 {latest.map((filing) => (
                   <FilingRow key={filing.id} filing={filing} featured />
@@ -280,12 +284,12 @@ export function EdgarFilingsCard({
               }))
               .filter((group) => group.filings.length > 0)
               .map((group) => (
-              <section key={group.category} className="space-y-3">
+              <section key={group.category} className="space-y-4">
                 <div className="flex items-center justify-between gap-3 border-b border-border/40 pb-2">
-                  <h3 className="font-mono text-xs uppercase tracking-[0.18em] text-foreground/90">
+                  <h3 className="text-sm font-semibold text-foreground">
                     {group.label}
                   </h3>
-                  <span className="font-mono text-[10px] text-muted-foreground">
+                  <span className="text-xs text-muted-foreground">
                     {group.filings.length} filing
                     {group.filings.length !== 1 ? "s" : ""}
                   </span>
@@ -300,13 +304,22 @@ export function EdgarFilingsCard({
           </>
         )}
 
-        <div className="rounded-md border border-border/60 bg-background/20 p-4">
-          <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
-            <div className="flex items-center gap-2">
-              <Sparkles className="h-4 w-4 text-terminal-amber" />
-              <p className="font-mono text-xs uppercase tracking-[0.18em] text-terminal-amber">
-                EDGAR Linkage Memo
-              </p>
+        <div className="rounded-lg border border-border/60 bg-background/20 p-5 sm:p-6">
+          <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+            <div className="space-y-1">
+              <div className="flex items-center gap-2">
+                <Sparkles className="h-4 w-4 text-terminal-amber" />
+                <p className="text-sm font-semibold text-foreground">
+                  EDGAR Linkage Memo
+                </p>
+              </div>
+              {insight && !loadingInsight && (
+                <p className="text-xs text-muted-foreground">
+                  {insight.cached ? "Cached" : "Fresh"} ·{" "}
+                  {insight.filingsReviewed} filings reviewed · Updated{" "}
+                  {formatDate(insight.generatedAt)}
+                </p>
+              )}
             </div>
             <RefreshAnalysisButton
               loading={loadingInsight}
@@ -315,22 +328,14 @@ export function EdgarFilingsCard({
           </div>
 
           {loadingInsight ? (
-            <div className="flex items-center gap-3 py-6 text-muted-foreground">
+            <div className="flex items-center gap-3 py-8 text-muted-foreground">
               <Loader2 className="h-4 w-4 animate-spin text-terminal-amber" />
-              <span className="font-mono text-sm">
-                Running event-driven review...
-              </span>
+              <span className="text-sm">Running event-driven review...</span>
             </div>
           ) : insight ? (
-            <div className="space-y-4">
-              <p className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
-                {insight.cached ? "Cached" : "Fresh"} · {insight.filingsReviewed}{" "}
-                filings reviewed · Updated {formatDate(insight.generatedAt)}
-              </p>
-              <ResearchDeskOutput analysis={insight.analysis} />
-            </div>
+            <ResearchDeskOutput analysis={insight.analysis} />
           ) : (
-            <p className="text-sm text-muted-foreground">
+            <p className="text-sm leading-relaxed text-muted-foreground">
               EDGAR memo will appear once SEC documents are available.
             </p>
           )}

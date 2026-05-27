@@ -75,23 +75,24 @@ export function AiInsightsCard({
 
   return (
     <Card className="terminal-panel overflow-hidden border-border/60 bg-card/40">
-      <CardHeader className="terminal-header border-b border-border/60">
-        <div className="flex items-start justify-between gap-4">
-          <div className="space-y-1">
-            <CardTitle className="flex items-center gap-2 font-mono text-sm uppercase tracking-[0.2em] text-terminal-amber">
-              <Sparkles className="h-4 w-4" />
+      <CardHeader className="terminal-header border-b border-border/60 px-6 py-5">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+          <div className="space-y-1.5">
+            <CardTitle className="flex items-center gap-2 text-base font-semibold tracking-tight text-foreground">
+              <Sparkles className="h-4 w-4 text-terminal-amber" />
               Washington Signal Desk
             </CardTitle>
-            <CardDescription>
-              PM-grade memo on {politicianName}&apos;s disclosure book — positioning,
-              alpha, catalysts, and risk flags
+            <CardDescription className="max-w-2xl text-sm leading-relaxed">
+              PM-grade memo on {politicianName}&apos;s disclosure book —
+              positioning, alpha, catalysts, and risk flags.
             </CardDescription>
           </div>
 
-          <div className="flex flex-col items-end gap-2">
+          <div className="flex flex-wrap items-center gap-3 sm:flex-col sm:items-end">
             {insight && (
-              <p className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
-                {insight.cached ? "Cached" : "Fresh"} · {formatDate(insight.generatedAt)}
+              <p className="text-xs text-muted-foreground">
+                {insight.cached ? "Cached" : "Fresh"} ·{" "}
+                {formatDate(insight.generatedAt)}
               </p>
             )}
             <RefreshAnalysisButton
@@ -102,20 +103,23 @@ export function AiInsightsCard({
         </div>
       </CardHeader>
 
-      <CardContent className="p-6">
+      <CardContent className="p-6 sm:p-8">
         {loading && (
-          <div className="flex items-center justify-center gap-3 py-12 text-muted-foreground">
+          <div className="flex items-center justify-center gap-3 py-14 text-muted-foreground">
             <Loader2 className="h-5 w-5 animate-spin text-terminal-amber" />
-            <span className="font-mono text-sm">Running desk analysis...</span>
+            <span className="text-sm">Running desk analysis...</span>
           </div>
         )}
 
         {!loading && error && (
-          <div className="rounded-md border border-loss/30 bg-loss/5 p-4">
-            <p className="font-mono text-sm text-loss">{error}</p>
-            <p className="mt-2 text-sm text-muted-foreground">
+          <div className="rounded-lg border border-loss/30 bg-loss/5 p-5">
+            <p className="text-sm font-medium text-loss">{error}</p>
+            <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
               Check{" "}
-              <a href="/setup" className="text-primary underline-offset-4 hover:underline">
+              <a
+                href="/setup"
+                className="text-primary underline-offset-4 hover:underline"
+              >
                 /setup
               </a>{" "}
               for ANTHROPIC_API_KEY and Supabase.
